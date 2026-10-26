@@ -14,6 +14,8 @@ import type {
 
 let activeAbort: AbortController | null = null;
 
+const LAST_CONVERSATION_KEY = "glm54.lastConversation";
+
 interface AppState {
   // data
   conversations: ConversationSummary[];
@@ -116,6 +118,15 @@ export const useAppStore = create<AppState>()((set, get) => ({
       get().loadDocuments(),
       get().loadServerInfo(),
     ]);
+    // Restore the most recent conversation (survives reloads — the whole point).
+    try {
+      const last = localStorage.getItem(LAST_CONVERSATION_KEY);
+      if (last && !get().activeId && get().conversations.some((c) => c.id === last)) {
+        await get().openConversation(last);
+      }
+    } catch {
+      /* storage unavailable */
+    }
   },
 
   loadConversations: async (q = "") => {
@@ -140,6 +151,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
     try {
       const { conversation } = await apiClient.getConversation(id);
       set({ messages: conversation.messages });
+      try {
+        localStorage.setItem(LAST_CONVERSATION_KEY, id);
+      } catch {
+        /* ignore */
+      }
     } catch (err) {
       console.error("openConversation:", err);
       set({ activeId: null });
@@ -151,6 +167,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
   newConversation: () => {
     activeAbort?.abort();
     activeAbort = null;
+    try {
+      localStorage.removeItem(LAST_CONVERSATION_KEY);
+    } catch {
+      /* ignore */
+    }
     set({
       activeId: null,
       messages: [],

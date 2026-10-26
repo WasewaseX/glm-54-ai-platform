@@ -142,3 +142,25 @@ Work Log:
 
 Stage Summary:
 - GLM 5.4 AI delivered: full-stack, browser-verified, evidence-based capability reporting, no invented model claims.
+
+---
+Task ID: 11
+Agent: Z.ai Code (main)
+Task: Fix "Conversation not found" (session persistence), rebuild UI as chat.z.ai-style agent workspace, GitHub backup
+
+Work Log:
+- ROOT CAUSE (from dev.log): every API request inserted a new User row — the preview panel renders the app in a cross-site iframe where SameSite=Lax cookies are stripped from fetch(), so requireUser() never saw a cookie and conversations kept failing ownership checks with 404 "Conversation not found".
+- FIX (src/lib/auth.ts): identity resolution order is now x-session-token request header (validated hex) → glm54_session cookie → create; race-safe create with unique-violation retry; cookie still mirrored for top-level navigations.
+- FIX (src/lib/api-client.ts): client-side session manager — 24-byte crypto token persisted in localStorage (glm54.session), sent as X-Session-Token on EVERY fetch (incl. SSE chat), self-heals from server-issued x-session-token response header, document.cookie mirror; export downloads switched from window.open links to authenticated fetch+blob (downloadExport) so they work without cookies.
+- curl-verified: two turns in the SAME conversation return 200 (turn 2 quotes turn 1 verbatim); wrong/no token → 404 isolation; recents list shows the conversation for the owning token only.
+- UI rebuild (chat.z.ai reverse-engineer): welcome hero "More than coding..." (serif, CSS halftone cloud, m-auto centering fix for clipped headline) + 5 agent cards (Full-Stack, Writing, Data Insight, PPT, Web Site) that activate agent modes and prefill the composer; sidebar rebuilt with Z brand tile, Home/Scheduled/Cloud nav, Recents, "Meet Your AI Agents" card (Writer shortcut), user-chip footer; composer restyled rounded-[26px] with + attach, active-agent chip, Web/Think, honest model dropdown (Auto + actually-served model from /api/health), circular send; header adds Source (GitHub) link; sticky status footer text updated.
+- src/lib/agents.ts: agent system prompts; Writer agent has originality guardrails (no copyrighted reproduction) + strict continuation protocol; store gained activeAgentId/composerDraft/setActiveAgent/setComposerDraft/continueWriting.
+- Continue: message-list renders a Continue bar under the last complete assistant message (offset-aware with jump-to-bottom); continueWriting() resumes mid-sentence via CONTINUE_INSTRUCTION in the same conversation.
+- Persistence UX: bootstrap auto-restores the most recent conversation via localStorage glm54.lastConversation; cleared on Home/new chat.
+- GitHub backup: private repo WasewaseX/glm-54-ai-platform created with the user-provided PAT (stored ONLY in gitignored .env as GITHUB_BACKUP_TOKEN); token never persisted in .git/config (one-shot push URLs); scripts/backup-to-github.sh commits+pushes and redacts the token from output; .gitignore now excludes db/*.db and upload/; README durability section + .env.example updated; PAT-rotation warning recorded (token was pasted in chat in plaintext).
+- E2E (agent-browser): welcome renders (desktop+390px mobile), Writing card prefills composer, first message streams + auto-titles, SECOND message in same conversation succeeds and recalls the code word, full history restores after reload (and auto-opens on next reload), Continue button renders, light+dark verified, zero console errors, dev.log all 200s.
+
+Stage Summary:
+- "Conversation not found" eliminated at the root; multi-turn memory proven in-browser (BANANA-TIDE recall test).
+- App now mirrors chat.z.ai's workspace UX with 5 real agent modes and serialized-writing Continue.
+- Code durably backed up to github.com/WasewaseX/glm-54-ai-platform (private) with a re-runnable backup script.

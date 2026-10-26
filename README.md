@@ -15,10 +15,11 @@ A production-ready, full-stack AI workspace built on **Next.js 16 (App Router) +
 | **Web search tool** | Optional per-message grounding via the gateway's `web_search` function; results rendered as a status chip and cited context |
 | **Vision & files** | Drag-and-drop or picker uploads: images (PNG/JPEG/WebP/GIF/BMP) and PDF/DOCX analyzed by the vision model via data URLs |
 | **Long documents (RAG)** | Text files are chunked on ingest (paragraph-aware, overlapping) and retrieved per-query with BM25 scoring; AI map-reduce summarization |
-| **Conversations** | Persistent history, pin/archive/rename, full-text-ish search, per-conversation system prompt, Markdown/JSON export |
-| **System prompts** | Reusable prompt library with a default prompt for new chats |
+| **Conversations** | Persistent history, pin/archive/rename, full-text-ish search, per-conversation system prompt, Markdown/JSON export, last-conversation auto-restore on reload |
+| **Agent workspace** | chat.z.ai-style shell: Z-brand sidebar (Home / Scheduled / Cloud / Recents), "More than coding..." hero with agent cards — Full-Stack, Writing (long-form serialized fiction with one-click **Continue**), Data Insight, PPT, Web Site — plus model dropdown, Web/Think toggles, and an attach "" composer |
+| **System prompts** | Reusable prompt library with a default prompt for new chats, layered under per-agent prompts |
 | **Settings** | Theme (dark default / light / system), send-on-enter, thinking & web-search defaults, usage stats, danger-zone data wipe |
-| **Auth** | Cookie-bound anonymous sessions (httpOnly, 1-year) mapped to real `User` rows — a clean upgrade path to NextAuth/OAuth |
+| **Auth** | **Iframe-proof anonymous sessions**: identity travels in the `X-Session-Token` header (localStorage-backed) with an httpOnly cookie fallback — identical visitor identity survives reloads, new tabs, and cross-site preview iframes where `SameSite=Lax` cookies are stripped. Clean upgrade path to NextAuth/OAuth |
 | **Rate limiting** | Sliding-window limits per route (chat 30/min, uploads 12/min, search 20/min) with `429 + Retry-After` |
 | **UX** | Dark/light themes, aurora hero, glass composer, syntax-highlighted code with copy buttons, mobile sheet sidebar, sticky status footer, full keyboard/ARIA accessibility |
 
@@ -46,6 +47,26 @@ bun run dev        # http://localhost:3000
 ```
 
 `bun run lint` verifies code quality. There is no separate build step needed for local dev; for production use `bun run build && bun run start` (standalone output).
+
+---
+
+## 🔄 Durability — GitHub backup (survives session resets)
+
+All code is continuously pushed to the private repo **`WasewaseX/glm-54-ai-platform`**.
+
+```bash
+# One-off setup (already configured in this workspace)
+#   .env → GITHUB_BACKUP_TOKEN=<GitHub PAT>   (gitignored, never committed)
+
+# Push any new work:
+bash scripts/backup-to-github.sh "what changed"
+
+# Restore into a fresh environment:
+#   git clone https://github.com/WasewaseX/glm-54-ai-platform
+#   bun install && bun run db:push && cp .env.example .env  # then fill .env
+```
+
+> **Security note:** the PAT used during initial setup was pasted into a chat in plaintext — treat it as compromised and rotate it (GitHub → Settings → Developer settings → Fine-grained tokens) once a replacement is in `.env`.
 
 ---
 

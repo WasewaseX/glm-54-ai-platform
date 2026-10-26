@@ -43,13 +43,13 @@ export function Welcome() {
   );
 
   return (
-    <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-y-auto scrollbar-thin">
+    <div className="relative flex min-h-0 flex-1 overflow-y-auto scrollbar-thin">
       {/* Halftone cloud backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-64 overflow-hidden">
         <div className="halftone-cloud absolute -top-20 left-1/2 h-72 w-[44rem] max-w-none -translate-x-1/2" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-12 text-center sm:px-6">
+      <div className="relative z-10 m-auto w-full max-w-3xl px-4 py-12 text-center sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
