@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { apiClient, streamChatSse } from "@/lib/api-client";
+import { AGENT_BY_ID, CONTINUE_INSTRUCTION } from "@/lib/agents";
 import type {
   AttachmentMeta,
   ChatMessage,
@@ -23,6 +24,8 @@ interface AppState {
   settings: Required<import("@/lib/types").UserSettings>;
   serverInfo: ServerInfo | null;
   pendingAttachments: DocumentItem[];
+  activeAgentId: string | null;
+  composerDraft: string;
 
   // ui state
   conversationsLoading: boolean;
@@ -48,6 +51,9 @@ interface AppState {
   sendMessage: (text: string, opts?: { webSearch?: boolean; thinking?: boolean; systemPrompt?: string | null }) => Promise<void>;
   regenerate: () => Promise<void>;
   stopStreaming: () => void;
+  continueWriting: () => Promise<void>;
+  setActiveAgent: (id: string | null) => void;
+  setComposerDraft: (text: string) => void;
 
   uploadFiles: (files: File[]) => Promise<void>;
   removePendingAttachment: (id: string) => void;
@@ -90,6 +96,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
   serverInfo: null,
   pendingAttachments: [],
+  activeAgentId: null,
+  composerDraft: "",
 
   conversationsLoading: false,
   messagesLoading: false,
@@ -437,6 +445,27 @@ export const useAppStore = create<AppState>()((set, get) => ({
     activeAbort?.abort();
     activeAbort = null;
   },
+
+  /**
+   * Ask the model to resume the last assistant message exactly where it
+   * stopped (serialized writing / long-form generation). Reuses the active
+   * conversation so the full context and conversation-level system prompt
+   * apply.
+   */
+  continueWriting: async () => {
+    const { activeId, streaming, activeAgentId } = get();
+    if (streaming || !activeId) return;
+    const agent = activeAgentId ? AGENT_BY_ID[activeAgentId] : null;
+    await get().sendMessage(CONTINUE_INSTRUCTION, {
+      webSearch: false,
+      thinking: false,
+      systemPrompt: agent?.systemPrompt ?? undefined,
+    });
+  },
+
+  setActiveAgent: (id) => set({ activeAgentId: id }),
+
+  setComposerDraft: (text) => set({ composerDraft: text }),
 
   uploadFiles: async (files: File[]) => {
     try {

@@ -11,15 +11,95 @@ import type {
   UserSettings,
 } from "@/lib/types";
 
+// ---------- Session identity (iframe-proof) ----------
+// The app frequently runs inside a cross-site preview iframe where cookies
+// are stripped from fetch() requests. Identity therefore travels in the
+// `X-Session-Token` header, backed by localStorage, with a document.cookie
+// mirror for top-level navigations (export downloads, new tabs).
+
+const STORAGE_KEY = "glm54.session";
+const SESSION_HEADER = "X-Session-Token";
+const COOKIE_NAME = "glm54_session";
+const TOKEN_RE = /^[a-f0-9]{32,128}$/i;
+
+let cachedToken: string | null = null;
+
+function readMirrorCookie(): string | null {
+  try {
+    const match = document.cookie
+      .split(";")
+      .map((c) => c.trim())
+      .find((c) => c.startsWith(`${COOKIE_NAME}=`));
+    const value = match?.slice(COOKIE_NAME.length + 1) ?? null;
+    return value && TOKEN_RE.test(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistToken(token: string) {
+  cachedToken = token;
+  try {
+    localStorage.setItem(STORAGE_KEY, token);
+  } catch {
+    /* storage disabled — in-memory token still covers this page session */
+  }
+  try {
+    // Non-httpOnly mirror cookie (server also sets an httpOnly one).
+    document.cookie = `${COOKIE_NAME}=${token}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Resolve (or lazily create) the persistent session token. */
+export function getSessionToken(): string {
+  if (cachedToken) return cachedToken;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && TOKEN_RE.test(stored)) {
+      cachedToken = stored;
+      return stored;
+    }
+  } catch {
+    /* ignore */
+  }
+  const mirrored = readMirrorCookie();
+  if (mirrored) {
+    persistToken(mirrored);
+    return mirrored;
+  }
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  const token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  persistToken(token);
+  return token;
+}
+
+/** Capture a server-issued token (self-healing) from any API response. */
+function adoptSessionToken(res: Response) {
+  const issued = res.headers.get("x-session-token");
+  if (issued && TOKEN_RE.test(issued) && issued !== cachedToken) persistToken(issued);
+}
+
+function withSessionHeaders(extra?: HeadersInit): Headers {
+  const headers = new Headers(extra);
+  headers.set(SESSION_HEADER, getSessionToken());
+  return headers;
+}
+
 /** Fetch JSON, throwing a descriptive Error on failure. */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
-    headers: {
-      ...(init?.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+    headers: withSessionHeaders({
+      ...(init?.body && !(init.body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...init?.headers,
-    },
+    }),
   });
+  adoptSessionToken(res);
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
     try {
@@ -54,10 +134,11 @@ export async function streamChatSse(
 ): Promise<void> {
   const res = await fetch("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: withSessionHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
     signal,
   });
+  adoptSessionToken(res);
 
   if (!res.ok || !res.body) {
     let message = `Chat request failed (${res.status})`;
@@ -93,6 +174,30 @@ export async function streamChatSse(
       }
     }
   }
+}
+
+/**
+ * Download a conversation export via authenticated fetch + blob, so it works
+ * even when cookies are unavailable (e.g. inside cross-site preview iframes).
+ */
+export async function downloadExport(id: string, format: "md" | "json"): Promise<void> {
+  const res = await fetch(`/api/conversations/${id}/export?format=${format}`, {
+    headers: withSessionHeaders(),
+  });
+  adoptSessionToken(res);
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+  const blob = await res.blob();
+  const dispo = res.headers.get("content-disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(dispo);
+  const name = match ? decodeURIComponent(match[1]) : `conversation.${format}`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 // ---------- Typed endpoint helpers ----------

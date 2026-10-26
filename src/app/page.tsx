@@ -65,8 +65,8 @@ export default function Home() {
         <footer className="flex h-7 shrink-0 items-center justify-between border-t border-border/40 px-3 pb-[env(safe-area-inset-bottom)] text-[10px] text-muted-foreground/70 sm:px-4">
           <span>
             {messages.length > 0
-              ? "History restored from database"
-              : "Session-ready · history is saved automatically"}
+              ? "History synced — conversations persist across sessions"
+              : "Session-ready · every conversation is saved automatically"}
           </span>
           <span className="hidden sm:block">Next.js 16 · SSE streaming · RAG long-context</span>
         </footer>

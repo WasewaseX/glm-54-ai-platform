@@ -346,3 +346,15 @@
   max-width: 100%;
   border-radius: 10px;
 }
+
+/* ---------- z.ai-style halftone cloud (welcome hero) ---------- */
+.halftone-cloud {
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.2px);
+  background-size: 9px 9px;
+  color: rgb(0 0 0 / 0.2);
+  -webkit-mask-image: radial-gradient(ellipse 55% 52% at 50% 38%, black 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse 55% 52% at 50% 38%, black 0%, transparent 72%);
+}
+.dark .halftone-cloud {
+  color: rgb(255 255 255 / 0.14);
+}

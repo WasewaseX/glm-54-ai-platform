@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDown, FileSearch, Globe } from "lucide-react";
+import { ArrowDown, ChevronRight, FileSearch, Globe } from "lucide-react";
 import { MessageItem } from "@/components/chat/message-item";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export function MessageList() {
   const streamingTool = useAppStore((s) => s.streamingTool);
   const streamingContextNote = useAppStore((s) => s.streamingContextNote);
   const regenerate = useAppStore((s) => s.regenerate);
+  const continueWriting = useAppStore((s) => s.continueWriting);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
@@ -36,6 +37,13 @@ export function MessageList() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     setPinnedToBottom(true);
   };
+
+  const last = messages[messages.length - 1];
+  const showContinue =
+    !streaming &&
+    last?.role === "assistant" &&
+    last.status === "complete" &&
+    (last.content?.length ?? 0) > 0;
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -80,6 +88,22 @@ export function MessageList() {
         </div>
       </div>
 
+      {/* Continue bar — resume long-form generation where it stopped */}
+      {showContinue && (
+        <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void continueWriting()}
+            className="h-8 gap-1 rounded-full bg-background/90 shadow-md backdrop-blur"
+            aria-label="Continue the previous response"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+            Continue
+          </Button>
+        </div>
+      )}
+
       {/* Jump to bottom */}
       <Button
         variant="outline"
@@ -87,7 +111,8 @@ export function MessageList() {
         onClick={scrollToBottom}
         aria-label="Scroll to bottom"
         className={cn(
-          "absolute bottom-4 left-1/2 z-10 h-8 w-8 -translate-x-1/2 rounded-full shadow-md transition-all",
+          "absolute left-1/2 z-20 h-8 w-8 -translate-x-1/2 rounded-full shadow-md transition-all",
+          showContinue ? "bottom-16" : "bottom-4",
           pinnedToBottom ? "pointer-events-none opacity-0" : "opacity-100"
         )}
       >

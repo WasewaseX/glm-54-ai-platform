@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Download, Info, Moon, PanelLeft, Sparkles, Sun } from "lucide-react";
+import { Download, Info, Moon, PanelLeft, Sparkles, Sun, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAppStore } from "@/lib/store";
+import { downloadExport } from "@/lib/api-client";
+import { GITHUB_REPO_URL } from "@/lib/constants";
 import { useTheme } from "next-themes";
 
 export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
@@ -28,6 +31,11 @@ export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
 
   const active = conversations.find((c) => c.id === activeId);
   const isDark = mounted && resolvedTheme !== "light";
+
+  const exportAs = (format: "md" | "json") => {
+    if (!active) return;
+    downloadExport(active.id, format).catch((err) => toast.error((err as Error).message));
+  };
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-3 backdrop-blur sm:px-4">
@@ -67,6 +75,17 @@ export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-0.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="hidden h-8 gap-1 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground sm:inline-flex"
+          onClick={() => window.open(GITHUB_REPO_URL, "_blank", "noopener,noreferrer")}
+          aria-label="Open source repository"
+        >
+          Source
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+
         {active && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -75,16 +94,8 @@ export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <a href={`/api/conversations/${active.id}/export?format=md`} download>
-                  Export as Markdown
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href={`/api/conversations/${active.id}/export?format=json`} download>
-                  Export as JSON
-                </a>
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportAs("md")}>Export as Markdown</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportAs("json")}>Export as JSON</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

@@ -3,18 +3,29 @@
 import * as React from "react";
 import {
   BrainCircuit,
+  Check,
+  ChevronDown,
   FileText,
   Globe,
   Image as ImageIcon,
-  Paperclip,
+  Plus,
   SendHorizontal,
   Square,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAppStore } from "@/lib/store";
 import { formatBytes } from "@/lib/api-client";
+import { AGENT_BY_ID } from "@/lib/agents";
 import { cn } from "@/lib/utils";
 
 const ACCEPT =
@@ -29,6 +40,11 @@ export function Composer() {
   const removePendingAttachment = useAppStore((s) => s.removePendingAttachment);
   const settings = useAppStore((s) => s.settings);
   const prompts = useAppStore((s) => s.prompts);
+  const activeAgentId = useAppStore((s) => s.activeAgentId);
+  const setActiveAgent = useAppStore((s) => s.setActiveAgent);
+  const composerDraft = useAppStore((s) => s.composerDraft);
+  const setComposerDraft = useAppStore((s) => s.setComposerDraft);
+  const serverInfo = useAppStore((s) => s.serverInfo);
 
   const [text, setText] = React.useState("");
   const [webSearch, setWebSearch] = React.useState(false);
@@ -37,6 +53,8 @@ export function Composer() {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const dragCounter = React.useRef(0);
+
+  const activeAgent = activeAgentId ? AGENT_BY_ID[activeAgentId] : null;
 
   // Initialize toggles from saved settings
   React.useEffect(() => {
@@ -56,6 +74,17 @@ export function Composer() {
     resize();
   }, [text, resize]);
 
+  // Consume drafts pushed by agent cards on the welcome screen
+  React.useEffect(() => {
+    if (!composerDraft) return;
+    setText(composerDraft);
+    setComposerDraft("");
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      resize();
+    });
+  }, [composerDraft, setComposerDraft, resize]);
+
   const submit = React.useCallback(() => {
     if (streaming) return;
     const value = text.trim();
@@ -64,11 +93,22 @@ export function Composer() {
     sendMessage(value, {
       webSearch,
       thinking,
-      systemPrompt: defaultPrompt?.content ?? null,
+      systemPrompt: activeAgent?.systemPrompt ?? defaultPrompt?.content ?? null,
     });
     setText("");
     requestAnimationFrame(resize);
-  }, [streaming, text, pendingAttachments.length, prompts, settings.defaultSystemPromptId, sendMessage, webSearch, thinking, resize]);
+  }, [
+    streaming,
+    text,
+    pendingAttachments.length,
+    prompts,
+    settings.defaultSystemPromptId,
+    activeAgent,
+    sendMessage,
+    webSearch,
+    thinking,
+    resize,
+  ]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && settings.sendOnEnter && !e.nativeEvent.isComposing) {
@@ -91,7 +131,7 @@ export function Composer() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="border-t border-border/60 bg-gradient-to-t from-background via-background to-background/80 px-3 pb-3 pt-3 sm:px-6">
+      <div className="bg-gradient-to-t from-background via-background to-background/80 px-3 pb-3 pt-2 sm:px-6">
         <div className="mx-auto max-w-3xl">
           {/* Attachment chips */}
           {pendingAttachments.length > 0 && (
@@ -136,14 +176,14 @@ export function Composer() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={onDrop}
             className={cn(
-              "glass relative rounded-2xl border shadow-lg transition-all duration-200",
+              "glass relative rounded-[26px] border shadow-lg transition-all duration-200",
               dragging
                 ? "border-primary/70 ring-2 ring-primary/40"
                 : "border-border/80 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/25"
             )}
           >
             {dragging && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-sm">
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[26px] bg-background/70 backdrop-blur-sm">
                 <p className="text-sm font-medium text-primary">Drop files to attach</p>
               </div>
             )}
@@ -154,9 +194,9 @@ export function Composer() {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={onKeyDown}
               rows={1}
-              placeholder="Message GLM 5.4 AI…  (Shift+Enter for newline)"
+              placeholder="Send a Message…"
               aria-label="Message input"
-              className="max-h-[220px] w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[0.9375rem] leading-relaxed outline-none placeholder:text-muted-foreground/70 scrollbar-thin"
+              className="max-h-[220px] w-full resize-none bg-transparent px-4 pb-1 pt-4 text-[0.9375rem] leading-relaxed outline-none placeholder:text-muted-foreground/70 scrollbar-thin"
             />
 
             {/* Toolbar */}
@@ -178,15 +218,27 @@ export function Composer() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                    className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
                     onClick={() => fileInputRef.current?.click()}
                     aria-label="Attach files"
                   >
-                    <Paperclip className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Attach documents or images</TooltipContent>
               </Tooltip>
+
+              {activeAgent && (
+                <button
+                  type="button"
+                  onClick={() => setActiveAgent(null)}
+                  className="inline-flex h-8 max-w-[170px] items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-2.5 text-xs font-medium text-primary transition hover:bg-primary/15"
+                  aria-label={`Active agent: ${activeAgent.name}. Click to deactivate.`}
+                >
+                  <span className="truncate">{activeAgent.name}</span>
+                  <X className="h-3 w-3 shrink-0 opacity-70" />
+                </button>
+              )}
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -194,7 +246,7 @@ export function Composer() {
                     variant={webSearch ? "secondary" : "ghost"}
                     size="sm"
                     className={cn(
-                      "h-8 gap-1.5 rounded-lg px-2.5 text-xs",
+                      "h-8 gap-1.5 rounded-full px-2.5 text-xs",
                       webSearch && "border border-primary/35 bg-primary/10 text-primary"
                     )}
                     onClick={() => setWebSearch((v) => !v)}
@@ -213,7 +265,7 @@ export function Composer() {
                     variant={thinking ? "secondary" : "ghost"}
                     size="sm"
                     className={cn(
-                      "h-8 gap-1.5 rounded-lg px-2.5 text-xs",
+                      "h-8 gap-1.5 rounded-full px-2.5 text-xs",
                       thinking && "border border-primary/35 bg-primary/10 text-primary"
                     )}
                     onClick={() => setThinking((v) => !v)}
@@ -226,14 +278,50 @@ export function Composer() {
                 <TooltipContent>Extended reasoning (slower, deeper)</TooltipContent>
               </Tooltip>
 
-              <div className="ml-auto flex items-center gap-2">
-                <span className="hidden text-[11px] text-muted-foreground sm:block">
-                  {text.length > 0 && `${text.length} chars`}
-                </span>
+              <div className="ml-auto flex items-center gap-1.5">
+                {/* Model selector — honest: single "Auto" mode + real served model */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                      aria-label="Select model"
+                    >
+                      GLM 5.4 · Auto
+                      <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-60">
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      Model
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem disabled className="text-xs">
+                      <Check className="h-3.5 w-3.5 text-primary" /> Auto — best available
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      {serverInfo?.servedChatModel ? (
+                        <>
+                          Actually serving:{" "}
+                          <span className="font-mono text-foreground/80">
+                            {serverInfo.servedChatModel}
+                          </span>
+                        </>
+                      ) : (
+                        "Served model is shown once the first response streams."
+                      )}
+                      <br />
+                      Vision engages automatically for image/PDF attachments; thinking mode adds a
+                      reasoning trace.
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {streaming ? (
                   <Button
                     size="icon"
-                    className="h-9 w-9 rounded-xl bg-destructive/90 text-white hover:bg-destructive"
+                    className="h-9 w-9 rounded-full bg-destructive/90 text-white hover:bg-destructive"
                     onClick={stopStreaming}
                     aria-label="Stop generating"
                   >
@@ -242,7 +330,7 @@ export function Composer() {
                 ) : (
                   <Button
                     size="icon"
-                    className="h-9 w-9 rounded-xl glow-primary transition-transform active:scale-95 disabled:opacity-40"
+                    className="h-9 w-9 rounded-full glow-primary transition-transform active:scale-95 disabled:opacity-40"
                     onClick={submit}
                     disabled={!text.trim() && pendingAttachments.length === 0}
                     aria-label="Send message"
@@ -255,7 +343,8 @@ export function Composer() {
           </div>
 
           <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-            GLM 5.4 AI can make mistakes — verify important information.
+            GLM 5.4 AI can make mistakes — verify important information. Conversations are saved
+            automatically.
           </p>
         </div>
       </div>

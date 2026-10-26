@@ -3,8 +3,10 @@
 import * as React from "react";
 import {
   Archive,
+  Cloud,
   Download,
   FileText,
+  House,
   Info,
   MoreHorizontal,
   Pencil,
@@ -13,9 +15,11 @@ import {
   Plus,
   Search,
   Settings,
-  Sparkles,
   Trash2,
+  PanelLeftClose,
+  Clock,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAppStore } from "@/lib/store";
+import { downloadExport } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/types";
 
@@ -78,8 +83,8 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
       className={cn(
         "group mx-1.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none transition-colors",
         active
-          ? "bg-primary/12 text-foreground ring-1 ring-primary/30"
-          : "text-foreground/80 hover:bg-accent hover:text-accent-foreground"
+          ? "bg-accent text-accent-foreground ring-1 ring-primary/25"
+          : "text-foreground/80 hover:bg-accent/70 hover:text-accent-foreground"
       )}
     >
       {conversation.pinned && <Pin className="h-3 w-3 shrink-0 text-primary/80" />}
@@ -125,7 +130,7 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`/api/conversations/${conversation.id}/export?format=md`, "_blank");
+              downloadExport(conversation.id, "md").catch((err) => toast.error((err as Error).message));
             }}
           >
             <Download className="h-3.5 w-3.5" /> Export Markdown
@@ -133,7 +138,7 @@ function ConversationRow({ conversation }: { conversation: ConversationSummary }
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`/api/conversations/${conversation.id}/export?format=json`, "_blank");
+              downloadExport(conversation.id, "json").catch((err) => toast.error((err as Error).message));
             }}
           >
             <Download className="h-3.5 w-3.5" /> Export JSON
@@ -168,36 +173,76 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const searchQuery = useAppStore((s) => s.searchQuery);
   const setSearchQuery = useAppStore((s) => s.setSearchQuery);
   const newConversation = useAppStore((s) => s.newConversation);
-  const activeId = useAppStore((s) => s.activeId);
+  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   const setActiveDialog = useAppStore((s) => s.setActiveDialog);
+  const setActiveAgent = useAppStore((s) => s.setActiveAgent);
+  const setComposerDraft = useAppStore((s) => s.setComposerDraft);
+  const activeAgentId = useAppStore((s) => s.activeAgentId);
 
   const pinned = conversations.filter((c) => c.pinned);
   const recent = conversations.filter((c) => !c.pinned);
 
+  const goHome = () => {
+    newConversation();
+    onNavigate?.();
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground">
-      {/* Brand */}
-      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <span className="text-sm font-semibold tracking-tight">GLM 5.4 AI</span>
-      </div>
-
-      {/* New chat */}
-      <div className="px-3 pt-2">
-        <Button
-          onClick={() => {
-            newConversation();
-            onNavigate?.();
-          }}
-          className="glow-primary h-9 w-full justify-start gap-2 rounded-xl text-sm"
-          aria-label="Start a new conversation"
+      {/* Brand row */}
+      <div className="flex items-center justify-between px-3 pb-2 pt-3.5">
+        <button
+          type="button"
+          onClick={goHome}
+          className="flex items-center gap-2 rounded-lg px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label="GLM 5.4 AI — go home"
         >
-          <Plus className="h-4 w-4" />
-          New chat
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground font-serif text-sm font-bold text-background">
+            Z
+          </span>
+          <span className="text-sm font-semibold tracking-tight">GLM 5.4 AI</span>
+        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Collapse sidebar"
+        >
+          <PanelLeftClose className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Primary nav */}
+      <nav className="px-2 pt-1" aria-label="Primary">
+        <button
+          type="button"
+          onClick={goHome}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-foreground/90 outline-none transition-colors hover:bg-accent/70 focus-visible:ring-2 focus-visible:ring-primary/50"
+        >
+          <House className="h-4 w-4" />
+          Home
+        </button>
+        <button
+          type="button"
+          onClick={() => toast.info("Scheduled tasks are on the roadmap — use cron-driven agents from the CLI for now.")}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground/70 outline-none transition-colors hover:bg-accent/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
+        >
+          <Clock className="h-4 w-4" />
+          Scheduled
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveDialog("documents");
+            onNavigate?.();
+          }}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground/70 outline-none transition-colors hover:bg-accent/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
+        >
+          <Cloud className="h-4 w-4" />
+          Cloud
+        </button>
+      </nav>
 
       {/* Search */}
       <div className="relative px-3 pb-1 pt-3">
@@ -211,9 +256,10 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         />
       </div>
 
-      {/* List */}
+      {/* Recents */}
       <ScrollArea className="min-h-0 flex-1 px-0 pb-2">
-        <div className="px-1 pt-2">
+        <div className="px-1 pt-1">
+          <p className="px-3 pb-1 pt-1.5 text-[11px] font-medium text-muted-foreground/80">Recents</p>
           {loading && conversations.length === 0 && (
             <div className="space-y-1.5 px-1.5">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -223,69 +269,91 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           )}
 
           {!loading && conversations.length === 0 && (
-            <p className="px-3 py-8 text-center text-xs text-muted-foreground">
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               {searchQuery ? "No conversations match your search." : "No conversations yet — start one!"}
             </p>
           )}
 
           {pinned.length > 0 && (
-            <>
-              <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Pinned
-              </p>
-              <div className="space-y-0.5">
-                {pinned.map((c) => (
-                  <ConversationRow key={c.id} conversation={c} />
-                ))}
-              </div>
-            </>
+            <div className="space-y-0.5">
+              {pinned.map((c) => (
+                <ConversationRow key={c.id} conversation={c} />
+              ))}
+            </div>
           )}
           {recent.length > 0 && (
-            <>
-              <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Recent
-              </p>
-              <div className="space-y-0.5">
-                {recent.map((c) => (
-                  <ConversationRow key={c.id} conversation={c} />
-                ))}
-              </div>
-            </>
+            <div className="space-y-0.5">
+              {recent.map((c) => (
+                <ConversationRow key={c.id} conversation={c} />
+              ))}
+            </div>
           )}
         </div>
       </ScrollArea>
 
+      {/* Agents promo card */}
+      <div className="mx-2.5 mb-2.5 rounded-xl border border-border/60 bg-card/70 p-3">
+        <p className="text-xs font-semibold">Meet Your AI Agents</p>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+          Specialist modes for code, writing, data, decks, and sites.
+        </p>
+        <div className="mt-2 flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 rounded-lg text-[11px]"
+            onClick={() => {
+              newConversation();
+              setActiveAgent(activeAgentId === "writing" ? null : "writing");
+              setComposerDraft("Chapter 1 of an original serialized webnovel — I'll ask you to continue after each part.");
+              onNavigate?.();
+            }}
+          >
+            Writer
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 rounded-lg text-[11px]"
+            onClick={() => {
+              setActiveDialog("about");
+              onNavigate?.();
+            }}
+          >
+            Agents info
+          </Button>
+        </div>
+      </div>
+
       {/* Footer — sticky at bottom of sidebar */}
-      <div className="mt-auto border-t border-sidebar-border/60 px-3 py-2.5">
-        <div className="flex items-center gap-1">
+      <div className="border-t border-sidebar-border/60 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/70 to-primary/40 text-[11px] font-semibold text-primary-foreground"
+          >
+            Z
+          </span>
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-xs font-medium">Anonymous session</p>
+            <p className="truncate text-[10px] text-muted-foreground">history synced locally</p>
+          </div>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-8 flex-1 justify-start gap-2 rounded-lg text-xs text-muted-foreground hover:text-foreground"
+            size="icon"
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
             onClick={() => {
               setActiveDialog("documents");
               onNavigate?.();
             }}
+            aria-label="Documents"
           >
             <FileText className="h-3.5 w-3.5" />
-            Documents
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 flex-1 justify-start gap-2 rounded-lg text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setActiveDialog("settings");
-              onNavigate?.();
-            }}
-          >
-            <Settings className="h-3.5 w-3.5" />
-            Settings
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
             onClick={() => {
               setActiveDialog("about");
               onNavigate?.();
@@ -293,6 +361,18 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             aria-label="About and verified capabilities"
           >
             <Info className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setActiveDialog("settings");
+              onNavigate?.();
+            }}
+            aria-label="Settings"
+          >
+            <Settings className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
