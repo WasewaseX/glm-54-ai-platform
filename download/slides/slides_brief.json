@@ -1,0 +1,75 @@
+{
+  "design": {
+    "title": "AI Platform: Q3 2023 Investor Update",
+    "style_name": "Midnight Violet — premium dark investor deck",
+    "palette": { "background": "#0B0F1E", "primary": "#EDEFF9", "accent": "#8B5CF6" },
+    "typography": { "heading": "Space Grotesk", "body": "Inter", "numeric": "JetBrains Mono" },
+    "reference": "Stripe Sessions / Linear launch decks: dark, restrained, data-forward"
+  },
+  "global_css_path": "/home/z/my-project/download/slides/global.css",
+  "slides_dir": "/home/z/my-project/download/slides",
+  "language": "en",
+  "speaker_notes": "full",
+  "slides": [
+    {
+      "title": "Title Slide",
+      "layout": "cover",
+      "output_path": "/home/z/my-project/download/slides/slide_01.html",
+      "task_brief": "COVER. Kicker: 'Q3 2023 INVESTOR UPDATE'. Main title: 'AI Platform' with tagline directly below: 'Accelerating AI adoption for enterprise customers'. Meta line: 'Date of presentation: Q3 2023' and 'Presenter: [Name], Chief Executive Officer'. Visual: a subtle radial violet glow and a thin accent rule; add four small metric chips previewing the deck: '$12.3M ARR', '342 customers', '145% NRR', '18 mo runway'. No photos. Speaker notes must include: welcome, focus on accelerating growth while maintaining strong unit economics, agenda (progress, strategy, risks, ask)."
+    },
+    {
+      "title": "Executive Summary",
+      "layout": "key message + bento stats",
+      "output_path": "/home/z/my-project/download/slides/slide_02.html",
+      "task_brief": "Headline: 'Strong Momentum Across Key Metrics'. Four large stat cards (2x2 bento): 1) Revenue — '$12.3M ARR' with badge '85% YoY growth'; 2) Customer Growth — '120 new enterprise customers' with badge '45% net retention'; 3) Product Expansion — '3 new AI modules launched' with badge '12 total modules'; 4) Market Position — '#2 in enterprise AI platforms' with badge '18% market share'. Bottom strip line: 'Accelerating AI adoption for enterprise customers.' Speaker notes must include: exceptional growth across all key metrics, revenue nearly doubled year-over-year, expanded enterprise footprint, product roadmap strengthening competitive position."
+    },
+    {
+      "title": "Financial Performance",
+      "layout": "stats + trajectory bars",
+      "output_path": "/home/z/my-project/download/slides/slide_03.html",
+      "task_brief": "Headline: 'Financial Highlights & Trajectory'. Left column stat tiles: 'Q3 2023 Revenue: $3.1M (up 22% QoQ)', 'ARR: $12.3M (85% YoY growth)', 'Gross Margin: 78% (stable)'. Right column: 'Cash Runway: 18 months at current burn rate' and milestone card 'Path to profitability by Q1 2025'. Include a simple CSS bar visual labeled 'Revenue trajectory' showing ascending bars for Q4'21, Q1'22, Q2'22, Q3'22, Q4'22, Q3'23 where only Q3'23 ($3.1M) is labeled with an exact value and earlier bars are unlabeled relative heights, annotated 'up 22% QoQ'. Speaker notes must include: quarterly performance accelerating, healthy gross margins while investing in growth, on track to reach profitability ahead of schedule."
+    },
+    {
+      "title": "Customer Metrics",
+      "layout": "split stats + meters",
+      "output_path": "/home/z/my-project/download/slides/slide_04.html",
+      "task_brief": "Headline: 'Expanding Enterprise Footprint'. Section 'Customer Base' with three stat tiles: 'Total customers: 342 (up 68% YoY)', 'Enterprise customers: 187 (up 92% YoY)', 'Average contract value: $65,000 (up 15% YoY)'. Section 'Retention': 'Net revenue retention: 145%' with meter at 145% scale-capped visually, 'Churn rate: 5.2% (down from 8.1% YoY)'. Section 'Expansion Revenue': meter '45% of total revenue'. Use meters with labels, not pie charts. Speaker notes must include: expanding enterprise base with strong retention and expansion, NRR 145% demonstrates increasing value customers derive as usage expands."
+    },
+    {
+      "title": "Product & Technology Milestones",
+      "layout": "bento grid",
+      "output_path": "/home/z/my-project/download/slides/slide_05.html",
+      "task_brief": "Headline: 'Product Expansion & Innovation'. Group 'New Modules Launched' as three cards: 'Advanced NLP Processing Engine', 'Multi-Model AI Orchestration', 'Real-time Analytics Dashboard'. Group 'Technology Updates' as three metric rows: 'Proprietary inference engine reducing compute costs by 30%', 'API latency improved by 40%', 'Security framework expanded to FedRAMP compliance'. Group 'Customer Impact': '94% customer satisfaction score', 'Average 4.7/5 on G2 rating'. Speaker notes must include: innovations directly impact value proposition, new modules address key customer needs, performance improvements enhance unit economics."
+    },
+    {
+      "title": "Market Opportunity",
+      "layout": "big stats + positioning",
+      "output_path": "/home/z/my-project/download/slides/slide_06.html",
+      "task_brief": "Headline: 'Capturing a Growing Market'. 'Total Addressable Market' section: two large stat cards 'Enterprise AI Platforms: $89B by 2026 (CAGR 32%)' and 'AI Professional Services: $45B by 2026 (CAGR 28%)'. 'Market Position' section: '#2 in enterprise AI platforms (18% market share)', 'Fastest growing in segment (45% YoY growth)'. 'Competitive Differentiation' bullets: 'Most comprehensive enterprise AI solution', 'Highest customer satisfaction in segment'. Speaker notes must include: market expanding rapidly, well-positioned as enterprises accelerate AI adoption, growth rate outpaces the market."
+    },
+    {
+      "title": "Go-To-Market Strategy",
+      "layout": "three-column funnel",
+      "output_path": "/home/z/my-project/download/slides/slide_07.html",
+      "task_brief": "Headline: 'Scaling Sales & Marketing Efficiency'. Three columns: 'Sales Expansion' — 'Enterprise sales team increased by 40%', 'New verticals: Healthcare, Financial Services', 'Average sales cycle reduced by 25%'. 'Marketing Impact' — 'Brand awareness up 60% (share of voice)', 'Marketing efficiency: $1.20 CAC/LTV ratio'. 'Channel Partnerships' — '15 new strategic partnerships', '30% of revenue through channels'. Include a slim CSS funnel of three stacked bars labeled Leads → Qualified → Customers (unlabeled widths narrowing). Speaker notes must include: expanded sales and marketing to capture new opportunities while improving efficiency, channel partnerships increasingly important to the growth engine."
+    },
+    {
+      "title": "Roadmap & Vision",
+      "layout": "phased roadmap columns",
+      "output_path": "/home/z/my-project/download/slides/slide_08.html",
+      "task_brief": "Headline: 'Accelerating Growth Through Innovation'. Three phase columns: 'Q4 2023 – Q1 2024' — 'Launch of industry-specific AI solutions', 'Expansion into European markets', 'Complete API platform overhaul'; 'Q2 – Q4 2024' — 'AI marketplace launch', 'Strategic acquisition target integration', 'International expansion (APAC)'; 'Long-term Vision' — 'Become the definitive enterprise AI platform', '$100M ARR by 2026'. Make the third column visually distinct (accent border, larger $100M ARR figure). Speaker notes must include: near-term execution and long-term vision, industry-specific solutions and global expansion while enhancing core platform, acquisition accelerates capabilities."
+    },
+    {
+      "title": "Risks & Mitigation",
+      "layout": "table",
+      "output_path": "/home/z/my-project/download/slides/slide_09.html",
+      "task_brief": "Headline: 'Proactive Risk Management'. Full-width 5-row table, columns: Risk / Impact / Mitigation Strategy. Rows verbatim: 'Market Competition | High | Differentiate through industry-specific solutions'; 'Talent Acquisition | Medium | Expanded university partnerships and competitive comp'; 'Regulatory Changes | Medium | Proactive compliance framework and dedicated legal team'; 'Economic Downturn | Low | Diversified customer base and flexible pricing models'; 'Technology Obsolescence | Medium | Continuous R&D investment and modular architecture'. Impact badges colored: High = red, Medium = amber (#F59E0B), Low = green. Speaker notes must include: key risks identified with comprehensive mitigations, proactive risk management positions the company to navigate challenges while maintaining growth trajectory."
+    },
+    {
+      "title": "Investment Ask & Next Steps",
+      "layout": "closing + use of funds",
+      "output_path": "/home/z/my-project/download/slides/slide_10.html",
+      "task_brief": "Headline: 'Securing Growth Capital'. Left: giant figure '$25M Series C'. 'Use of Funds' with four labeled CSS meter bars: 'Product development 40%', 'Sales & marketing expansion 35%', 'International expansion 15%', 'Talent acquisition 10%'. Right: 'Target Outcomes' checklist: 'Reach $25M ARR by end of 2024', 'Expand to 500+ enterprise customers', 'Achieve profitability by Q1 2025'. Closing quote bar at bottom: 'We invite you to join us in shaping the future of enterprise AI. Let's schedule a follow-up discussion to explore how this investment can create substantial returns together.' Speaker notes must include: seeking $25M to accelerate growth and solidify market leadership, investment expands product offerings and enters new markets, targeting 100% growth in ARR over the next 18 months."
+    }
+  ]
+}

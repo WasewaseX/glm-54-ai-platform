@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>09 · Risks &amp; Mitigation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .thead{font-family:var(--font-num);font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;color:var(--secondary);}
+  .risk-name{font-size:17px;font-weight:600;color:var(--primary);}
+  .mitig{font-size:var(--fs-body);color:var(--secondary);line-height:1.5;}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-num);font-size:var(--fs-small);font-weight:600;padding:5px 14px;border-radius:999px;white-space:nowrap;}
+  .pill .dot{width:7px;height:7px;border-radius:50%;}
+  .pill-high{background:rgba(248,113,113,.12);color:var(--danger);border:1px solid rgba(248,113,113,.35);}
+  .pill-high .dot{background:var(--danger);}
+  .pill-med{background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.35);}
+  .pill-med .dot{background:#F59E0B;}
+  .pill-low{background:var(--accent-2-soft);color:var(--accent-2);border:1px solid rgba(45,212,167,.35);}
+  .pill-low .dot{background:var(--accent-2);}
+  .trow{display:grid;grid-template-columns:300px 150px 1fr;align-items:center;column-gap:24px;}
+  .glow{position:absolute;border-radius:50%;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div data-decor class="glow" style="width:540px;height:540px;top:-260px;left:-180px;background:radial-gradient(circle, rgba(139,92,246,.12), transparent 65%);"></div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 64px 58px;">
+    <!-- Header -->
+    <header>
+      <div class="kicker">Risk Management</div>
+      <h1 style="font-family:var(--font-heading);font-size:var(--fs-h1);font-weight:700;letter-spacing:-0.015em;margin-top:12px;line-height:1.15;">Proactive Risk Management</h1>
+      <p style="font-size:var(--fs-body);color:var(--secondary);margin-top:10px;max-width:700px;">Every key risk on our register is paired with a concrete mitigation.</p>
+    </header>
+
+    <!-- Table -->
+    <div class="card flex-1 flex flex-col" style="margin-top:26px;min-height:0;overflow:hidden;">
+      <div class="trow" style="padding:16px 30px;border-bottom:1px solid var(--line);">
+        <span class="thead">Risk</span>
+        <span class="thead">Impact</span>
+        <span class="thead">Mitigation Strategy</span>
+      </div>
+
+      <div class="trow flex-1" style="padding:0 30px;border-bottom:1px solid var(--line);">
+        <div class="flex items-center gap-3">
+          <i class="material-icons" style="font-size:20px;color:var(--secondary);">leaderboard</i>
+          <span class="risk-name">Market Competition</span>
+        </div>
+        <div><span class="pill pill-high"><span class="dot"></span>High</span></div>
+        <p class="mitig">Differentiate through industry-specific solutions</p>
+      </div>
+
+      <div class="trow flex-1" style="padding:0 30px;border-bottom:1px solid var(--line);">
+        <div class="flex items-center gap-3">
+          <i class="material-icons" style="font-size:20px;color:var(--secondary);">groups</i>
+          <span class="risk-name">Talent Acquisition</span>
+        </div>
+        <div><span class="pill pill-med"><span class="dot"></span>Medium</span></div>
+        <p class="mitig">Expanded university partnerships and competitive comp</p>
+      </div>
+
+      <div class="trow flex-1" style="padding:0 30px;border-bottom:1px solid var(--line);">
+        <div class="flex items-center gap-3">
+          <i class="material-icons" style="font-size:20px;color:var(--secondary);">gavel</i>
+          <span class="risk-name">Regulatory Changes</span>
+        </div>
+        <div><span class="pill pill-med"><span class="dot"></span>Medium</span></div>
+        <p class="mitig">Proactive compliance framework and dedicated legal team</p>
+      </div>
+
+      <div class="trow flex-1" style="padding:0 30px;border-bottom:1px solid var(--line);">
+        <div class="flex items-center gap-3">
+          <i class="material-icons" style="font-size:20px;color:var(--secondary);">trending_down</i>
+          <span class="risk-name">Economic Downturn</span>
+        </div>
+        <div><span class="pill pill-low"><span class="dot"></span>Low</span></div>
+        <p class="mitig">Diversified customer base and flexible pricing models</p>
+      </div>
+
+      <div class="trow flex-1" style="padding:0 30px;">
+        <div class="flex items-center gap-3">
+          <i class="material-icons" style="font-size:20px;color:var(--secondary);">memory</i>
+          <span class="risk-name">Technology Obsolescence</span>
+        </div>
+        <div><span class="pill pill-med"><span class="dot"></span>Medium</span></div>
+        <p class="mitig">Continuous R&amp;D investment and modular architecture</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">We want to be transparent about risk. We have identified the key risks facing the business, and each one is paired with a comprehensive mitigation. Market competition is our highest-impact risk, and we meet it by differentiating through industry-specific solutions rather than competing on breadth alone. Talent acquisition, regulatory changes, and technology obsolescence are rated medium; we are addressing them with expanded university partnerships and competitive compensation, a proactive compliance framework backed by a dedicated legal team, and continuous R&amp;D investment on a modular architecture. Economic downturn is our lowest-impact risk, thanks to a diversified customer base and flexible pricing models. This proactive approach to risk management positions the company to navigate challenges while maintaining our growth trajectory — risk awareness is built into how we operate, not bolted on.</aside>
+</body>
+</html>

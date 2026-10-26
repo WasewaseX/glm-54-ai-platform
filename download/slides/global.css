@@ -1,0 +1,77 @@
+/* THE DARK GENOME / Investor deck — global.css (palette + typography tokens only) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Palette — Midnight Violet */
+  --bg: #0B0F1E;
+  --bg-soft: #111730;
+  --surface: #151C36;
+  --surface-2: #1B2342;
+  --primary: #EDEFF9;
+  --secondary: #A7B0CE;
+  --muted: #6B7699;
+  --accent: #8B5CF6;
+  --accent-soft: rgba(139, 92, 246, 0.16);
+  --accent-2: #2DD4A7;
+  --accent-2-soft: rgba(45, 212, 167, 0.14);
+  --danger: #F87171;
+  --line: rgba(167, 176, 206, 0.18);
+
+  /* Typography tokens (families + sizes only — compose per slide) */
+  --font-heading: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-num: 'JetBrains Mono', monospace;
+  --fs-display: 64px;
+  --fs-h1: 40px;
+  --fs-h2: 26px;
+  --fs-h3: 18px;
+  --fs-body: 15px;
+  --fs-small: 12.5px;
+  --fs-micro: 10.5px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { background: var(--bg); }
+
+.slide {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+  color: var(--primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+/* Surfaces */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.card-accent { border-left: 3px solid var(--accent); }
+
+/* Kicker label */
+.kicker {
+  font-family: var(--font-num);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Accent text + numeric styling */
+.accent { color: var(--accent); }
+.pos { color: var(--accent-2); }
+.neg { color: var(--danger); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* Simple horizontal meter bar (CSS only) */
+.meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+
+/* Divider */
+.rule { height: 1px; background: var(--line); }

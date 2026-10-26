@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>07 · Go-To-Market Strategy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .label{font-family:var(--font-num);font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;color:var(--secondary);}
+  .stage-name{font-size:var(--fs-small);font-weight:600;color:var(--primary);}
+  .bar{height:26px;border-radius:8px;background:linear-gradient(90deg, var(--accent) 0%, rgba(139,92,246,.5) 100%);}
+  .icon-chip{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex:none;}
+  .row-text{font-size:var(--fs-body);color:var(--secondary);line-height:1.55;}
+  .row-text .hl{font-family:var(--font-num);font-weight:700;font-size:1.22em;color:var(--primary);}
+  .row-text .up{font-family:var(--font-num);font-weight:700;font-size:1.22em;color:var(--accent-2);}
+  .glow{position:absolute;border-radius:50%;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div data-decor class="glow" style="width:540px;height:540px;top:-240px;left:-160px;background:radial-gradient(circle, rgba(139,92,246,.14), transparent 65%);"></div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 64px 58px;">
+    <!-- Header -->
+    <header>
+      <div class="kicker">Go-To-Market Strategy</div>
+      <h1 style="font-family:var(--font-heading);font-size:var(--fs-h1);font-weight:700;letter-spacing:-0.015em;margin-top:12px;line-height:1.15;">Scaling Sales &amp; Marketing Efficiency</h1>
+      <p style="font-size:var(--fs-body);color:var(--secondary);margin-top:10px;max-width:700px;">Investing ahead of growth — while every efficiency metric moves in the right direction.</p>
+    </header>
+
+    <!-- Body -->
+    <div class="flex-1 flex gap-7" style="margin-top:28px;min-height:0;">
+      <!-- Funnel rail -->
+      <aside class="card flex flex-col" style="width:238px;flex:none;padding:24px;">
+        <div class="label">Pipeline</div>
+        <div class="flex-1 flex flex-col justify-center" style="gap:10px;">
+          <div>
+            <div class="stage-name">Leads</div>
+            <div class="bar" style="width:100%;margin-top:6px;"></div>
+          </div>
+          <i class="material-icons" data-decor style="font-size:16px;color:var(--muted);align-self:center;">south</i>
+          <div>
+            <div class="stage-name">Qualified</div>
+            <div class="bar" style="width:58%;margin-top:6px;"></div>
+          </div>
+          <i class="material-icons" data-decor style="font-size:16px;color:var(--muted);align-self:center;">south</i>
+          <div>
+            <div class="stage-name">Customers</div>
+            <div class="bar" style="width:30%;margin-top:6px;"></div>
+          </div>
+        </div>
+        <div class="rule"></div>
+        <p style="font-size:var(--fs-small);color:var(--secondary);margin-top:12px;line-height:1.5;">Efficiency gains compound at every stage of the funnel.</p>
+      </aside>
+
+      <!-- Three columns -->
+      <div class="flex-1 grid grid-cols-3 gap-6" style="min-height:0;">
+        <!-- Sales Expansion -->
+        <section class="card flex flex-col" style="padding:24px;">
+          <div class="flex items-center gap-3">
+            <div class="icon-chip"><i class="material-icons" style="font-size:21px;color:var(--accent);">groups</i></div>
+            <h3 style="font-family:var(--font-heading);font-size:var(--fs-h3);font-weight:600;">Sales Expansion</h3>
+          </div>
+          <div class="rule" style="margin-top:18px;"></div>
+          <div class="flex-1 flex flex-col justify-evenly">
+            <p class="row-text">Enterprise sales team increased by <span class="up">40%</span></p>
+            <p class="row-text">New verticals: <span style="color:var(--primary);font-weight:600;">Healthcare, Financial Services</span></p>
+            <p class="row-text">Average sales cycle reduced by <span class="up">25%</span></p>
+          </div>
+        </section>
+
+        <!-- Marketing Impact -->
+        <section class="card flex flex-col" style="padding:24px;">
+          <div class="flex items-center gap-3">
+            <div class="icon-chip"><i class="material-icons" style="font-size:21px;color:var(--accent);">campaign</i></div>
+            <h3 style="font-family:var(--font-heading);font-size:var(--fs-h3);font-weight:600;">Marketing Impact</h3>
+          </div>
+          <div class="rule" style="margin-top:18px;"></div>
+          <div class="flex-1 flex flex-col justify-evenly">
+            <p class="row-text">Brand awareness up <span class="up">60%</span> (share of voice)</p>
+            <p class="row-text">Marketing efficiency: <span class="hl">$1.20</span> CAC/LTV ratio</p>
+          </div>
+        </section>
+
+        <!-- Channel Partnerships -->
+        <section class="card flex flex-col" style="padding:24px;">
+          <div class="flex items-center gap-3">
+            <div class="icon-chip"><i class="material-icons" style="font-size:21px;color:var(--accent);">handshake</i></div>
+            <h3 style="font-family:var(--font-heading);font-size:var(--fs-h3);font-weight:600;">Channel Partnerships</h3>
+          </div>
+          <div class="rule" style="margin-top:18px;"></div>
+          <div class="flex-1 flex flex-col justify-evenly">
+            <p class="row-text"><span class="hl">15</span> new strategic partnerships</p>
+            <p class="row-text"><span class="up">30%</span> of revenue through channels</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">We expanded sales and marketing aggressively this quarter to capture new opportunities — but importantly, we did it while improving efficiency, not at its expense. On the sales side, we grew the enterprise team by forty percent, entered two new verticals in Healthcare and Financial Services, and cut the average sales cycle by twenty-five percent, so more sellers are closing deals faster. On the marketing side, brand awareness is up sixty percent on share of voice, and marketing efficiency stands at a one-dollar-twenty CAC-to-LTV ratio, which validates that spend is disciplined. Channel partnerships are becoming an increasingly important part of our growth engine: fifteen new strategic partnerships signed this period, and channels now contribute thirty percent of revenue. The funnel you see on the left is healthy end to end — more leads, sharper qualification, and faster conversion into customers.</aside>
+</body>
+</html>

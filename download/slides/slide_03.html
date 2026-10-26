@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Financial Performance — Highlights &amp; Trajectory</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .ghost {
+    font-family: var(--font-heading); font-weight: 700; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1.5px rgba(139, 92, 246, 0.13);
+    letter-spacing: -0.04em;
+  }
+  .lbl { font-family: var(--font-num); font-size: var(--fs-micro); letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--secondary); }
+  .bar-early { width: 46px; border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(180deg, rgba(139,92,246,0.42), rgba(139,92,246,0.10)); }
+  .bar-last { width: 46px; border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(180deg, var(--accent), rgba(139,92,246,0.35));
+    box-shadow: 0 0 26px rgba(139,92,246,0.35); }
+  .pill-teal { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+    border-radius: 999px; border: 1px solid rgba(45,212,167,0.4); background: var(--accent-2-soft); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- decorative field -->
+  <div data-decor aria-hidden="true" style="position:absolute; width:680px; height:680px; top:-320px; left:-260px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 65%);"></div>
+  <div data-decor aria-hidden="true" style="position:absolute; width:560px; height:560px; bottom:-280px; right:-200px; border-radius:50%; background:radial-gradient(circle, rgba(45,212,167,0.08) 0%, transparent 65%);"></div>
+  <div data-decor aria-hidden="true" class="ghost" style="position:absolute; top:-30px; right:34px; font-size:220px;">02</div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 72px 50px; z-index:1;">
+
+    <!-- header -->
+    <div>
+      <div class="flex items-center" style="gap:12px;">
+        <span style="width:36px; height:2px; background:var(--accent);"></span>
+        <span class="kicker">Financial Performance</span>
+      </div>
+      <h1 style="margin-top:14px; font-family:var(--font-heading); font-size:var(--fs-h1); font-weight:700; line-height:1.1; letter-spacing:-0.02em; color:var(--primary);">Financial Highlights &amp; Trajectory</h1>
+    </div>
+
+    <div class="flex flex-1" style="gap:22px; margin-top:26px; min-height:0;">
+
+      <!-- left: stat tiles -->
+      <div class="flex flex-col" style="width:392px; flex:none; gap:16px;">
+        <div class="card card-accent" style="flex:1; padding:16px 22px; display:flex; flex-direction:column; justify-content:center;">
+          <div class="lbl">Q3 2023 Revenue</div>
+          <div style="margin-top:9px;"><span class="num" style="font-size:37px; font-weight:700; line-height:1; color:var(--primary);">$3.1M</span></div>
+          <div class="flex items-center" style="gap:6px; margin-top:9px;">
+            <i class="material-icons pos" style="font-size:16px;">trending_up</i>
+            <span class="num pos" style="font-size:13px; font-weight:600;">up 22% QoQ</span>
+          </div>
+          <div style="margin-top:6px; font-size:var(--fs-small); color:var(--secondary);">Quarterly performance accelerating</div>
+        </div>
+        <div class="card card-accent" style="flex:1; padding:16px 22px; display:flex; flex-direction:column; justify-content:center;">
+          <div class="lbl">ARR</div>
+          <div style="margin-top:9px;"><span class="num" style="font-size:37px; font-weight:700; line-height:1; color:var(--primary);">$12.3M</span></div>
+          <div class="flex items-center" style="gap:6px; margin-top:9px;">
+            <i class="material-icons pos" style="font-size:16px;">trending_up</i>
+            <span class="num pos" style="font-size:13px; font-weight:600;">85% YoY growth</span>
+          </div>
+          <div style="margin-top:6px; font-size:var(--fs-small); color:var(--secondary);">Revenue nearly doubled year-over-year</div>
+        </div>
+        <div class="card card-accent" style="flex:1; padding:16px 22px; display:flex; flex-direction:column; justify-content:center;">
+          <div class="lbl">Gross Margin</div>
+          <div style="margin-top:9px;"><span class="num" style="font-size:37px; font-weight:700; line-height:1; color:var(--primary);">78%</span></div>
+          <div class="flex items-center" style="gap:6px; margin-top:9px;">
+            <i class="material-icons" style="font-size:16px; color:var(--secondary);">trending_flat</i>
+            <span class="num" style="font-size:13px; font-weight:600; color:var(--secondary);">stable</span>
+          </div>
+          <div style="margin-top:6px; font-size:var(--fs-small); color:var(--secondary);">Healthy margins while investing in growth</div>
+        </div>
+      </div>
+
+      <!-- right: trajectory + runway / milestone -->
+      <div class="flex-1 flex flex-col" style="gap:16px; min-height:0;">
+
+        <div class="card" style="flex:1.55; padding:20px 24px 16px; display:flex; flex-direction:column; min-height:0;">
+          <div class="flex items-center justify-between">
+            <div style="font-family:var(--font-heading); font-size:var(--fs-h3); font-weight:600; color:var(--primary);">Revenue trajectory</div>
+            <div class="pill-teal">
+              <i class="material-icons" style="font-size:14px; color:var(--accent-2);">trending_up</i>
+              <span class="num" style="font-size:11.5px; font-weight:600; color:var(--primary); letter-spacing:0.04em;">up 22% QoQ</span>
+            </div>
+          </div>
+          <div class="flex items-end" style="flex:1; gap:12px; margin-top:16px; min-height:0;">
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%;"><div class="bar-early" style="height:34px;"></div></div>
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%;"><div class="bar-early" style="height:50px;"></div></div>
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%;"><div class="bar-early" style="height:68px;"></div></div>
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%;"><div class="bar-early" style="height:90px;"></div></div>
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%;"><div class="bar-early" style="height:114px;"></div></div>
+            <div class="flex flex-col items-center justify-end" style="flex:1; height:100%; gap:8px;">
+              <span class="num" style="font-size:15px; font-weight:700; color:var(--primary);">$3.1M</span>
+              <div class="bar-last" style="height:146px;"></div>
+            </div>
+          </div>
+          <div class="flex" style="gap:12px; margin-top:10px; padding-top:9px; border-top:1px solid var(--line);">
+            <div class="num" style="flex:1; text-align:center; font-size:11px; color:var(--secondary);">Q4'21</div>
+            <div class="num" style="flex:1; text-align:center; font-size:11px; color:var(--secondary);">Q1'22</div>
+            <div class="num" style="flex:1; text-align:center; font-size:11px; color:var(--secondary);">Q2'22</div>
+            <div class="num" style="flex:1; text-align:center; font-size:11px; color:var(--secondary);">Q3'22</div>
+            <div class="num" style="flex:1; text-align:center; font-size:11px; color:var(--secondary);">Q4'22</div>
+            <div class="num" style="flex:1; text-align:center; font-size:11px; font-weight:600; color:var(--primary);">Q3'23</div>
+          </div>
+        </div>
+
+        <div class="flex" style="flex:1; gap:16px; min-height:0;">
+          <div class="card" style="flex:1; padding:18px 24px; display:flex; flex-direction:column; justify-content:center;">
+            <div class="flex items-center" style="gap:10px;">
+              <i class="material-icons" style="font-size:20px; color:var(--accent);">savings</i>
+              <span class="lbl">Cash Runway</span>
+            </div>
+            <div style="margin-top:11px;">
+              <span class="num" style="font-size:34px; font-weight:700; line-height:1; color:var(--primary);">18</span>
+              <span style="font-family:var(--font-heading); font-size:19px; font-weight:600; color:var(--primary);"> months</span>
+            </div>
+            <div style="margin-top:6px; font-size:var(--fs-small); color:var(--secondary);">at current burn rate</div>
+          </div>
+          <div style="flex:1.15; padding:18px 24px; border-radius:14px; border:1px solid rgba(139,92,246,0.45); background:linear-gradient(135deg, rgba(139,92,246,0.16), var(--surface) 70%); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:center;">
+            <div data-decor aria-hidden="true" style="position:absolute; width:220px; height:220px; top:-110px; right:-70px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.30) 0%, transparent 70%);"></div>
+            <div class="flex items-center" style="gap:10px;">
+              <i class="material-icons" style="font-size:20px; color:var(--accent);">flag</i>
+              <span class="kicker">Milestone</span>
+            </div>
+            <div style="margin-top:11px; font-family:var(--font-heading); font-size:18px; font-weight:600; line-height:1.35; color:var(--primary);">Path to profitability by <span class="num accent">Q1 2025</span></div>
+            <div class="flex items-center" style="gap:6px; margin-top:7px;">
+              <i class="material-icons pos" style="font-size:15px;">check_circle</i>
+              <span class="pos" style="font-size:var(--fs-small); font-weight:500;">On track — ahead of schedule</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">Now the financial detail behind those headlines. Quarterly performance is accelerating: Q3 revenue was three point one million dollars, up twenty-two percent quarter-over-quarter — and as the trajectory chart shows, every quarter in the last two years has built on the last. ARR now stands at twelve point three million, up eighty-five percent year-over-year. Two things matter about the quality of this growth. First, gross margin is seventy-eight percent and stable — we are delivering healthy gross margins while still investing aggressively in sales and R&amp;D, so growth is not being bought with unprofitable revenue. Second, discipline on burn: we have eighteen months of runway at the current burn rate, and the milestone card on the right is the one I would highlight — we are on track to reach profitability by Q1 2025, and on the current trajectory, ahead of schedule.</aside>
+</body>
+</html>

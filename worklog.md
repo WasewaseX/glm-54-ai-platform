@@ -248,3 +248,150 @@ Work Log:
 
 Stage Summary:
 - Token no longer present in any local or remote git history reachable from branch heads; backup workflow remains token-safe (one-shot push URLs, token only in gitignored .env).
+
+---
+Task ID: 16-b
+Agent: novel-writer B (ch 9-16)
+Task: Write Act II chapters 9-16 of THE DARK GENOME
+
+Work Log:
+- Read worklog.md, novel/bible.md, novel/outline.md; manuscript/ had no ch08.md at writing time (concurrent agent), so Act II was written from the outline + continuity table.
+- Wrote 8 chapters as ch09.md-ch16.md in the exact file format (H2 title line, blank-line-separated prose, `* * *` scene breaks, no other markdown, no lists/bold in prose).
+- Enforced continuity: Soren Ninth Essence w/ sealed Predator Codex at ch9 open -> Eighth Essence + smoke-sight after ch13's First Essence burn; Ilse maimed left hand (bandage ch9, walnut-and-brass hand ch10+); Dax Merrow fellow recruit, unsanctioned brewing + Court-perfume buyer; Maerwen's seven-lobed sprig-in-ring mark threaded ch9 (corridor seal) -> ch12 (script colophon) -> ch16 (folios); Fade takes mother's FACE in ch11 (watch kept), memory of the sea sold to Marrow in ch13; Amalgam Heresy fusion-carcasses + Tomas Vann's counting voice in ch10; Ashlane mercy-kill + seven-name list in ch14; Grand Canopy masque, stolen genome-ledger, Wren's exact hook line in ch15; Circle confrontation, Seeds reveal (two readings), re-seal order + institution break in ch16.
+- Self-checks run over all 8 files: word counts (bodies 1,423-1,586; totals <=1,700), title format, scene-break syntax, hook endings, banned/ borrowed-terminology scan (beyonder/nightmare/sleeper/sequence/potion/etc.) -> CLEAN; fixed organ-count slip (one organ at Ninth) and two ordinary-English flag words during review.
+
+Stage Summary:
+- Ch9 Apothecary Blackwing (1,443 words): Concord deeps, Circle hierarchy, genome-craft school, failed-student wards; hook: sealed corridor bearing Maerwen's botanical seal.
+- Ch10 The Ledger of Flesh (1,594 words): Mycelium Fields field catalogue, fresh-spliced fusion-carcasses; hook: the five still alive count in dead Tomas Vann's voice.
+- Ch11 Dax's Bargain (1,429 words): Soren covers Dax's unsanctioned brews; the Fade takes his mother's face, keeps the stopped watch; hook: buyer pays in Court perfume (Moltwater).
+- Ch12 The Botanist's Letter (1,494 words): Archivist Hollis deciphers the seer's wallpaper as a 40-year-old Concord production script for the Sporefall; hook: colophon glyph is Maerwen's mark.
+- Ch13 Whispers in the Slate Market (1,487 words): Marrow trades First Essence for the memory of the sea; Eighth Essence, smoke-sight; hook: ledger shows Primate Crane buying Moltwater monthly for a year.
+- Ch14 The Chirurgeon of Ashlane (1,502 words): rogue graft clinic, mercy-killed fused child Tansy, Chirurgeon captured, paid by the Court to "practice"; hook: seven-name list, seventh is Soren Vale, in fresh ink.
+- Ch15 Court of Lanterns (1,490 words): masque infiltration, genome-ledger stolen, Lady Wren unmasks him privately and offers apprenticeship; hook: "Your mother is not dead, little seed. She is inventory."
+- Ch16 The Mother Hypothesis (1,546 words): Circle confronted, corridor opened by the seal's answer to Soren, seven designed gravid lineages + two readings revealed; hook: Council re-seals the corridor; Soren stops trusting anyone who counts him as an asset (Eighth Essence; Court and Concord both want the Seventh).
+
+---
+Task ID: 16-a
+Agent: novel-writer A (ch 1-8)
+Task: Write Act I chapters 1-8 of THE DARK GENOME
+
+Work Log:
+- Read worklog.md, novel/bible.md (setting, Lacuna/gravid power system, essence tiers, Codices, the Fade, bestiary, style guide) and novel/outline.md (Act I synopses). Read pre-existing manuscript/ch17.md (style sample from an earlier agent) and matched its voice/format.
+- Wrote /home/z/my-project/novel/manuscript/ch01.md through ch08.md, one file per chapter, exact outline titles, format: `## Chapter N — Title` line, prose paragraphs on blank lines, `* * *` scene breaks only, no other markdown.
+- Locked POV third-person limited past tense on Soren Vale throughout; dialogue-forward; horror via specificity (counts, smells, sounds arriving late); every chapter ends on its outline hook.
+- Continuity enforced per table: ch1 mortal mortuary night shift, blooming light-drinking organ, stopped watch ticks once, hook = eye opens; ch2 dream-hunt graft, wakes changed but un-ranked, hush-hound in locked room; ch3 first Fold-walk to Hollow Grennel Street, kills hush-hound with spade, eats spilled shadow → Tenth Essence, hook = applause from balcony of galls; ch4 Ilse Vann recruitment vs vivisection, gravid/Lacuna/tiers/Concord explained in dialogue, missing-persons wall reveals Maerwen Vale; ch5 House Blackwing brew under Apothecary Ondrey, provisional Predator Codex choice, growth fever, kill-sense Organ, hook = Fade takes the kindest memory first; ch6 curfew tide breach field harvest, Dax Merrow saves Soren and bills him, perfumed calling card hook = "For the Seventh"; ch7 mortuary's impossible sixth floor Fold, garden of teeth, seer's wallpaper message "THE SPOREFALL WAS PLANTED. ASK THE CONCORD WHO SOWED.", hook = lagging reflection; ch8 Court raid on the Salt Row undercroft safehouse, Lady Wren's thralls, Ilse loses left hand to lantern-wire, Soren blooms to Ninth Essence mid-fight with Codex sealing, kills thrall-master via kill-sense + mortician's table-lift pawl, act break = Concord owes answers / he owes the Court a visit.
+- Originality scrub: only bible.md coinages used (Lacuna, gravid, essence tiers, Tinctures, Codex/Codices incl. Predator/Chirurgeon/Botanist/Symbiont, the Fade, the Hollow, the Court of Lanterns, the Veridian Concord, House Blackwing, tallyman, Folds, hush-hounds, lantern-mites, gallows-walker, gene-script, Sporefall, Amalgam splice). Grep-swept ch01-ch08 for borrowed genre terminology — zero hits; even generic near-collisions (e.g. "sleeper") rewritten. Em dashes limited to title lines only; no bold/lists in prose; no real-world brands or modern slang.
+- Self-check per file: word counts via wc -w (all within 1,400-1,700), title lines exact, scene-break lines validated, hook last-lines verified programmatically. Left concurrent agent's ch09.md untouched.
+
+Stage Summary:
+- ch01 The Body in the Fog — 1,547 words (hook: the organ opens an eye)
+- ch02 Lacuna — 1,551 words (hook: hush-hound inside the locked room)
+- ch03 Greyharbor Below — 1,520 words (hook: tall thing applauding from a balcony of galls)
+- ch04 The Tallyman — 1,542 words (hook: Maerwen Vale's face on the wall of the missing)
+- ch05 Tincture of the Novice — 1,556 words (hook: the Fade takes the kindest memory first)
+- ch06 Curfew Hunters — 1,602 words (hook: calling card addressed "For the Seventh")
+- ch07 The Missing Sixth Floor — 1,541 words (hook: his reflection stays behind one heartbeat too long)
+- ch08 First Essence Burned — 1,599 words (hook/act break: the Concord owes him answers; he owes the Court a visit)
+- Act I (ch 1-8) complete: 12,458 words, all hooks, continuity and format checks green.
+---
+Task ID: 16-f
+Agent: ppt-renderer B (slides 6-10)
+Task: Render investor deck slides 6-10 HTML
+
+Work Log:
+- Read slides_brief.json and global.css; confirmed Midnight Violet palette tokens and typography variables
+- Rendered slide_06.html (Market Opportunity): asymmetric split — two large TAM stat cards ($89B / $45B with CAGR badges, combined $134B line) left, Market Position panel (#2 rank, 18% share meter, 45% YoY badge) + Competitive Differentiation card right
+- Rendered slide_07.html (GTM Strategy): slim 3-stage CSS funnel rail (Leads → Qualified → Customers, unlabeled narrowing bars) + three icon-led columns (Sales Expansion / Marketing Impact / Channel Partnerships) with verbatim stat rows
+- Rendered slide_08.html (Roadmap & Vision): three phase columns with ghost numerals; third column visually distinct via accent border, violet glow, and larger $100M ARR figure
+- Rendered slide_09.html (Risks & Mitigation): full-width 5-row table (Risk / Impact / Mitigation) with color-coded impact pills — High red (#F87171), Medium amber (#F59E0B), Low green (#2DD4A7)
+- Rendered slide_10.html (Investment Ask): giant $25M Series C figure, four labeled use-of-funds meter bars (40/35/15/10), Target Outcomes checklist card, and verbatim closing quote bar
+- Embedded full ~80–150 word English speaker notes as hidden <aside data-notes> in every slide; validated DOCTYPE/closing tags, relative global.css links, Tailwind CDN, and Material Icons in all five files
+
+Stage Summary:
+- slide_06: big-stat TAM cards + market-position panel, all stats verbatim with 18% share meter
+- slide_07: funnel-rail + three-column GTM layout with highlighted efficiency metrics
+- slide_08: phased roadmap columns with accent-glow vision column and $100M ARR hero figure
+- slide_09: clean 5-row risk table with red/amber/green impact badges
+- slide_10: closing ask slide with $25M hero, use-of-funds meters, outcomes checklist, and quote bar
+---
+Task ID: 16-e
+Agent: ppt-renderer A (slides 1-5)
+Task: Render investor deck slides 1-5 HTML
+
+Work Log:
+- Read slides_brief.json and global.css; locked to Midnight Violet palette (#0B0F1E / #EDEFF9 / #8B5CF6 + accent-2/danger/line tokens) and Space Grotesk / Inter / JetBrains Mono typography tokens
+- Rendered slide_01.html (cover): kicker, display-grade "AI Platform" title with accent rule, tagline, four metric chips ($12.3M ARR / 342 customers / 145% NRR / 18 mo runway), 01-04 agenda strip, date + presenter meta, radial violet glow and ghost "Q3" decor (data-decor)
+- Rendered slide_02.html (executive summary): left key-message rail + 2x2 bento stat cards with mono hero numbers, badges and grounded microcopy; full-width bottom strip "Accelerating AI adoption for enterprise customers."
+- Rendered slide_03.html (financial performance): three card-accent stat tiles ($3.1M / $12.3M ARR / 78% margin), CSS ascending revenue-trajectory bars Q4'21-Q3'23 with only Q3'23 labeled $3.1M and "up 22% QoQ" chip, Cash Runway card and Q1 2025 profitability milestone card
+- Rendered slide_04.html (customer metrics): Customer Base tile row (342 / 187 / $65,000 with YoY deltas), Retention card with scale-capped 145% NRR meter (0-150% scale, 100% cap tick), churn 5.2% vs 8.1% compare bars, Expansion Revenue meter at 45%
+- Rendered slide_05.html (product & technology): three New Modules cards, Technology Updates metric rows (30% compute, 40% latency, FedRAMP), Customer Impact stats (94% CSAT, 4.7/5 G2 with star row)
+- Embedded full ~130-word English speaker notes per slide as final hidden <aside data-notes>; used relative global.css link, Tailwind CDN, Material Icons, JetBrains Mono for all numerals; no images, no timelines/SVG flowcharts, no headers/footers
+
+Stage Summary:
+- Slide 1: dark cover hero with glow, metric preview chips and numbered agenda strip.
+- Slide 2: key-message rail beside a 2x2 bento of headline metrics with badge pills.
+- Slide 3: financial tiles + ascending CSS trajectory bars + runway/profitability cards.
+- Slide 4: customer-base tiles with scale-capped NRR meter, churn comparison and expansion meter.
+- Slide 5: product bento of three module cards, tech-update rows and customer-impact stats.
+
+---
+Task ID: 16-c
+Agent: novel-writer C (ch 17-23)
+Task: Write Act III (first half) chapters 17-23 of THE DARK GENOME
+
+Work Log:
+- Read worklog.md, novel/bible.md, novel/outline.md; manuscript/ had no ch16 yet (concurrent agent), so proceeded from outline synopses + continuity table (Soren Eighth Essence / Predator Codex; Ilse maimed; Dax's hidden Court debts; Crane Purist; Wren knows "the Seventh Seed"; Maerwen's face and the sea already lost to the Fade).
+- Wrote ch17-23 to /home/z/my-project/novel/manuscript/ch17.md..ch23.md in the exact format (title line, prose, `* * *` breaks), third-person limited past tense locked to Soren, dialogue-forward, 1,400-1,700 words each, each ending on its outline hook.
+- Continuity enforced across chapters: tier ladder Eighth -> Seventh Essence (crane-line harvest fever, ch18) with new Organ the Fold-step; Lacuna matures ch21 (opens Folds barehanded, explicitly no tier change); Fade tithe takes Maerwen's voice during the Seventh fever (ch18) which the canopy then uses (hook); glimpse-fare is his childhood street's name (ch21); Dax's year of perfume debts -> sally-gate betrayal -> burns the Court's boarding-line, dies, leaves Dax's mother's wedding ring + PAID IN FULL page (ch19); Rootgate named via the stolen Court ledger ("keel-anchor. Do not wake the keeper.") foreshadowing the ch24 leviathan; Wren's garden math (starving Hollow, Sporefall as lifeboat, seed-stock/potted-city plan, unnamed negotiating Primate, held-not-spent Maerwen); Warden parley in a Fold-dream (succession offer, wears Maerwen's face from eaten memories, restores his sold sea as proof, receipt = Sporefall night from the other side); ch23 war-council under armed truce (Serle's militia), burn-the-Rootgate plan, Soren elected point (only a Seed can walk the deep root-roads), Ilse takes rearguard, Crane's tearful blessing + sealed perfume-scented letter to the Court observed within Soren's limited POV.
+- Self-checks: wc -w (all 7 in range), exact chapter titles from outline, hook verification via tail, markdown scan (no lists/bold/extra headers; only allowed `* * *` breaks), fixed timeline slips (calling-card and ledger references re-anchored to the autumn), replaced one anachronism ("half-second" -> "half a heartbeat"), terminology screen for borrowed names/terms (Shadow Slave, LotM, etc.) returned only benign common words; all invented terms restricted to bible.md lexicon (Lacuna, gravid, Folds, gene-scripts, Tinctures, Codices, the Fade, the Hollow, tallymen, Court of Lanterns, Veridian Concord, Slate Market, the Warden, the Seeds, Rootgate, Sporefall) plus minor original set dressing (districts Ropewalk/Ashlane, Preceptor Roswald Vane, Captain Serle).
+- Appended this entry to worklog.md without overwriting (worklog had grown concurrently with other agents' entries).
+
+Stage Summary:
+- Ch17 "Schism" — 1,651 words: Purist-Amalgamist split opens in House Blackwing, wards burn, Soren refuses both banners and keeps Ilse and Dax; hook: Ropewalk district vanishes overnight.
+- Ch18 "The Hungry Canopy" — 1,608 words: armed truce with militia, harvest-cells run like triage, Seventh Essence + Fold-step; hook: the canopy whispers his name in his mother's (just-taken) voice.
+- Ch19 "Siege of Blackwing" — 1,545 words: Court assault; Dax opens the sally-gate under debt-coercion, burns the boarding-line, dies redeemed, leaves the wedding ring; hook: the Court was buying time for the Rootgate.
+- Ch20 "Lady Wren's Garden" — 1,427 words: the Hollow is starving, Sporefall was its lifeboat, the potted-city plan; hook: a Concord Primate negotiates "controlled ascension," name withheld.
+- Ch21 "The Seventh Seed Blooms" — 1,480 words: Soren opens Folds without a door, glimpses the Warden's horizon of singing eaten faces; hook: mid-song it stops and every face turns.
+- Ch22 "The Warden's Voice" — 1,540 words: Fold-dream parley, succession offered, the Warden wears Maerwen's eaten face and returns his sold sea; hook: it shows the Sporefall from the other side.
+- Ch23 "Gathering of Codices" — 1,495 words: truce war-council elects Soren point to burn the Rootgate, Ilse takes rearguard, Crane blesses with tears; hook: Crane seals a perfumed letter for the Court.
+
+---
+Task ID: 16-d
+Agent: novel-writer D (ch 24-30 + epilogue)
+Task: Write Act III (second half) + epilogue of THE DARK GENOME
+
+Work Log:
+- Read worklog.md, novel/bible.md, novel/outline.md; ch23.md did not exist at task start (concurrent agent), so proceeded from outline + bible; later cross-checked ch22/ch23 for continuity and reconciled the sea-memory beat (ch22 dream "sip" vs ch28 true return) with a bridging paragraph.
+- Wrote 8 files in novel/manuscript/: ch24.md-ch30.md + epilogue.md, exact title lines from outline, `* * *` scene breaks, no other markdown, hooks placed as final lines per outline.
+- Continuity enforced: Soren Seventh Essence (Predator, doorless Folds) through ch25, Sixth Essence + new organ (the True Tally) in ch26; Ilse dies at the Choir's Crossing in ch24 with her brass counter passing to Soren already self-ticking; Dax's ring ("for my boy") + counter anchor him against near-Fade; Crane's betrayal, managed-ascension terms, herald naming the Seventh Seed; Warden succession, Maerwen's sealed final memory (giving-script, symbiosis), refusal of throne, first New Codex tincture, dockline holds, Wren's exile, Concord veto, mother's face + watch ticking in ch29, six-of-seven ledger, fog lifts ch30, overseas seed-signal → House Ondrey of Vesperquay epilogue with Maerwen's seven-lobed glyph case.
+- Self-checks passed: wc -w all in spec (ch24-30 within 1,400-1,700; epilogue 700-900); title lines verified; final lines = outline hooks; scene breaks exact; zero markdown artifacts/lists/bold in prose; grep sweep for borrowed terminology (Shadow Slave / LotM terms, modern slang) clean (2 simile uses of generic "sleeper" rephrased anyway); em dashes kept to 1-2 per chapter.
+- Minor consistency passes: invented only in-bible-compatible terms (saltfire, count-irons, bloom-glass, giving-script, True Tally, mooring-spires, the Choir's Crossing, molted knights, hymn-chalk); counts tracked in-text (41 -> 38 expedition; 211+1 dockside lamps; six of seven Seeds).
+
+Stage Summary:
+- Ch24 "The Rootgate March" — 1,628 words: descent, gallows-walkers, glasswings, Ilse's rearguard death at the Choir's Crossing, her ticking counter; hook: the Rootgate is not a gate, it is a nest.
+- Ch25 "Betrayal at the Gate" — 1,475 words: tide arrives with Concord banners, Crane's managed-feeding confession, herald names the Seventh Seed, both sides turn, Wren's "Run"; hook: Soren Folds out of the battle alone toward the nest.
+- Ch26 "Court of One" — 1,465 words: root-road pursuit, Predator genome to its end, Sixth Essence + the True Tally, anchors hold, herald killed, anchor-line shattered; hook: the Warden opens the nest gently.
+- Ch27 "The Warden's Succession" — 1,437 words: core of faces, throne refused, Maerwen's sealed final memory (Seeds meant to re-seed the Hollow, symbiosis; Court fed it, Concord locked it, both starved it); hook: the Warden asks — "Teach me to ask."
+- Ch28 "Greyharbor Rises" — 1,512 words: dockline holds as canopy stills, throne refused, first New Codex tincture brewed on the Warden's own bench, hunger turns inward, expansion dies; hook: the sea, the one he sold, comes home.
+- Ch29 "The New Codex" — 1,462 words: Crane arrested by his own Circle, Wren's exile-above farewell, Concord reformed under Soren's veto, Fade partially reverses, mother's face returns and the watch ticks; hook: of the seven Seeds, six are accounted for.
+- Ch30 "First Light in Greyharbor" — 1,420 words: fog lifts, sun over the city, mortuary denouement, Ilse's counter on the sill, watch ticking, Marrow's caramels; hook: Concord letter from House Ondrey of Vesperquay — a seed-signal answered there too.
+- Epilogue "The Overseas Letter" — 852 words: Mirren Ondrey's bloom-glass sings after forty dark years, the sealed case marked with Maerwen's seven-lobed glyph opens to a living lattice and her letter ("Plant me gently."); Book Two hook, wonder not violence.
+
+---
+Task ID: 16
+Agent: Z.ai Code (main)
+Task: Deliver investor-update .pptx deck + 109-page original webnovel PDF + verify multi-turn conversation flow
+
+Work Log:
+- Investor deck: committed download/slides/{global.css,slides_brief.json} (Midnight Violet palette #0B0F1E/#EDEFF9/#8B5CF6; Space Grotesk/Inter/JetBrains Mono; user's 10-slide outline content rendered verbatim incl. full speaker notes) and fanned out 2 ppt-expert agents (slides 1-5, 6-10); exported via skills/pptx/batch_html2pptx.js (correct path; first attempt failed on wrong skills/ppt path) -> download/investor-update-deck.pptx (5.5 MB, 10 slides, only non-fatal off-canvas glow BOUNDS warnings).
+- Novel: wrote original story bible + 30-chapter outline (novel/bible.md, novel/outline.md) — "THE DARK GENOME, Book One: Greyharbor Bloom": original progression-fantasy/biopunk world (Lacuna organ, essence tiers 10->1, Tinctures, Codices, the Fade, the Hollow, Court of Lanterns, Veridian Concord); strictly NO borrowed characters/systems/text from Shadow Slave or Lord of the Mysteries.
+- Fanned out 4 parallel writer agents (16-a ch1-8, 16-b ch9-16, 16-c ch17-23, 16-d ch24-30+epilogue) with continuity tables; 31 manuscript files, 46,440 words, all chapters 1,400-1,700 words, hooks + continuity verified by each agent.
+- PDF: cover via cover.md Template 03 (cascade palette dark ink #0c0c0b + gold #dfc16a; fixed two cover_validate gaps by shortening vline and moving content to left:101px) rendered with html2poster.js; body via ReportLab build_body.py (TocDocTemplate + multiBuild, clickable TOC bookmarks, Liberation Serif 11.5/19.2 justified, CondPageBreak chapter openers, scene-break styling); TableOfContents import fixed to reportlab.platypus.tableofcontents; merged cover+body with pypdf (cover scaled to exact A4 after pdf_qa flagged 96dpi mismatch) -> download/the-dark-genome.pdf, 109 pages, 415 KB.
+- Preflight: code.sanitize, font.check (0 issues), toc_validate check-pdf (0 errors), pages.clean (no blanks), pdf_qa.py PASS (12 checks).
+- Deliverable access: copied both files to public/deliverables/ and added a Deliverables download section to the welcome screen (welcome.tsx, BookOpen/Presentation/Download icons, responsive 1->2 col grid); both URLs serve 200 with correct MIME types.
+- E2E (agent-browser): welcome renders desktop+390px with both download links; multi-turn golden path re-proven live — new conversation -> "remember VELVET-LANTERN" -> stored -> second message -> assistant replies "VELVET-LANTERN" (auto-titled conversation, reload auto-restores it, mobile conversation view + sticky footer verified); 0 console errors, 0 page errors. The "cant make a new conversation" screenshot was the z.ai web UI; this platform's conversation creation + multi-turn persistence works.
+- lint clean.
+
+Stage Summary:
+- Two real artifacts delivered and downloadable in-app: /deliverables/investor-update-deck.pptx (10-slide investor deck with speaker notes) and /deliverables/the-dark-genome.pdf (109-page original novel, clickable TOC, QA PASS).
+- Honest note: "100M/200M output token capacity" was never promised by this platform — served model is glm-4-plus with standard context; large-document handling is via RAG/chunking (verified). Originality guardrail respected: the novel is genre-inspired but 100% original.

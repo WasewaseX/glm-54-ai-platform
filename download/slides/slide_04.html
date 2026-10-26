@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customer Metrics — Expanding Enterprise Footprint</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .ghost {
+    font-family: var(--font-heading); font-weight: 700; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1.5px rgba(139, 92, 246, 0.13);
+    letter-spacing: -0.04em;
+  }
+  .lbl { font-family: var(--font-num); font-size: var(--fs-micro); letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--secondary); }
+  .sec { display: flex; align-items: center; gap: 12px; }
+  .sec .sq { width: 8px; height: 8px; background: var(--accent); border-radius: 2px; flex: none; }
+  .sec .t { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--primary); font-weight: 600; }
+  .icon-box { width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--accent-soft);
+    border: 1px solid rgba(139,92,246,0.3); display: flex; align-items: center; justify-content: center; }
+  .pill-teal { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px;
+    border-radius: 999px; border: 1px solid rgba(45,212,167,0.4); background: var(--accent-2-soft); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- decorative field -->
+  <div data-decor aria-hidden="true" style="position:absolute; width:760px; height:760px; top:-380px; right:-260px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.16) 0%, transparent 65%);"></div>
+  <div data-decor aria-hidden="true" class="ghost" style="position:absolute; top:-30px; right:34px; font-size:220px;">03</div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 72px 50px; z-index:1;">
+
+    <!-- header -->
+    <div>
+      <div class="flex items-center" style="gap:12px;">
+        <span style="width:36px; height:2px; background:var(--accent);"></span>
+        <span class="kicker">Customer Metrics</span>
+      </div>
+      <h1 style="margin-top:14px; font-family:var(--font-heading); font-size:var(--fs-h1); font-weight:700; line-height:1.1; letter-spacing:-0.02em; color:var(--primary);">Expanding Enterprise Footprint</h1>
+    </div>
+
+    <!-- customer base -->
+    <div class="sec" style="margin-top:22px;">
+      <span class="sq"></span><span class="t">Customer Base</span><div class="rule flex-1"></div>
+    </div>
+    <div class="grid grid-cols-3" style="gap:16px; margin-top:12px;">
+
+      <div class="card flex items-center" style="padding:16px 20px; gap:14px;">
+        <div class="icon-box"><i class="material-icons" style="font-size:19px; color:var(--accent);">groups</i></div>
+        <div>
+          <div class="lbl">Total customers</div>
+          <div style="margin-top:5px;"><span class="num" style="font-size:30px; font-weight:700; line-height:1; color:var(--primary);">342</span></div>
+          <div class="num pos" style="margin-top:4px; font-size:12px; font-weight:600;">up 68% YoY</div>
+        </div>
+      </div>
+
+      <div class="card flex items-center" style="padding:16px 20px; gap:14px;">
+        <div class="icon-box"><i class="material-icons" style="font-size:19px; color:var(--accent);">apartment</i></div>
+        <div>
+          <div class="lbl">Enterprise customers</div>
+          <div style="margin-top:5px;"><span class="num" style="font-size:30px; font-weight:700; line-height:1; color:var(--primary);">187</span></div>
+          <div class="num pos" style="margin-top:4px; font-size:12px; font-weight:600;">up 92% YoY</div>
+        </div>
+      </div>
+
+      <div class="card flex items-center" style="padding:16px 20px; gap:14px;">
+        <div class="icon-box"><i class="material-icons" style="font-size:19px; color:var(--accent);">payments</i></div>
+        <div>
+          <div class="lbl">Average contract value</div>
+          <div style="margin-top:5px;"><span class="num" style="font-size:30px; font-weight:700; line-height:1; color:var(--primary);">$65,000</span></div>
+          <div class="num pos" style="margin-top:4px; font-size:12px; font-weight:600;">up 15% YoY</div>
+        </div>
+      </div>
+    </div>
+    <div class="flex" style="gap:16px; margin-top:8px;">
+      <div style="flex:1; font-size:11.5px; color:var(--secondary);"><span class="num" style="font-weight:600; color:var(--primary);">120</span> new enterprise customers in Q3</div>
+      <div style="flex:1; font-size:11.5px; color:var(--secondary);">Enterprises now the majority of our base</div>
+      <div style="flex:1; font-size:11.5px; color:var(--secondary);">Larger deals as platform scope grows</div>
+    </div>
+
+    <!-- retention + expansion -->
+    <div class="flex flex-1" style="gap:16px; margin-top:18px; min-height:0;">
+
+      <div class="card" style="flex:3; padding:20px 26px; display:flex; flex-direction:column; min-height:0;">
+        <div class="flex items-center" style="gap:10px;">
+          <i class="material-icons" style="font-size:19px; color:var(--accent);">autorenew</i>
+          <span class="t" style="font-family:var(--font-num); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; font-weight:600; color:var(--primary);">Retention</span>
+        </div>
+        <div class="flex items-end justify-between" style="margin-top:14px;">
+          <span style="font-size:var(--fs-body); color:var(--secondary);">Net revenue retention</span>
+          <span class="num" style="font-size:42px; font-weight:700; line-height:1; color:var(--primary);">145%</span>
+        </div>
+        <div style="margin-top:12px; position:relative;">
+          <div class="meter" style="height:10px;"><span style="width:96.7%; background:linear-gradient(90deg, var(--accent), rgba(139,92,246,0.75)); box-shadow:0 0 14px rgba(139,92,246,0.5);"></span></div>
+          <div data-decor aria-hidden="true" style="position:absolute; left:66.67%; top:-4px; bottom:-4px; width:0; border-left:2px dashed rgba(237,239,249,0.55);"></div>
+        </div>
+        <div style="position:relative; margin-top:6px; font-family:var(--font-num); font-size:10.5px; color:var(--secondary);">
+          <span style="position:absolute; left:0;">0%</span>
+          <span style="position:absolute; left:66.67%; transform:translateX(-50%); color:var(--primary); font-weight:600;">100% cap</span>
+          <span style="position:absolute; right:0;">150%</span>
+        </div>
+        <div class="flex items-start" style="gap:8px; margin-top:16px;">
+          <i class="material-icons" style="font-size:16px; color:var(--accent); margin-top:1px;">insights</i>
+          <span style="font-size:var(--fs-small); line-height:1.5; color:var(--secondary);"><span class="num" style="font-weight:600; color:var(--primary);">145%</span> NRR demonstrates increasing value customers derive as usage expands</span>
+        </div>
+        <div class="rule" style="margin-top:14px;"></div>
+        <div class="flex items-center justify-between" style="margin-top:12px;">
+          <span style="font-size:var(--fs-body); color:var(--secondary);">Churn rate</span>
+          <div class="flex items-center" style="gap:12px;">
+            <span class="num" style="font-size:26px; font-weight:700; color:var(--primary);">5.2%</span>
+            <span class="pill-teal">
+              <i class="material-icons" style="font-size:14px; color:var(--accent-2);">south</i>
+              <span class="num" style="font-size:11.5px; font-weight:600; color:var(--primary);">down from 8.1% YoY</span>
+            </span>
+          </div>
+        </div>
+        <div class="flex flex-col" style="gap:6px; margin-top:12px;">
+          <div class="flex items-center" style="gap:12px;">
+            <span class="num" style="width:170px; font-size:11px; color:var(--secondary);">8.1% — a year ago</span>
+            <div class="meter" style="flex:1; height:6px;"><span style="width:100%; background:rgba(167,176,206,0.35);"></span></div>
+          </div>
+          <div class="flex items-center" style="gap:12px;">
+            <span class="num" style="width:170px; font-size:11px; color:var(--primary); font-weight:600;">5.2% — Q3 2023</span>
+            <div class="meter" style="flex:1; height:6px;"><span style="width:64%; background:var(--accent-2);"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="flex:2; padding:20px 26px; display:flex; flex-direction:column; min-height:0;">
+        <div class="flex items-center" style="gap:10px;">
+          <i class="material-icons" style="font-size:19px; color:var(--accent);">trending_up</i>
+          <span style="font-family:var(--font-num); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; font-weight:600; color:var(--primary);">Expansion Revenue</span>
+        </div>
+        <div class="flex-1 flex flex-col justify-center">
+          <div><span class="num" style="font-size:52px; font-weight:700; line-height:1; color:var(--primary);">45%</span></div>
+          <div style="margin-top:6px; font-size:var(--fs-body); color:var(--secondary);">of total revenue</div>
+          <div class="meter" style="margin-top:14px; height:10px;"><span style="width:45%; background:linear-gradient(90deg, var(--accent), rgba(139,92,246,0.75)); box-shadow:0 0 14px rgba(139,92,246,0.45);"></span></div>
+        </div>
+        <div style="font-size:var(--fs-small); line-height:1.5; color:var(--secondary);">Nearly half of revenue now comes from existing customers expanding their usage</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">The customer metrics show we are expanding the enterprise base while retaining and growing it at the same time. Total customers reached three hundred and forty-two, up sixty-eight percent year-over-year, with one hundred and twenty new logos in the quarter alone. Enterprise customers grew even faster — one hundred and eighty-seven, up ninety-two percent — so enterprises are now the majority of our base. Average contract value climbed to sixty-five thousand dollars, up fifteen percent, as customers deploy more of the platform across their organizations. Retention is the foundation underneath: net revenue retention of one hundred and forty-five percent demonstrates the increasing value customers derive as their usage expands — on average, existing customers spend forty-five percent more with us each year. Churn fell to five point two percent, down from eight point one percent a year ago, and forty-five percent of total revenue now comes from expansion.</aside>
+</body>
+</html>

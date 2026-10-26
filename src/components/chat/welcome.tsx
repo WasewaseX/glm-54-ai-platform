@@ -3,8 +3,10 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
+  BookOpen,
   BrainCircuit,
   Code2,
+  Download,
   FileSearch,
   Globe,
   LayoutTemplate,
@@ -18,6 +20,21 @@ import { AGENTS } from "@/lib/agents";
 import { cn } from "@/lib/utils";
 
 const AGENT_ICONS = [Code2, PenLine, FileSearch, Presentation, LayoutTemplate] as const;
+
+const DELIVERABLES = [
+  {
+    href: "/deliverables/investor-update-deck.pptx",
+    icon: Presentation,
+    title: "Investor Update Deck",
+    meta: "10 slides · .pptx · with speaker notes",
+  },
+  {
+    href: "/deliverables/the-dark-genome.pdf",
+    icon: BookOpen,
+    title: "The Dark Genome",
+    meta: "Original novel · 109-page PDF",
+  },
+];
 
 const FEATURE_CHIPS = [
   { icon: Sparkles, label: "Streaming" },
@@ -101,11 +118,37 @@ export function Welcome() {
           })}
         </div>
 
+        {/* Deliverable downloads */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
+          className="mx-auto mt-8 grid w-full max-w-xl grid-cols-1 gap-3 sm:grid-cols-2"
+        >
+          {DELIVERABLES.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              download
+              className="group flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 px-4 py-3 text-left backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-muted/50">
+                <item.icon className="h-5 w-5 text-foreground/70 transition-colors group-hover:text-primary" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{item.title}</span>
+                <span className="block truncate text-[11px] text-muted-foreground">{item.meta}</span>
+              </span>
+              <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+            </a>
+          ))}
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.45 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-1.5"
+          className="mt-6 flex flex-wrap items-center justify-center gap-1.5"
         >
           {FEATURE_CHIPS.map((chip) => (
             <span

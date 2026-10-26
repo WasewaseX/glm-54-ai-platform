@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>06 · Market Opportunity</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .label{font-family:var(--font-num);font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;color:var(--secondary);}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-num);font-size:var(--fs-small);font-weight:600;padding:5px 12px;border-radius:999px;white-space:nowrap;}
+  .badge-accent{background:var(--accent-soft);color:var(--primary);border:1px solid rgba(139,92,246,.38);}
+  .badge-pos{background:var(--accent-2-soft);color:var(--accent-2);border:1px solid rgba(45,212,167,.38);}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;}
+  .dot-pos{background:var(--accent-2);}
+  .glow{position:absolute;border-radius:50%;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div data-decor class="glow" style="width:560px;height:560px;top:-260px;right:-180px;background:radial-gradient(circle, rgba(139,92,246,.16), transparent 65%);"></div>
+  <div data-decor class="glow" style="width:460px;height:460px;bottom:-260px;left:-180px;background:radial-gradient(circle, rgba(45,212,167,.07), transparent 65%);"></div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 64px 58px;">
+    <!-- Header -->
+    <header>
+      <div class="kicker">Market Opportunity</div>
+      <h1 style="font-family:var(--font-heading);font-size:var(--fs-h1);font-weight:700;letter-spacing:-0.015em;margin-top:12px;line-height:1.15;">Capturing a Growing Market</h1>
+      <p style="font-size:var(--fs-body);color:var(--secondary);margin-top:10px;max-width:660px;">Enterprise AI spend is compounding fast — and our growth is outpacing the market itself.</p>
+    </header>
+
+    <!-- Body -->
+    <div class="flex-1 grid grid-cols-12 gap-7" style="margin-top:28px;min-height:0;">
+      <!-- Left: TAM -->
+      <section class="col-span-7 flex flex-col" style="min-height:0;">
+        <div class="label">Total Addressable Market</div>
+        <div class="grid grid-cols-2 gap-6 flex-1" style="margin-top:14px;min-height:0;">
+          <div class="card flex flex-col justify-between" style="padding:26px 28px;">
+            <div style="font-size:var(--fs-h3);font-weight:600;">Enterprise AI Platforms</div>
+            <div>
+              <div class="num" style="font-size:var(--fs-display);font-weight:700;color:var(--accent);letter-spacing:-0.02em;line-height:1;">$89B</div>
+              <div class="num" style="font-size:var(--fs-small);color:var(--secondary);margin-top:10px;">by 2026</div>
+            </div>
+            <div class="badge badge-accent"><span class="dot"></span>CAGR 32%</div>
+          </div>
+          <div class="card flex flex-col justify-between" style="padding:26px 28px;">
+            <div style="font-size:var(--fs-h3);font-weight:600;">AI Professional Services</div>
+            <div>
+              <div class="num" style="font-size:var(--fs-display);font-weight:700;color:var(--primary);letter-spacing:-0.02em;line-height:1;">$45B</div>
+              <div class="num" style="font-size:var(--fs-small);color:var(--secondary);margin-top:10px;">by 2026</div>
+            </div>
+            <div class="badge badge-accent"><span class="dot"></span>CAGR 28%</div>
+          </div>
+        </div>
+        <div class="rule" style="margin-top:20px;"></div>
+        <div class="flex items-center justify-between" style="margin-top:12px;">
+          <span style="font-size:var(--fs-small);color:var(--secondary);">Combined addressable market</span>
+          <span class="num" style="font-size:var(--fs-h3);font-weight:600;color:var(--primary);">$134B by 2026</span>
+        </div>
+      </section>
+
+      <!-- Right: position + differentiation -->
+      <section class="col-span-5 flex flex-col gap-5" style="min-height:0;">
+        <div class="card card-accent flex-1 flex flex-col justify-between" style="padding:24px 26px;">
+          <div class="label">Market Position</div>
+          <div class="flex items-end gap-4">
+            <div class="num" style="font-size:var(--fs-display);font-weight:700;line-height:.95;color:var(--primary);">#2</div>
+            <div style="font-size:var(--fs-body);color:var(--secondary);padding-bottom:4px;">in enterprise AI&nbsp;platforms</div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between" style="font-size:var(--fs-small);">
+              <span style="color:var(--secondary);">Market share</span>
+              <span class="num" style="color:var(--primary);font-weight:600;">18%</span>
+            </div>
+            <div class="meter" style="margin-top:8px;"><span style="width:18%;"></span></div>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <span style="font-size:var(--fs-small);color:var(--secondary);">Fastest growing in segment</span>
+            <span class="badge badge-pos"><span class="dot dot-pos"></span>45% YoY growth</span>
+          </div>
+        </div>
+
+        <div class="card" style="padding:22px 26px;">
+          <div class="label">Competitive Differentiation</div>
+          <div class="flex items-start gap-3" style="margin-top:16px;">
+            <i class="material-icons" style="font-size:20px;color:var(--accent);">workspace_premium</i>
+            <span style="font-size:var(--fs-body);color:var(--primary);font-weight:500;">Most comprehensive enterprise AI solution</span>
+          </div>
+          <div class="flex items-start gap-3" style="margin-top:12px;">
+            <i class="material-icons" style="font-size:20px;color:var(--accent);">thumb_up_alt</i>
+            <span style="font-size:var(--fs-body);color:var(--primary);font-weight:500;">Highest customer satisfaction in segment</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">The market opportunity in front of us is expanding rapidly. Enterprise AI platforms alone are on track to reach eighty-nine billion dollars by 2026, compounding at thirty-two percent a year, with AI professional services adding another forty-five billion. As enterprises accelerate AI adoption, they are consolidating around comprehensive, trusted platforms — and that is exactly where we play. We hold the number-two position in enterprise AI platforms with eighteen percent market share, and critically, our forty-five percent year-over-year growth means we are outpacing the market itself. In a crowded field, differentiation is durable: we offer the most comprehensive enterprise AI solution and the highest customer satisfaction in our segment. Scale plus satisfaction gives us a reinforcing advantage — the bigger we get, the better the product becomes, and the harder it is to displace us.</aside>
+</body>
+</html>

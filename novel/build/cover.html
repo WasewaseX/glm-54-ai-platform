@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    @page { size: 794px 1123px; margin: 0; }
+    :root {
+      --c-bg: #0c0c0b;
+      --c-accent: #dfc16a;
+      --c-text: #f0f0ee;
+      --c-muted: #95938c;
+      --c-footer: #7a766c;
+    }
+    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Inter', sans-serif; }
+    @media screen {
+      html { height: auto; display: flex; justify-content: center; min-height: 100vh; background: var(--c-bg); }
+      body { transform-origin: top center; scale: min(1, calc(100vw / 794), calc(100vh / 1123)); margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.3); }
+    }
+    .cover { width: 794px; height: 1123px; position: relative; box-sizing: border-box; }
+    .vline { position: absolute; left: 57px; top: 76px; bottom: 130px; width: 2.5px; background: var(--c-accent); }
+    .content { position: absolute; left: 101px; right: 76px; top: 0; bottom: 0; }
+    .label { position: absolute; top: 132px; font-size: 9pt; color: var(--c-accent); letter-spacing: 3px; text-transform: uppercase; font-family: 'Inter', sans-serif; }
+    .title { position: absolute; top: 228px; font-size: 44pt; font-weight: 900; line-height: 1.15; font-family: 'Playfair Display', serif; color: var(--c-text); max-width: 600px; }
+    .title .thin { font-weight: 400; font-style: italic; }
+    .subtitle { position: absolute; top: 540px; font-size: 12pt; line-height: 1.65; color: var(--c-muted); max-width: 500px; font-family: 'Inter', sans-serif; font-weight: 300; }
+    .authors { position: absolute; top: 742px; font-size: 12pt; color: var(--c-text); letter-spacing: 1px; }
+    .institution { position: absolute; top: 786px; font-size: 10pt; color: var(--c-muted); line-height: 1.4; }
+    .footer { position: absolute; bottom: 76px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 9pt; color: var(--c-footer); letter-spacing: 2px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <div class="vline"></div>
+    <div class="content">
+      <div class="label">The Greyharbor Cycle &middot; Book One</div>
+      <div class="title">THE DARK<br>GENOME</div>
+      <div class="subtitle">In the fog-locked port city of Greyharbor, a mortuary assistant inherits a parasitic organ of living shadow &mdash; and must climb a ladder of forbidden biological tinctures before the dark biosphere beneath the city devours everything he has left. To save it, he will learn what the darkness is really made of: every memory the world has forgotten.</div>
+      <div class="authors">A Novel of the Hollow</div>
+      <div class="institution">Thirty chapters and an epilogue &middot; Progression fantasy with biopunk themes</div>
+      <div class="footer">
+        <span>The Dark Genome &middot; Book One</span>
+        <span>First Edition</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

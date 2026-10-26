@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>08 · Roadmap &amp; Vision</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="global.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  .chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-num);font-size:var(--fs-micro);letter-spacing:.18em;text-transform:uppercase;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--secondary);}
+  .chip-vision{background:var(--accent-soft);border:1px solid rgba(139,92,246,.45);color:var(--primary);}
+  .phase-date{font-family:var(--font-num);font-size:var(--fs-h3);font-weight:600;color:var(--primary);letter-spacing:-0.01em;}
+  .item{display:flex;align-items:flex-start;gap:12px;}
+  .item .material-icons{font-size:18px;color:var(--accent);margin-top:2px;flex:none;}
+  .item p{font-size:var(--fs-body);color:var(--secondary);line-height:1.55;}
+  .ghost{position:absolute;top:14px;right:20px;font-family:var(--font-num);font-weight:700;font-size:96px;line-height:1;pointer-events:none;}
+  .card-vision{background:linear-gradient(180deg, var(--surface) 0%, rgba(139,92,246,.10) 100%);border:1px solid rgba(139,92,246,.55);border-radius:14px;box-shadow:0 0 60px rgba(139,92,246,.14);}
+  .glow{position:absolute;border-radius:50%;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div data-decor class="glow" style="width:600px;height:600px;top:-280px;right:-200px;background:radial-gradient(circle, rgba(139,92,246,.15), transparent 65%);"></div>
+
+  <div class="relative h-full flex flex-col" style="padding:56px 64px 58px;">
+    <!-- Header -->
+    <header>
+      <div class="kicker">Roadmap &amp; Vision</div>
+      <h1 style="font-family:var(--font-heading);font-size:var(--fs-h1);font-weight:700;letter-spacing:-0.015em;margin-top:12px;line-height:1.15;">Accelerating Growth Through Innovation</h1>
+      <p style="font-size:var(--fs-body);color:var(--secondary);margin-top:10px;max-width:700px;">Near-term execution, building toward long-term category leadership.</p>
+    </header>
+
+    <!-- Phased columns -->
+    <div class="flex-1 grid grid-cols-3 gap-6" style="margin-top:28px;min-height:0;">
+      <!-- Phase 01 -->
+      <section class="card relative flex flex-col" style="padding:26px 28px;">
+        <div data-decor class="ghost" style="color:rgba(167,176,206,.06);">01</div>
+        <span class="chip" style="align-self:flex-start;">Phase 01</span>
+        <div class="phase-date" style="margin-top:14px;">Q4 2023 – Q1 2024</div>
+        <div class="rule" style="margin-top:16px;"></div>
+        <div class="flex-1 flex flex-col justify-evenly" style="padding-top:8px;">
+          <div class="item"><i class="material-icons">east</i><p>Launch of industry-specific AI solutions</p></div>
+          <div class="item"><i class="material-icons">east</i><p>Expansion into European markets</p></div>
+          <div class="item"><i class="material-icons">east</i><p>Complete API platform overhaul</p></div>
+        </div>
+      </section>
+
+      <!-- Phase 02 -->
+      <section class="card relative flex flex-col" style="padding:26px 28px;">
+        <div data-decor class="ghost" style="color:rgba(167,176,206,.06);">02</div>
+        <span class="chip" style="align-self:flex-start;">Phase 02</span>
+        <div class="phase-date" style="margin-top:14px;">Q2 – Q4 2024</div>
+        <div class="rule" style="margin-top:16px;"></div>
+        <div class="flex-1 flex flex-col justify-evenly" style="padding-top:8px;">
+          <div class="item"><i class="material-icons">east</i><p>AI marketplace launch</p></div>
+          <div class="item"><i class="material-icons">east</i><p>Strategic acquisition target integration</p></div>
+          <div class="item"><i class="material-icons">east</i><p>International expansion (APAC)</p></div>
+        </div>
+      </section>
+
+      <!-- Long-term Vision (distinct) -->
+      <section class="card-vision relative flex flex-col" style="padding:26px 28px;">
+        <div data-decor class="ghost" style="color:rgba(139,92,246,.12);">03</div>
+        <span class="chip chip-vision" style="align-self:flex-start;"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent);"></span>Long-term Vision</span>
+        <div class="flex-1 flex flex-col justify-evenly" style="padding-top:14px;">
+          <div class="item"><i class="material-icons">flag</i><p style="color:var(--primary);font-weight:500;">Become the definitive enterprise AI platform</p></div>
+        </div>
+        <div style="border-top:1px solid rgba(139,92,246,.35);padding-top:18px;margin-top:12px;">
+          <div class="num" style="font-size:var(--fs-display);font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;">$100M</div>
+          <div class="num" style="font-size:var(--fs-h3);color:var(--primary);font-weight:600;margin-top:10px;">ARR by 2026</div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">Our roadmap balances near-term execution with a clear long-term vision. Over the next two quarters we will launch industry-specific AI solutions, expand into European markets, and complete a full overhaul of our API platform — deepening the core while opening new segments. Through the remainder of 2024 we take the next step: launching the AI marketplace, integrating our strategic acquisition target, and expanding internationally into APAC. The acquisition is deliberately sequenced to accelerate capabilities we would otherwise need years to build in-house. Long term, the ambition is singular: to become the definitive enterprise AI platform, with one hundred million dollars in ARR by 2026. Every initiative on this page ladders up to that goal — industry-specific solutions, global reach, and a continuously enhanced core platform.</aside>
+</body>
+</html>
