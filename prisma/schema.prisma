@@ -1,0 +1,111 @@
+// GLM 5.4 AI — database schema
+// SQLite via Prisma. Session-based auth, persistent chat history,
+// reusable system prompts, document store for long-context RAG,
+// and usage telemetry for rate limiting + stats.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  sessionToken String         @unique // httpOnly cookie-bound anonymous session
+  displayName  String         @default("You")
+  settings     String? // JSON-serialized UserSettings
+  createdAt    DateTime       @default(now())
+  lastSeenAt   DateTime       @updatedAt
+  conversations Conversation[]
+  systemPrompts SystemPrompt[]
+  documents    Document[]
+  usageEvents  UsageEvent[]
+}
+
+model Conversation {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String    @default("New conversation")
+  model        String? // requested model id (server normalizes; served model stored per message)
+  systemPrompt String? // conversation-level system prompt override
+  pinned       Boolean   @default(false)
+  archived     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  messages     Message[]
+
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id               String       @id @default(cuid())
+  conversationId   String
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role             String // "user" | "assistant"
+  content          String
+  attachments      String? // JSON: [{id,name,mime,size,kind,documentId?}]
+  model            String? // actual served model id (ground truth)
+  thinking         String? // reasoning trace when thinking mode enabled
+  promptTokens     Int?
+  completionTokens Int?
+  latencyMs        Int?
+  webSearchUsed    Boolean      @default(false)
+  status           String       @default("complete") // complete | cancelled | error
+  error            String?
+  createdAt        DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model SystemPrompt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  content   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Document {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  mime      String
+  size      Int
+  kind      String          @default("text") // text | image | binary
+  content   String? // extracted/UTF-8 text (text docs) — data URLs are never persisted
+  summary   String? // AI-generated summary
+  chunkCount Int            @default(0)
+  createdAt DateTime        @default(now())
+  chunks    DocumentChunk[]
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  idx        Int
+  text       String
+  tokens     Int
+
+  @@index([documentId])
+}
+
+model UsageEvent {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             String // chat | vision | search | summarize | title
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  latencyMs        Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+}

@@ -1,0 +1,114 @@
+"use client";
+
+import * as React from "react";
+import { Download, Info, Moon, PanelLeft, Sparkles, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAppStore } from "@/lib/store";
+import { useTheme } from "next-themes";
+
+export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
+  const activeId = useAppStore((s) => s.activeId);
+  const conversations = useAppStore((s) => s.conversations);
+  const serverInfo = useAppStore((s) => s.serverInfo);
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
+  const setActiveDialog = useAppStore((s) => s.setActiveDialog);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  // Theme-dependent UI must wait until after hydration (next-themes pattern).
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  const active = conversations.find((c) => c.id === activeId);
+  const isDark = mounted && resolvedTheme !== "light";
+
+  return (
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-3 backdrop-blur sm:px-4">
+      {/* Mobile: opens the sheet. Desktop: toggles the sidebar column. */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 rounded-lg md:hidden"
+        onClick={onMobileMenu}
+        aria-label="Open conversations"
+      >
+        <PanelLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden h-8 w-8 rounded-lg md:inline-flex"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+      >
+        <PanelLeft className="h-4 w-4" />
+      </Button>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <h1 className="truncate text-sm font-medium">
+          {active ? active.title : "New conversation"}
+        </h1>
+        {serverInfo?.servedChatModel && (
+          <Badge
+            variant="outline"
+            className="hidden shrink-0 border-primary/30 bg-primary/[0.07] font-mono text-[10px] text-primary/90 sm:inline-flex"
+          >
+            {serverInfo.servedChatModel}
+          </Badge>
+        )}
+      </div>
+
+      <div className="ml-auto flex items-center gap-0.5">
+        {active && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label="Export conversation">
+                <Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <a href={`/api/conversations/${active.id}/export?format=md`} download>
+                  Export as Markdown
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`/api/conversations/${active.id}/export?format=json`} download>
+                  Export as JSON
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-lg"
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={mounted ? (isDark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
+        >
+          {mounted ? (isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />) : <Moon className="h-4 w-4" />}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-lg"
+          onClick={() => setActiveDialog("about")}
+          aria-label="About and verified capabilities"
+        >
+          <Info className="h-4 w-4" />
+        </Button>
+      </div>
+    </header>
+  );
+}
