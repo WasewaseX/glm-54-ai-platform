@@ -233,3 +233,18 @@ Work Log:
 
 Stage Summary:
 - Session deliverable: GLM 5.4 AI is now a real agent platform (chat + autonomous agent with tools and artifacts), durably backed up to GitHub.
+
+---
+Task ID: 15-b (SECURITY)
+Agent: Z.ai Code (main)
+Task: Purge leaked GITHUB_BACKUP_TOKEN from git history
+
+Work Log:
+- DISCOVERED: .env (containing GITHUB_BACKUP_TOKEN) was tracked in git from before the .gitignore rule existed and had been pushed to the private backup repo in earlier commits; the Task-15 backup push kept it in history.
+- REMEDIATION: git rm --cached .env → filter-branch --index-filter removed .env from every commit → stash/filter-branch backup refs (refs/original/*) and stash deleted → reflog expired → git gc --prune=now → verified 0 token occurrences in all local history.
+- FORCE-PUSHED main to overwrite remote history (0be83cb → 8d86007); verified remote head is the scrubbed commit.
+- .env recreated in working tree (gitignored, verified via git check-ignore); .env.example restored and un-ignored via `!.env.example` (the `.env*` glob had been silently excluding it — it was lost in a previous session reset).
+- NOTE: the old commits may persist as dangling objects on GitHub's servers for some time; because the repo is private AND the token was already pasted in plaintext chat, the user should ROTATE the PAT at their earliest convenience.
+
+Stage Summary:
+- Token no longer present in any local or remote git history reachable from branch heads; backup workflow remains token-safe (one-shot push URLs, token only in gitignored .env).
