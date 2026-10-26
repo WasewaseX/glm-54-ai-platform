@@ -56,3 +56,6 @@ server.log
 db/*.db
 db/*.db-journal
 upload/
+
+# but keep the example file
+!.env.example
