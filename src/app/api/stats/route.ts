@@ -39,5 +39,33 @@ export async function GET() {
     searches,
   };
 
-  return Response.json({ stats });
+  // Platform-wide ground truth (all users) — powers the "Real metrics" panel.
+  const [pConvs, pMsgs, pEvents, pDocs, pArtifacts, pSteps, pSearches] = await Promise.all([
+    db.conversation.count(),
+    db.message.count(),
+    db.usageEvent.findMany({
+      select: { promptTokens: true, completionTokens: true, latencyMs: true },
+    }),
+    db.document.count(),
+    db.artifact.count(),
+    db.agentStep.count(),
+    db.usageEvent.count({ where: { kind: "search" } }),
+  ]);
+
+  const platform = {
+    conversations: pConvs,
+    messages: pMsgs,
+    promptTokens: pEvents.reduce((a, e) => a + e.promptTokens, 0),
+    completionTokens: pEvents.reduce((a, e) => a + e.completionTokens, 0),
+    avgLatencyMs:
+      pEvents.length > 0
+        ? Math.round(pEvents.reduce((a, e) => a + e.latencyMs, 0) / pEvents.length)
+        : 0,
+    searches: pSearches,
+    documents: pDocs,
+    artifacts: pArtifacts,
+    agentSteps: pSteps,
+  };
+
+  return Response.json({ stats, platform });
 }

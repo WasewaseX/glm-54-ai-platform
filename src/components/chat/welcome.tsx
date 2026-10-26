@@ -7,6 +7,7 @@ import {
   BrainCircuit,
   Code2,
   Download,
+  FileCheck2,
   FileSearch,
   Globe,
   LayoutTemplate,
@@ -15,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { RealMetrics } from "./real-metrics";
 import { useAppStore } from "@/lib/store";
 import { AGENTS } from "@/lib/agents";
 import { cn } from "@/lib/utils";
@@ -23,10 +25,16 @@ const AGENT_ICONS = [Code2, PenLine, FileSearch, Presentation, LayoutTemplate] a
 
 const DELIVERABLES = [
   {
+    href: "/deliverables/real-platform-report.pptx",
+    icon: FileCheck2,
+    title: "Real Platform Report",
+    meta: "10 slides · .pptx · 100% live-DB data, sources cited",
+  },
+  {
     href: "/deliverables/investor-update-deck.pptx",
     icon: Presentation,
     title: "Investor Update Deck",
-    meta: "10 slides · .pptx · with speaker notes",
+    meta: "10 slides · .pptx · demo outline content (not real metrics)",
   },
   {
     href: "/deliverables/the-dark-genome.pdf",
@@ -123,7 +131,7 @@ export function Welcome() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
-          className="mx-auto mt-8 grid w-full max-w-xl grid-cols-1 gap-3 sm:grid-cols-2"
+          className="mx-auto mt-8 grid w-full max-w-xl grid-cols-1 gap-3"
         >
           {DELIVERABLES.map((item) => (
             <a
@@ -143,6 +151,9 @@ export function Welcome() {
             </a>
           ))}
         </motion.div>
+
+        {/* Real metrics — live from the database, never fabricated */}
+        <RealMetrics />
 
         <motion.div
           initial={{ opacity: 0 }}

@@ -395,3 +395,19 @@ Work Log:
 Stage Summary:
 - Two real artifacts delivered and downloadable in-app: /deliverables/investor-update-deck.pptx (10-slide investor deck with speaker notes) and /deliverables/the-dark-genome.pdf (109-page original novel, clickable TOC, QA PASS).
 - Honest note: "100M/200M output token capacity" was never promised by this platform — served model is glm-4-plus with standard context; large-document handling is via RAG/chunking (verified). Originality guardrail respected: the novel is genre-inspired but 100% original.
+---
+Task ID: 17
+Agent: Z.ai Code (main)
+Task: "Real results not fakes" — GitHub backup, real-metrics report deck, live metrics dashboard
+
+Work Log:
+- GitHub backup (user's standing order, previously never executed): added GITHUB_BACKUP_TOKEN to gitignored .env, ran scripts/backup-to-github.sh — all 10 prior commits + this session's work pushed to https://github.com/WasewaseX/glm-54-ai-platform (commit 2c171fd, then final push). Session resets can no longer destroy code.
+- Built scripts/collect-real-metrics.ts — pulls ground truth from live SQLite (Prisma), git history, filesystem census. Fixed UsageEvent schema mismatch (no `model` column). Output: /tmp/real-metrics.json.
+- REAL numbers: 52 conversations, 125 messages (62 assistant), 21,403 tokens served, 4.7s avg latency, 3 web searches, 3 documents, 4 artifacts, 8 agent steps, 93 TS files, 15 API routes, 61 UI components, 10 commits.
+- Built download/real-platform-report.pptx (10 slides, 232 KB, pptxgenjs) — every figure sourced with a SOURCE line on each slide; includes an explicit "Corrections" slide listing what was demo content (342 customers, $12.3M ARR, 100M-token myth) vs verified reality; appendix prints the raw JSON; copy in public/deliverables/ serves HTTP 200.
+- /api/stats extended with platform-wide totals (all users); new src/components/chat/real-metrics.tsx renders live DB numbers on the welcome screen with refresh button, loading skeleton, error state, "platform-wide · not demo data" badge.
+- welcome.tsx: real report listed first; investor deck now explicitly labeled "demo outline content (not real metrics)"; deliverables grid switched to single column.
+- E2E (agent-browser): metrics panel renders with 52/125/21,403/4.7s/3/4 live values; golden path re-proven — message sent via correct composer (first attempt hit sidebar search by ref mistake), assistant replied (glm-4-plus), turn-2 recalled codeword REAL-RESULTS-777, conversation survived reload; deliverable URLs 200; lint clean; no console errors (only benign Fast Refresh note).
+
+Stage Summary:
+- User's "fake 342 customers" complaint answered head-on: an auditable real-data deck (real-platform-report.pptx) plus an in-app live metrics dashboard, plus a transparent corrections slide. GitHub backup is now real and verified (repo: WasewaseX/glm-54-ai-platform). Multi-turn persistence remains green.
