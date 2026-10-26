@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BrainCircuit,
   ChevronDown,
+  ChevronRight,
   Copy,
   Check,
   FileText,
@@ -16,9 +17,48 @@ import {
   User,
 } from "lucide-react";
 import { Markdown } from "@/components/chat/markdown";
+import { AgentTimeline } from "@/components/chat/agent-timeline";
 import type { ChatMessage } from "@/lib/types";
+import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+// ---- [[artifact:<id>]] markers (embedded by the agent engine) ----
+
+const ARTIFACT_MARKER_RE = /\[\[artifact:([^\]\n]+)\]\]/g;
+
+type ContentSegment = { type: "text"; value: string } | { type: "artifact"; id: string };
+
+function splitArtifactSegments(content: string): ContentSegment[] {
+  const segments: ContentSegment[] = [];
+  let last = 0;
+  for (const match of content.matchAll(ARTIFACT_MARKER_RE)) {
+    const start = match.index ?? 0;
+    if (start > last) segments.push({ type: "text", value: content.slice(last, start) });
+    segments.push({ type: "artifact", id: match[1] });
+    last = start + match[0].length;
+  }
+  if (last < content.length) segments.push({ type: "text", value: content.slice(last) });
+  return segments;
+}
+
+function ArtifactChip({ id }: { id: string }) {
+  const artifact = useAppStore((s) => s.artifacts.find((a) => a.id === id));
+  const openArtifact = useAppStore((s) => s.openArtifact);
+  const title = artifact?.title ?? "Artifact";
+  return (
+    <button
+      type="button"
+      onClick={() => openArtifact(id)}
+      aria-label={`Open artifact: ${title}`}
+      className="my-2 inline-flex max-w-full items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.07] px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+    >
+      <FileText className="h-4 w-4 shrink-0" aria-hidden />
+      <span className="truncate">{title}</span>
+      <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+    </button>
+  );
+}
 
 function AttachmentChips({ message }: { message: ChatMessage }) {
   if (!message.attachments?.length) return null;
@@ -79,6 +119,16 @@ export function MessageItem({
   const [copied, setCopied] = React.useState(false);
   const hasContent = message.content.length > 0;
 
+  // Agent timeline steps for this assistant message (live + hydrated).
+  const steps = useAppStore((s) => s.stepsByMessage[message.id]);
+
+  // Content split around [[artifact:id]] markers → markdown text + chips.
+  const segments = React.useMemo(
+    () => (isUser ? null : splitArtifactSegments(message.content)),
+    [isUser, message.content]
+  );
+  const hasArtifactChips = segments?.some((seg) => seg.type === "artifact") ?? false;
+
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(message.content);
@@ -111,6 +161,13 @@ export function MessageItem({
         </div>
 
         <div className={cn("min-w-0", isUser ? "max-w-[85%]" : "max-w-[92%] sm:max-w-[85%]")}>
+          {/* Agent execution timeline (plan / searches / reads / artifacts) */}
+          {!isUser && steps && steps.length > 0 && (
+            <div className="mb-2">
+              <AgentTimeline steps={steps} streaming={Boolean(message.streaming)} />
+            </div>
+          )}
+
           {/* Thinking trace */}
           {!isUser && message.thinking && message.thinking.trim().length > 0 && (
             <ThinkingBlock thinking={message.thinking} />
@@ -135,17 +192,29 @@ export function MessageItem({
           >
             {isUser ? (
               <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed">{message.content}</p>
+            ) : hasArtifactChips && segments ? (
+              <div className={cn(message.streaming && "stream-caret-wrap")}>
+                {segments.map((seg, i) =>
+                  seg.type === "artifact" ? (
+                    <ArtifactChip key={`${seg.id}-${i}`} id={seg.id} />
+                  ) : seg.value.trim().length > 0 ? (
+                    <Markdown key={i} content={seg.value} />
+                  ) : null
+                )}
+              </div>
             ) : hasContent ? (
               <div className={cn(message.streaming && "stream-caret-wrap")}>
                 <Markdown content={message.content} />
               </div>
-            ) : message.status === "error" ? null : (
+            ) : message.status === "error" ? null : message.status === "streaming" ? (
               <div className="flex items-center gap-2 py-0.5">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                <span className="shimmer-text text-sm">
-                  {message.status === "cancelled" ? "Cancelled" : "Thinking…"}
-                </span>
+                <span className="shimmer-text text-sm">Thinking…</span>
               </div>
+            ) : (
+              <p className="text-sm italic text-muted-foreground">
+                {message.status === "cancelled" ? "Cancelled — no output." : "(empty response)"}
+              </p>
             )}
 
             {message.webSearchUsed && !isUser && (

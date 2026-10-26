@@ -9,6 +9,7 @@ import { Welcome } from "@/components/chat/welcome";
 import { SettingsDialog } from "@/components/chat/settings-dialog";
 import { DocumentsDialog } from "@/components/chat/documents-dialog";
 import { AboutDialog } from "@/components/chat/about-dialog";
+import { ArtifactPanelHost } from "@/components/chat/artifact-panel";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAppStore } from "@/lib/store";
 
@@ -71,6 +72,11 @@ export default function Home() {
           <span className="hidden sm:block">Next.js 16 · SSE streaming · RAG long-context</span>
         </footer>
       </main>
+
+      {/* Artifacts: fixed right column on desktop, slide-in Sheet on mobile.
+          A flex sibling of <main>, so it never overlaps content and the
+          status footer stays pinned to the bottom of the main column. */}
+      <ArtifactPanelHost />
 
       <SettingsDialog />
       <DocumentsDialog />

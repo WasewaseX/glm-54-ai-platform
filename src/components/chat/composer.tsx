@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  Bot,
   BrainCircuit,
   Check,
   ChevronDown,
@@ -13,6 +14,7 @@ import {
   Square,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -34,6 +36,7 @@ const ACCEPT =
 export function Composer() {
   const streaming = useAppStore((s) => s.streaming);
   const sendMessage = useAppStore((s) => s.sendMessage);
+  const sendAgentMessage = useAppStore((s) => s.sendAgentMessage);
   const stopStreaming = useAppStore((s) => s.stopStreaming);
   const uploadFiles = useAppStore((s) => s.uploadFiles);
   const pendingAttachments = useAppStore((s) => s.pendingAttachments);
@@ -42,6 +45,8 @@ export function Composer() {
   const prompts = useAppStore((s) => s.prompts);
   const activeAgentId = useAppStore((s) => s.activeAgentId);
   const setActiveAgent = useAppStore((s) => s.setActiveAgent);
+  const agentMode = useAppStore((s) => s.agentMode);
+  const setAgentMode = useAppStore((s) => s.setAgentMode);
   const composerDraft = useAppStore((s) => s.composerDraft);
   const setComposerDraft = useAppStore((s) => s.setComposerDraft);
   const serverInfo = useAppStore((s) => s.serverInfo);
@@ -89,6 +94,20 @@ export function Composer() {
     if (streaming) return;
     const value = text.trim();
     if (!value && pendingAttachments.length === 0) return;
+
+    // Agent mode handles its own tool calls; visual attachments are not supported.
+    if (agentMode) {
+      const hasVisual = pendingAttachments.some((d) => d.kind !== "text");
+      if (hasVisual) {
+        toast.warning("Agent mode supports text documents — switch to standard chat for images/PDFs");
+        return;
+      }
+      sendAgentMessage(value, { thinking });
+      setText("");
+      requestAnimationFrame(resize);
+      return;
+    }
+
     const defaultPrompt = prompts.find((p) => p.id === settings.defaultSystemPromptId);
     sendMessage(value, {
       webSearch,
@@ -100,7 +119,9 @@ export function Composer() {
   }, [
     streaming,
     text,
-    pendingAttachments.length,
+    pendingAttachments,
+    agentMode,
+    sendAgentMessage,
     prompts,
     settings.defaultSystemPromptId,
     activeAgent,
@@ -179,7 +200,9 @@ export function Composer() {
               "glass relative rounded-[26px] border shadow-lg transition-all duration-200",
               dragging
                 ? "border-primary/70 ring-2 ring-primary/40"
-                : "border-border/80 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/25"
+                : agentMode
+                  ? "border-primary/40 ring-1 ring-primary/15 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/25"
+                  : "border-border/80 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/25"
             )}
           >
             {dragging && (
@@ -194,7 +217,7 @@ export function Composer() {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={onKeyDown}
               rows={1}
-              placeholder="Send a Message…"
+              placeholder={agentMode ? "Describe a task — the Agent will plan, search & build…" : "Send a Message…"}
               aria-label="Message input"
               className="max-h-[220px] w-full resize-none bg-transparent px-4 pb-1 pt-4 text-[0.9375rem] leading-relaxed outline-none placeholder:text-muted-foreground/70 scrollbar-thin"
             />
@@ -243,11 +266,31 @@ export function Composer() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    variant={agentMode ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-8 gap-1.5 rounded-full px-2.5 text-xs",
+                      agentMode && "border border-primary/35 bg-primary/10 text-primary"
+                    )}
+                    onClick={() => setAgentMode(!agentMode)}
+                    aria-pressed={agentMode}
+                  >
+                    <Bot className="h-3.5 w-3.5" />
+                    Agent
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Agent mode: plan, search, read pages, generate images &amp; files</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
                     variant={webSearch ? "secondary" : "ghost"}
                     size="sm"
                     className={cn(
                       "h-8 gap-1.5 rounded-full px-2.5 text-xs",
-                      webSearch && "border border-primary/35 bg-primary/10 text-primary"
+                      webSearch && "border border-primary/35 bg-primary/10 text-primary",
+                      agentMode && "opacity-60"
                     )}
                     onClick={() => setWebSearch((v) => !v)}
                     aria-pressed={webSearch}
@@ -256,7 +299,11 @@ export function Composer() {
                     Web
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Ground answers with web search</TooltipContent>
+                <TooltipContent>
+                  {agentMode
+                    ? "The Agent decides its own tools — web toggle applies to standard chat"
+                    : "Ground answers with web search"}
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>

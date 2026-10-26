@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
-import type { ChatMessage, ConversationDetail } from "@/lib/types";
+import type { AgentStepItem, ArtifactItem, ArtifactKind, ChatMessage, ConversationDetail } from "@/lib/types";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,42 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     where: { conversationId: conversation.id },
     orderBy: { createdAt: "asc" },
   });
+
+  const [artifactRows, stepRows] = await Promise.all([
+    db.artifact.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { updatedAt: "desc" },
+    }),
+    db.agentStep.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { idx: "asc" },
+    }),
+  ]);
+
+  const artifacts: ArtifactItem[] = artifactRows.map((a) => ({
+    id: a.id,
+    conversationId: a.conversationId,
+    messageId: a.messageId,
+    title: a.title,
+    kind: a.kind as ArtifactKind,
+    language: a.language,
+    content: a.content,
+    version: a.version,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+  }));
+
+  const steps: AgentStepItem[] = stepRows.map((s) => ({
+    id: s.id,
+    messageId: s.messageId,
+    idx: s.idx,
+    kind: s.kind as AgentStepItem["kind"],
+    tool: s.tool,
+    title: s.title,
+    detail: s.detail,
+    status: s.status as AgentStepItem["status"],
+    createdAt: s.createdAt.toISOString(),
+  }));
 
   const messages: ChatMessage[] = rows.map((m) => {
     let attachments = null;
@@ -66,6 +102,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     createdAt: conversation.createdAt.toISOString(),
     updatedAt: conversation.updatedAt.toISOString(),
     messages,
+    artifacts,
+    steps,
   };
 
   return Response.json({ conversation: detail });

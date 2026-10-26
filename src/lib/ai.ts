@@ -214,6 +214,56 @@ export async function webSearch(
   }));
 }
 
+/** Read a web page and extract readable text via the gateway's page_reader tool. */
+export async function pageReader(url: string): Promise<{ title: string; text: string; tokens: number }> {
+  const zai = await getZAI();
+  const res = (await zai.functions.invoke("page_reader", { url })) as {
+    code?: number;
+    data?: { html?: string; title?: string; url?: string; usage?: { tokens?: number } };
+  };
+  const html = res?.data?.html ?? "";
+  return {
+    title: res?.data?.title ?? url,
+    text: htmlToText(html),
+    tokens: res?.data?.usage?.tokens ?? 0,
+  };
+}
+
+/** Very small HTML → text converter (no deps): drops scripts/styles/tags, decodes common entities. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<(br|\/p|\/div|\/h[1-6]|\/li|\/tr)\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+const IMAGE_SIZES = ["1024x1024", "768x1344", "864x1152", "1344x768", "1152x864", "1440x720", "720x1440"] as const;
+export type ImageSize = (typeof IMAGE_SIZES)[number];
+
+export function isImageSize(size: unknown): size is ImageSize {
+  return typeof size === "string" && (IMAGE_SIZES as readonly string[]).includes(size);
+}
+
+/** Generate an image; resolves to base64 PNG data (no data: prefix). */
+export async function generateImage(prompt: string, size: ImageSize = "1024x1024"): Promise<string> {
+  const zai = await getZAI();
+  const res = await zai.images.generations.create({ prompt, size });
+  const b64 = res?.data?.[0]?.base64;
+  if (!b64) throw new Error("Image generation returned no data.");
+  return b64;
+}
+
 /** Normalize SDK errors into user-safe messages (never leak config/keys). */
 export function normalizeAiError(err: unknown): { message: string; status: number } {
   const raw = err instanceof Error ? err.message : String(err);

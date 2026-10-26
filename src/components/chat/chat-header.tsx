@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, Info, Moon, PanelLeft, Sparkles, Sun, ExternalLink } from "lucide-react";
+import { Download, Info, Moon, PanelLeft, PanelRight, Sparkles, Sun, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { useAppStore } from "@/lib/store";
 import { downloadExport } from "@/lib/api-client";
 import { GITHUB_REPO_URL } from "@/lib/constants";
 import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
   const activeId = useAppStore((s) => s.activeId);
@@ -23,6 +24,9 @@ export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   const setActiveDialog = useAppStore((s) => s.setActiveDialog);
+  const artifacts = useAppStore((s) => s.artifacts);
+  const artifactPanelOpen = useAppStore((s) => s.artifactPanelOpen);
+  const setArtifactPanelOpen = useAppStore((s) => s.setArtifactPanelOpen);
   const { resolvedTheme, setTheme } = useTheme();
 
   // Theme-dependent UI must wait until after hydration (next-themes pattern).
@@ -75,6 +79,29 @@ export function ChatHeader({ onMobileMenu }: { onMobileMenu?: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-0.5">
+        {/* Artifacts panel toggle (desktop column / mobile sheet) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "relative h-8 w-8 rounded-lg",
+            artifactPanelOpen && "bg-primary/10 text-primary"
+          )}
+          onClick={() => setArtifactPanelOpen(!artifactPanelOpen)}
+          aria-label={artifactPanelOpen ? "Close artifacts panel" : "Open artifacts panel"}
+          aria-pressed={artifactPanelOpen}
+        >
+          <PanelRight className="h-4 w-4" />
+          {artifacts.length > 0 && (
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-none text-primary-foreground"
+              aria-hidden
+            >
+              {artifacts.length > 9 ? "9+" : artifacts.length}
+            </span>
+          )}
+        </Button>
+
         <Button
           variant="ghost"
           size="sm"

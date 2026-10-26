@@ -20,6 +20,7 @@ import { estimateTokens, retrieveChunks } from "@/lib/rag";
 import { requireUser } from "@/lib/auth";
 import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
 import type { ChatStreamEvent, WebSearchResult } from "@/lib/types";
+import type { Conversation } from "@prisma/client";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
   }
 
   // ---------- Resolve conversation ----------
-  let conversation = null;
+  let conversation: Conversation | null = null;
   if (body.conversationId) {
     conversation = await db.conversation.findFirst({
       where: { id: body.conversationId, userId: user.id },

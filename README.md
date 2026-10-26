@@ -10,6 +10,7 @@ A production-ready, full-stack AI workspace built on **Next.js 16 (App Router) +
 
 | Area | What you get |
 | --- | --- |
+| **Agent engine** | A real autonomous agent (POST `/api/agent`): emits a **plan**, then chains verified gateway tools — `web_search`, `page_reader`, `generate_image` — and produces versioned **Artifacts** (markdown / code / html / svg / image). Multi-iteration tool-result loop with a live Z.ai-style execution timeline, artifact side panel (view, preview HTML in a sandboxed iframe, copy, download), and `[[artifact:id]]` chips inside messages. Artifacts and steps are persisted per conversation and restored on reload |
 | **Streaming chat** | Token-by-token SSE streaming, live caret, stop/resume, regenerate, auto-titling |
 | **Thinking mode** | Toggleable chain-of-thought requests (`thinking.enabled`), collapsible reasoning trace when the model emits one |
 | **Web search tool** | Optional per-message grounding via the gateway's `web_search` function; results rendered as a status chip and cited context |
@@ -150,9 +151,23 @@ data: {"type":"error","message":"…","fatal":boolean}
 
 Client disconnects are detected server-side (`request.signal`) and partial outputs are persisted with `status: "cancelled"` — nothing is lost.
 
+### Agent protocol (`POST /api/agent` → SSE)
+
+The agent loop gives the model an inline block protocol. The engine filters blocks out of the visible stream (char-accurate even when tags split across chunks), executes them, and feeds tool results back for the next iteration (≤6 iterations, ≤12 tool steps):
+
+```
+<plan>{"steps":["Research","Draft"]}</plan>                     → plan + step events
+<tool>{"name":"web_search","arguments":{"query":"…"}}</tool>    → step events (running→done/error)
+<tool>{"name":"page_reader","arguments":{"url":"…"}}</tool>
+<tool>{"name":"generate_image","arguments":{"prompt":"…"}}</tool>
+<artifact title="Report" kind="markdown">…full content…</artifact>
+```
+
+SSE events: `meta` · `plan` · `step` · `artifact_delta` (live draft) · `artifact` (finalized, versioned) · `delta` · `thinking` · `title` · `done` · `error`. Generated images are stored as `Document` rows and attached as `image` artifacts; text artifacts upsert by title (same title → `version++`). Assistant messages embed `[[artifact:<id>]]` markers that the UI renders as chips.
+
 ### Data model (Prisma / SQLite)
 
-`User` → `Conversation` → `Message` (roles, tokens, latency, model, status) · `SystemPrompt` · `Document` → `DocumentChunk` · `UsageEvent`. All relations cascade on delete; indexes on hot query paths (`userId+updatedAt`, `conversationId+createdAt`, `documentId`).
+`User` → `Conversation` → `Message` (roles, tokens, latency, model, status) · `AgentStep` (plan/tool/artifact timeline rows) · `Artifact` (versioned files) · `SystemPrompt` · `Document` → `DocumentChunk` · `UsageEvent`. All relations cascade on delete; indexes on hot query paths (`userId+updatedAt`, `conversationId+createdAt`, `documentId`, `messageId`).
 
 ---
 

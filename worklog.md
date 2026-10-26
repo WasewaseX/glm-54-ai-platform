@@ -164,3 +164,72 @@ Stage Summary:
 - "Conversation not found" eliminated at the root; multi-turn memory proven in-browser (BANANA-TIDE recall test).
 - App now mirrors chat.z.ai's workspace UX with 5 real agent modes and serialized-writing Continue.
 - Code durably backed up to github.com/WasewaseX/glm-54-ai-platform (private) with a re-runnable backup script.
+
+---
+Task ID: 12
+Agent: Z.ai Code (main)
+Task: Backend agent engine — real multi-step tool-calling loop + artifacts (reverse-engineering chat.z.ai agent)
+
+Work Log:
+- prisma/schema.prisma: added Artifact (conversationId, messageId?, title, kind markdown|code|html|svg|image, language?, content, version) + AgentStep (messageId, conversationId, idx, kind plan|tool|artifact, tool?, title, detail JSON, status running|done|error); relations on Conversation/Message. db:push OK.
+- src/lib/types.ts: ArtifactItem, AgentStepItem, AgentStreamEvent (meta/title/plan/step/artifact_delta/artifact/delta/thinking/done/error), ConversationDetail gains artifacts?/steps?.
+- src/lib/ai.ts: pageReader() (gateway page_reader + dependency-free htmlToText), generateImage() (images.generations.create → base64), isImageSize() with the 7 verified sizes.
+- src/lib/agent-engine.ts: AGENT_SYSTEM_PROMPT with exact inline block protocol (<plan> JSON steps, <tool> JSON calls, <artifact title kind language> raw content); BlockStreamFilter — char-accurate streaming filter that suppresses plan/tool/artifact blocks from the visible stream (handles partial openers/closers split across chunks, false-positive angle brackets, unclosed blocks at EOF; artifacts stream live via artifact_delta); executeTool (web_search/page_reader/generate_image; image saves a Document and an image Artifact); upsertArtifact (same title → version++); runAgent loop: ≤6 iterations, ≤12 tool steps, feeds <tool_results> back as user turns, persists steps/artifacts as they happen, abort-aware, returns AgentRunStats (fullText, thinkingText, model, usage, iterations, status, toolsUsed, artifactsCreated). Stored assistant content embeds [[artifact:<id>]] markers for UI chips.
+- src/app/api/agent/route.ts: SSE endpoint — auth + rate limit, conversation resolution, text-doc RAG context, agent persona passthrough (agentId → AGENT_BY_ID), persists user/assistant rows, runs the engine, persists message/usage/model, auto-title, done event with iterations. Visual attachments politely rejected (use chat mode).
+- src/app/api/conversations/[id]/route.ts: GET now returns artifacts[] + steps[] alongside messages (reload restores timelines + panel).
+- Fixed `let conversation = null` strict-null typing in both chat and agent routes (Conversation | null).
+- Verified BlockStreamFilter with 8 chunk-boundary unit scenarios (char-by-char split tags, split closers, HTML-in-artifact, false positives, EOF-unclosed) — all pass. tsc clean for new files.
+
+Stage Summary:
+- The app now has a REAL agent engine: plan → tool calls (web_search, page_reader, generate_image) → artifacts with versioning, streamed live with a Z.ai-style protocol. Backend ready for frontend UX (Task 13).
+
+---
+Task ID: 13
+Agent: Z.ai Code (main)
+Task: Agent frontend UX — Agent toggle, live execution timeline, Artifacts side panel (chat.z.ai-style)
+
+Work Log:
+- src/lib/api-client.ts: added AgentRequestBody + streamAgentSse (POST /api/agent, typed AgentStreamEvent) sharing the exact SSE parser with streamChatSse via new openSseStream/readSseBody helpers (frame splitting + [DONE] handling identical); added fetchRawBlob (session-headered blob fetch) + saveBlob (object-URL download), and refactored downloadExport onto saveBlob (behavior unchanged).
+- src/lib/types.ts: added LiveArtifact (tempId/title/kind/language/content) for the streaming artifact draft.
+- src/lib/store.ts: agent state (agentMode, stepsByMessage, artifacts, artifactPanelOpen, activeArtifactId, liveArtifact) + actions (setAgentMode, setArtifactPanelOpen, openArtifact, hydrateArtifacts, scheduleArtifactHydration, sendAgentMessage). sendAgentMessage mirrors sendMessage exactly — optimistic rows, abort controller, patch-first-then-update-id on meta (critical Task 9 bug pattern preserved) — and handles: step upsert by id (running→done/error replaced, idx-sorted) into stepsByMessage[currentAssistantId]; artifact_delta appends into liveArtifact; artifact upserts (harvesting the streamed draft text as content), clears liveArtifact, auto-selects + opens the panel; plan is a deliberate no-op (the persisted step event is the source of truth); done/error/title same as chat. Because the artifact SSE event carries no content, a debounced hydrateArtifacts() refetches conversation detail and merges authoritative rows (self-heals image artifacts whose content is a document id). openConversation hydrates artifacts + groups steps by messageId (idx order); newConversation/stopStreaming clear agent state incl. pending drafts.
+- src/components/chat/agent-timeline.tsx (new): chat.z.ai-style task card above assistant content — rounded-xl border bg-card/50, Bot header with live summary ("Working — 2/5 done" shimmer / "5 steps completed"), default expanded while streaming, auto-collapses on done, per-kind icons (plan ListChecks, web_search Globe, page_reader BookOpen, generate_image ImagePlus, artifact/image FileText), status icons (Loader2 spin / emerald Check / destructive AlertCircle), click-to-expand safely-parsed JSON detail (query/url/count/chars/error), plan steps rendered as numbered checklist.
+- src/components/chat/artifact-panel.tsx (new): ArtifactPanel (header + count badge, selectable list rows with kind icon/title/kind·language/updated-time/v{n} badge, master-detail viewer) + ArtifactPanelHost (desktop: w-[400px] xl:w-[440px] shrink-0 border-l column; mobile <768px: Sheet side="right" w-[85vw]). Viewers: markdown → Markdown; code → Markdown fenced block with fence-length padding (immune to nested backticks) giving language label + copy + highlighting; html → sandboxed iframe preview (allow-scripts, no same-origin) with Preview/Code toggle; svg → data-URL img + code toggle; image → plain <img src="/api/documents/{content}/raw"> exactly like documents-dialog. Actions: Copy (sonner toast), Download (blob; .md/.txt/.html/.svg, image fetched raw as .png). Live draft shows a shimmer "Writing artifact…" row + plain <pre> streaming view. Friendly empty state.
+- src/components/chat/message-item.tsx: renders AgentTimeline (steps selected from store by message.id) above the bubble; content split around [[artifact:<id>]] markers → inline chip buttons (FileText + artifact title from store, fallback "Artifact") calling openArtifact — raw markers never rendered.
+- src/components/chat/composer.tsx: Agent toggle (Bot icon, active styling + tooltip "Agent mode: plan, search, read pages, generate images & files"), subtle active styling on the input shell (primary ring) + task placeholder; agentMode send path calls sendAgentMessage (web toggle kept but dimmed with explanatory tooltip — agent picks its own tools); guard: visual attachments in agent mode → toast.warning and no send.
+- src/components/chat/chat-header.tsx: PanelRight "Artifacts" toggle with pressed state + absolute count badge (9+ cap), aria-pressed/labels.
+- src/app/page.tsx: ArtifactPanelHost as a flex sibling of <main> (desktop column / mobile Sheet) — footer stickiness and responsive layout untouched.
+- Verification: `bun run lint` clean; `bunx tsc --noEmit` src/ errors identical to baseline (pre-existing toast.success ones in documents-dialog/settings-dialog left untouched; zero new); GET / + POST /api/chat compile and stream clean in dev.log (meta/delta/title/done regression pass).
+- CRITICAL FINDING (for Task 14): live agent runs currently fail in the RUNNING dev-server process with `TypeError: Cannot read properties of undefined (reading 'findMany') at db.artifact` (agent-engine upsertArtifact) — the long-running process caches the pre-Task-12 Prisma client (globalThis-cached PrismaClient), and /api/conversations/[id] hydration of artifacts/steps is equally affected. The on-disk client IS current (fresh node: p.artifact/p.agentStep exist; `bunx prisma generate` re-run). The dev server must be RESTARTED before E2E; SSE protocol itself was live-verified up to that failure point (meta → artifact_delta tempId "pending-artifact-1" → error fatal), and the frontend renders the failure as a proper error banner.
+
+Stage Summary:
+- Agent UX complete end-to-end on the client: Agent mode toggle, live plan/search/read/image/artifact timeline, artifact chips in messages, and a live Artifacts panel (view/copy/download incl. sandboxed HTML & SVG previews and stored-image rendering) that survives reload via conversation hydration. Backend + frontend E2E is unblocked the moment the dev server is restarted to pick up the Task 12 Prisma client.
+
+---
+Task ID: 14
+Agent: Z.ai Code (main)
+Task: E2E verification of the agent engine (curl + agent-browser) + fixes
+
+Work Log:
+- Restarted dev server (old process cached the pre-Task-12 Prisma client — db.artifact/db.agentStep were undefined inside it).
+- curl golden path: agent run produced meta → plan (2 steps persisted) → web_search (running→done, detail {query,count}) → page_reader (chained off search results) → artifact "GLM Overview" (markdown, v1, 965 chars) → done; auto-titled "GLM Model Overview"; conversation detail returns artifacts[] + steps[].
+- BlockStreamFilter verified with 8 chunk-boundary unit scenarios (char-by-char splits, split closers, HTML-in-artifact, false-positive angle brackets, EOF-unclosed) — all pass.
+- FIXED (live-view bug): store never appended the [[artifact:id]] marker to the assistant message during streaming (server embeds it only at save time) → live message showed the empty-state shimmer forever. Store now appends the marker on the artifact event.
+- FIXED: empty-bubble branch rendered "Thinking…" even for completed messages → now streaming-only; complete shows "(empty response)".
+- FIXED: sidebar conversation preview leaked raw [[artifact:…]] markers → preview now strips markers server-side.
+- FIXED: conversations created by SENDING (not by opening) never wrote glm54.lastConversation → no auto-restore after reload; both sendMessage and sendAgentMessage meta handlers now persist the key.
+- agent-browser E2E (desktop + 390px mobile): Agent toggle → send → plan/tool/artifact steps render in collapsible "Agent activity" timeline; artifact panel auto-opens (desktop right column, mobile Sheet) with markdown viewer, copy/download; HTML artifact Preview renders in sandboxed iframe ("Hello Agent" h1); [[artifact:id]] chips render in messages (live + hydrated); reload restores conversation, timeline, artifacts; normal chat still works in the same conversation as agent turns; zero console errors; lint clean; dev.log all 200s.
+
+Stage Summary:
+- The reverse-engineered Z.ai agent is fully working end-to-end: plan → tools → artifacts, live timeline + artifact panel, persistence across reloads, in both desktop and mobile.
+
+---
+Task ID: 15
+Agent: Z.ai Code (main)
+Task: README + GitHub backup
+
+Work Log:
+- README: added Agent engine row to features, new "Agent protocol (POST /api/agent → SSE)" section (block protocol + SSE events + versioning), data model updated with AgentStep/Artifact.
+- Pushed all work to github.com/WasewaseX/glm-54-ai-platform via scripts/backup-to-github.sh (token read from gitignored .env only).
+
+Stage Summary:
+- Session deliverable: GLM 5.4 AI is now a real agent platform (chat + autonomous agent with tools and artifacts), durably backed up to GitHub.

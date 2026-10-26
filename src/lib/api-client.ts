@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  AgentStreamEvent,
   ChatStreamEvent,
   ConversationDetail,
   ConversationSummary,
@@ -123,34 +124,9 @@ export interface ChatRequestBody {
   regenerate?: boolean;
 }
 
-/**
- * POST /api/chat and parse the SSE response into typed events.
- * Returns the Response so callers can abort; onEvent is called per frame.
- */
-export async function streamChatSse(
-  body: ChatRequestBody,
-  onEvent: (event: ChatStreamEvent) => void,
-  signal?: AbortSignal
-): Promise<void> {
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: withSessionHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify(body),
-    signal,
-  });
-  adoptSessionToken(res);
-
-  if (!res.ok || !res.body) {
-    let message = `Chat request failed (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: string };
-      if (data.error) message = data.error;
-    } catch {
-      /* keep default */
-    }
-    throw new Error(message);
-  }
-
+/** Shared SSE body reader: splits frames and hands each `data:` payload to onPayload. */
+async function readSseBody(res: Response, onPayload: (payload: string) => void): Promise<void> {
+  if (!res.body) throw new Error("Stream response has no body.");
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -167,13 +143,101 @@ export async function streamChatSse(
       if (!line.startsWith("data:")) continue;
       const payload = line.slice(5).trim();
       if (!payload || payload === "[DONE]") continue;
-      try {
-        onEvent(JSON.parse(payload) as ChatStreamEvent);
-      } catch {
-        /* skip malformed frame */
-      }
+      onPayload(payload);
     }
   }
+}
+
+/** Open a POST SSE stream, throwing a descriptive Error on failure. */
+async function openSseStream(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: withSessionHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(body),
+    signal,
+  });
+  adoptSessionToken(res);
+
+  if (!res.ok || !res.body) {
+    let message = `Stream request failed (${res.status})`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data.error) message = data.error;
+    } catch {
+      /* keep default */
+    }
+    throw new Error(message);
+  }
+  return res;
+}
+
+/**
+ * POST /api/chat and parse the SSE response into typed events.
+ * Returns the Response so callers can abort; onEvent is called per frame.
+ */
+export async function streamChatSse(
+  body: ChatRequestBody,
+  onEvent: (event: ChatStreamEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await openSseStream("/api/chat", body, signal);
+  await readSseBody(res, (payload) => {
+    try {
+      onEvent(JSON.parse(payload) as ChatStreamEvent);
+    } catch {
+      /* skip malformed frame */
+    }
+  });
+}
+
+export interface AgentRequestBody {
+  conversationId?: string;
+  message?: string;
+  attachmentIds?: string[];
+  thinking?: boolean;
+  agentId?: string;
+}
+
+/**
+ * POST /api/agent and parse the SSE response into typed AgentStreamEvents.
+ * Same frame protocol as streamChatSse; events carry plan/step/artifact data.
+ */
+export async function streamAgentSse(
+  body: AgentRequestBody,
+  onEvent: (event: AgentStreamEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await openSseStream("/api/agent", body, signal);
+  await readSseBody(res, (payload) => {
+    try {
+      onEvent(JSON.parse(payload) as AgentStreamEvent);
+    } catch {
+      /* skip malformed frame */
+    }
+  });
+}
+
+/**
+ * Fetch any API path as a Blob with session headers attached (iframe-proof
+ * downloads — cookies alone are not reliable inside cross-site previews).
+ */
+export async function fetchRawBlob(path: string): Promise<Blob> {
+  const res = await fetch(path, { headers: withSessionHeaders() });
+  adoptSessionToken(res);
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  return res.blob();
+}
+
+/** Trigger a browser download for a Blob (revokes the object URL afterwards). */
+export function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 /**
@@ -190,14 +254,7 @@ export async function downloadExport(id: string, format: "md" | "json"): Promise
   const dispo = res.headers.get("content-disposition") ?? "";
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(dispo);
   const name = match ? decodeURIComponent(match[1]) : `conversation.${format}`;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+  saveBlob(blob, name);
 }
 
 // ---------- Typed endpoint helpers ----------

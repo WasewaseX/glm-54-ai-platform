@@ -37,6 +37,7 @@ model Conversation {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   messages     Message[]
+  artifacts    Artifact[]
 
   @@index([userId, updatedAt])
 }
@@ -57,6 +58,7 @@ model Message {
   status           String       @default("complete") // complete | cancelled | error
   error            String?
   createdAt        DateTime     @default(now())
+  agentSteps       AgentStep[]
 
   @@index([conversationId, createdAt])
 }
@@ -95,6 +97,39 @@ model DocumentChunk {
   tokens     Int
 
   @@index([documentId])
+}
+
+model Artifact {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  messageId      String? // assistant message that produced the latest version
+  title          String
+  kind           String       @default("markdown") // markdown | code | html | svg | image
+  language       String? // for kind=code
+  content        String       @default("") // text content; kind=image stores the source documentId
+  version        Int          @default(1)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([conversationId, updatedAt])
+}
+
+model AgentStep {
+  id             String   @id @default(cuid())
+  messageId      String
+  message        Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversationId String
+  idx            Int
+  kind           String // plan | tool | artifact
+  tool           String? // web_search | page_reader | generate_image | artifact
+  title          String
+  detail         String? // compact JSON (query, url, results count, artifact id...)
+  status         String   @default("done") // running | done | error
+  createdAt      DateTime @default(now())
+
+  @@index([messageId])
+  @@index([conversationId])
 }
 
 model UsageEvent {

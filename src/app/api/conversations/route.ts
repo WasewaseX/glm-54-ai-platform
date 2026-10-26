@@ -47,7 +47,12 @@ export async function GET(req: Request) {
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
     messageCount: c._count.messages,
-    preview: c.messages[0]?.content?.slice(0, 140) ?? null,
+    preview:
+      c.messages[0]?.content
+        ?.replace(/\[\[artifact:[^\]\n]+\]\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 140) ?? null,
   }));
 
   return Response.json({ conversations: summaries });
