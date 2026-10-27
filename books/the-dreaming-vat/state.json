@@ -28,19 +28,21 @@
       "title": "Engineer's Ear"
     },
     "5": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2440,
+      "attempts": 1,
+      "title": "Borrowed Time"
     },
     "6": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2182,
+      "attempts": 1,
+      "title": "First Contact"
     },
     "7": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "8": {
       "status": "pending",
@@ -94,19 +96,21 @@
       "title": "Cerulean's Eye"
     },
     "17": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2056,
+      "attempts": 1,
+      "title": "The Board Meeting"
     },
     "18": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2487,
+      "attempts": 1,
+      "title": "Fog of War"
     },
     "19": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "20": {
       "status": "pending",
@@ -144,14 +148,15 @@
       "title": "The Privacy Filter"
     },
     "26": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2368,
+      "attempts": 1,
+      "title": "The Ethics Board"
     },
     "27": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "28": {
       "status": "pending",
@@ -199,19 +204,21 @@
       "title": "Corner Fraying"
     },
     "36": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2174,
+      "attempts": 1,
+      "title": "Data Smuggle"
     },
     "37": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2124,
+      "attempts": 1,
+      "title": "The Patent Shadow"
     },
     "38": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "39": {
       "status": "pending",
@@ -248,19 +255,21 @@
       "title": "Patent War"
     },
     "45": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2637,
+      "attempts": 1,
+      "title": "The Watchful Lab"
     },
     "46": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2175,
+      "attempts": 1,
+      "title": "The Fork Attempt"
     },
     "47": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "48": {
       "status": "pending",
@@ -302,19 +311,21 @@
       "title": "The Sample"
     },
     "55": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2169,
+      "attempts": 1,
+      "title": "The Warning"
     },
     "56": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1935,
+      "attempts": 1,
+      "title": "The Leak"
     },
     "57": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "58": {
       "status": "pending",
@@ -356,14 +367,16 @@
       "title": "The Naval Incident"
     },
     "65": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2072,
+      "attempts": 1,
+      "title": "Testimony"
     },
     "66": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2386,
+      "attempts": 1,
+      "title": "The Choir Field"
     },
     "67": {
       "status": "pending",
@@ -422,14 +435,15 @@
       "title": "Shared Breath"
     },
     "77": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2317,
+      "attempts": 1,
+      "title": "The Tick"
     },
     "78": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "79": {
       "status": "pending",
@@ -466,19 +480,21 @@
       "title": "The Protocol"
     },
     "85": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2307,
+      "attempts": 1,
+      "title": "The Dream"
     },
     "86": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2242,
+      "attempts": 1,
+      "title": "The Current"
     },
     "87": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "88": {
       "status": "pending",
@@ -514,19 +530,21 @@
       "title": "Confession"
     },
     "94": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2321,
+      "attempts": 1,
+      "title": "Commons"
     },
     "95": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2522,
+      "attempts": 1,
+      "title": "Tidal"
     },
     "96": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "97": {
       "status": "pending",
@@ -549,9 +567,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 102277,
-  "chaptersDone": 45,
+  "totalWords": 143191,
+  "chaptersDone": 63,
   "errors": [],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T09:50:12.102Z"
+  "updatedAt": "2026-10-27T09:59:07.092Z"
 }
