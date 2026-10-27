@@ -406,7 +406,7 @@
     "69": {
       "status": "failed",
       "words": 0,
-      "attempts": 4
+      "attempts": 5
     },
     "70": {
       "status": "pending",
@@ -468,9 +468,9 @@
       "title": "Ceasefire"
     },
     "80": {
-      "status": "pending",
+      "status": "failed",
       "words": 0,
-      "attempts": 2
+      "attempts": 3
     },
     "81": {
       "status": "done",
@@ -599,8 +599,9 @@
     "chapter 40: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 49: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 59: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
-    "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+    "chapter 80: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T12:24:36.845Z"
+  "updatedAt": "2026-10-27T12:36:58.654Z"
 }
