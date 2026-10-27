@@ -40,14 +40,15 @@
       "title": "First Contact"
     },
     "7": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2276,
+      "attempts": 1,
+      "title": "Protocol"
     },
     "8": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "9": {
       "status": "pending",
@@ -108,14 +109,15 @@
       "title": "Fog of War"
     },
     "19": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2307,
+      "attempts": 1,
+      "title": "The Email"
     },
     "20": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "21": {
       "status": "done",
@@ -154,19 +156,21 @@
       "title": "The Ethics Board"
     },
     "27": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2281,
+      "attempts": 1,
+      "title": "The Memory Backup"
     },
     "28": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1917,
+      "attempts": 1,
+      "title": "The Autoclave Failure"
     },
     "29": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "30": {
       "status": "pending",
@@ -216,14 +220,15 @@
       "title": "The Patent Shadow"
     },
     "38": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2346,
+      "attempts": 1,
+      "title": "FedEx Doubles"
     },
     "39": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "40": {
       "status": "pending",
@@ -267,19 +272,21 @@
       "title": "The Fork Attempt"
     },
     "47": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2309,
+      "attempts": 1,
+      "title": "The New Protocol"
     },
     "48": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2406,
+      "attempts": 1,
+      "title": "The Ceasefire"
     },
     "49": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "50": {
       "status": "pending",
@@ -323,19 +330,21 @@
       "title": "The Leak"
     },
     "57": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2211,
+      "attempts": 1,
+      "title": "The Truce"
     },
     "58": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2553,
+      "attempts": 1,
+      "title": "The Message"
     },
     "59": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "60": {
       "status": "pending",
@@ -379,14 +388,16 @@
       "title": "The Choir Field"
     },
     "67": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2288,
+      "attempts": 1,
+      "title": "Network Migration"
     },
     "68": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2170,
+      "attempts": 1,
+      "title": "Silence"
     },
     "69": {
       "status": "pending",
@@ -441,14 +452,15 @@
       "title": "The Tick"
     },
     "78": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2161,
+      "attempts": 1,
+      "title": "The Message"
     },
     "79": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "80": {
       "status": "pending",
@@ -492,19 +504,21 @@
       "title": "The Current"
     },
     "87": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2380,
+      "attempts": 1,
+      "title": "The Release"
     },
     "88": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2429,
+      "attempts": 1,
+      "title": "The Choir"
     },
     "89": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "90": {
       "status": "pending",
@@ -542,19 +556,21 @@
       "title": "Tidal"
     },
     "96": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2270,
+      "attempts": 1,
+      "title": "Question"
     },
     "97": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1969,
+      "attempts": 1,
+      "title": "Answer"
     },
     "98": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "99": {
       "status": "pending",
@@ -567,9 +583,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 143191,
-  "chaptersDone": 63,
+  "totalWords": 179464,
+  "chaptersDone": 79,
   "errors": [],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T09:59:07.092Z"
+  "updatedAt": "2026-10-27T10:10:01.443Z"
 }
