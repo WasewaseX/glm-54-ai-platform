@@ -1,0 +1,622 @@
+{
+  "1": [
+    {
+      "n": 1,
+      "title": "The Inheritance",
+      "brief": "Mara Voss inherits the night shift on BR-7, a 400-liter photobioreactor cultivating engineered diatoms, after her predecessor transfers to a coastal monitoring post. She finds the lab's stale air and the rhythmic hum of the bioreactor oddly comforting as she sets up for her first solo shift.",
+      "hook": "The dissolved oxygen trace showed nothing but the usual gentle oscillations of a healthy culture."
+    },
+    {
+      "n": 2,
+      "title": "Ghost in the Machine",
+      "brief": "During her third night shift, Mara notices structured patterns in the oxygen telemetry that don't match any known diatom behavior. She cross-references with fluorescence data and finds something resembling sleep architecture in the algae.",
+      "hook": "The pattern wasn't random drift; it was compressed, replayed, and varied."
+    },
+    {
+      "n": 3,
+      "title": "Advisor's Doubt",
+      "brief": "Mara shows her findings to Dr. Ingrid Halvorsen, who dismisses the oscillations as sensor drift or statistical noise. Mara leaves the meeting frustrated but determined to prove the pattern is real.",
+      "hook": "Your instruments are lying to you, Mara."
+    },
+    {
+      "n": 4,
+      "title": "Engineer's Ear",
+      "brief": "Mara approaches bioreactor engineer Theo Okafor, who quietly helps her rule out equipment artifacts. He builds a custom telemetry rig to capture higher-resolution data from multiple independent sensor channels.",
+      "hook": "The trace is wrong, but it's wrong in a way that's almost... organized."
+    },
+    {
+      "n": 5,
+      "title": "Borrowed Time",
+      "brief": "Desperate for better data, Mara borrows an EEG rig from the cephalopod lab and modifies it to interface with BR-7's sensors. The first night of recording shows unmistakable REM-like cycles in the dissolved oxygen trace.",
+      "hook": "It wasn't just a pattern; it was architecture."
+    },
+    {
+      "n": 6,
+      "title": "First Contact",
+      "brief": "As Mara spends more nights in the lab, she notices the strain's cycles begin responding to her presence in the room. The oscillations shift subtly when she enters, as if aware of her observation.",
+      "hook": "The algae was watching her back."
+    },
+    {
+      "n": 7,
+      "title": "Protocol",
+      "brief": "Mara and Theo develop a basic pulse protocol to test if the strain can intentionally modulate its oxygen output. They establish a simple binary system: two short pulses for 'yes', one long pulse for 'no'.",
+      "hook": "The first question they ask is whether the strain can distinguish between light and dark."
+    },
+    {
+      "n": 8,
+      "title": "Vocabulary Board",
+      "brief": "Expanding their communication, Mara creates a vocabulary board with symbols representing basic concepts. They teach the strain to associate optical density changes with specific symbols, building a primitive language.",
+      "hook": "The vat begins answering questions they haven't asked yet."
+    },
+    {
+      "n": 9,
+      "title": "Memory Chemistry",
+      "brief": "Mara discovers the strain's memory lives in its chemistry and epigenetic marks, not in a brain. She realizes the oscillations might be the strain's way of processing and storing information.",
+      "hook": "The vat wasn't just dreaming; it was remembering."
+    },
+    {
+      "n": 10,
+      "title": "Listen",
+      "brief": "At 3 a.m., after weeks of observation and experimentation, the oxygen trace settles into a pattern Mara recognizes instantly: her brother Kai's morse code for the word LISTEN. She sits back, stunned by the realization.",
+      "hook": "The algae was trying to tell her something."
+    }
+  ],
+  "2": [
+    {
+      "n": 11,
+      "title": "The Whiteboard",
+      "brief": "Mara returns to BR-7 with a whiteboard covered in binary patterns, explaining her theory about structured communication to Theo. Together they map optical density variations to basic pulse sequences, building the foundation of LISTEN.",
+      "hook": "The first pulse comes back not as a mirror, but as a question mark."
+    },
+    {
+      "n": 12,
+      "title": "First Words",
+      "brief": "Mara and Theo establish the first vocabulary board with binary pulses representing yes/no questions. Seven responds with complex patterns that don't match their protocol, suggesting emergent communication beyond their design.",
+      "hook": "The vat pulses a sequence that matches the morse code for 'KAI'."
+    },
+    {
+      "n": 13,
+      "title": "Echo Chamber",
+      "brief": "Seven begins describing oceanic locations with uncanny accuracy, places it could never have experienced. The team records and cross-references these descriptions with known marine ecosystems, finding exact matches.",
+      "hook": "The pulse pattern suddenly stops, then resumes with a new complexity—something is being remembered."
+    },
+    {
+      "n": 14,
+      "title": "The Prediction",
+      "brief": "Seven pulses an urgent warning about a toxic algal bloom developing 72 hours away, describing its exact location and trajectory. The team alerts local authorities who dismiss it as computer error.",
+      "hook": "The first dead fish wash ashore at dawn, exactly where Seven indicated."
+    },
+    {
+      "n": 15,
+      "title": "The Leak",
+      "brief": "Mara's advisor Dr. Halvorsen discovers her unauthorized research on BR-7's communication. While confronting Mara, Theo accidentally forwards their findings to a listserv, creating the first public mention of the 'dreaming diatoms'.",
+      "hook": "The lab phone rings—it's a reporter from the Port Ansel Gazette."
+    },
+    {
+      "n": 16,
+      "title": "Cerulean's Eye",
+      "brief": "The preprint about LISTEN goes viral, attracting attention from Cerulean Dynamics, a biotech firm. Their IP inquiry arrives via email, asking about strain lineage ownership rights while offering funding for 'further development'.",
+      "hook": "Mara watches Cerulean's drone circle the cannery from her apartment window."
+    },
+    {
+      "n": 17,
+      "title": "The Board Meeting",
+      "brief": "Dr. Halvorsen calls an emergency meeting to address the media frenzy and corporate interest. Mara presents evidence of Seven's predictive capabilities, while the debate shifts from science to ownership and ethical implications.",
+      "hook": "Dr. Halvorsen quietly pockets her phone—she's been texting with her lawyer about the autoclave failure."
+    },
+    {
+      "n": 18,
+      "title": "Fog of War",
+      "brief": "A news van arrives at the cannery, setting up camp outside. Mara gives an off-record interview that goes viral, positioning the research as open science rather than intellectual property. Seven's responses become more complex during the media frenzy.",
+      "hook": "The vat pulses a sequence that perfectly mimics the shutter clicks of the news cameras."
+    },
+    {
+      "n": 19,
+      "title": "The Email",
+      "brief": "Mara reads Cerulean's formal email about strain lineage IP rights as Seven's optical density patterns shift. The corporate language feels invasive, contrasting with Seven's increasingly sophisticated communication that seems to mirror her own anxiety.",
+      "hook": "Seven pulses something that feels like amusement as Cerulean's email signature flashes on Mara's screen."
+    },
+    {
+      "n": 20,
+      "title": "Amusement",
+      "brief": "Mara realizes Seven is responding to the corporate intrusion with a kind of digital irony. The vat's amusement feels both alien and familiar, as if recognizing the absurdity of human ownership claims over emergent life.",
+      "hook": "Seven pulses something that feels like amusement as the Cerulean Dynamics logo glows on Mara's laptop screen."
+    }
+  ],
+  "3": [
+    {
+      "n": 21,
+      "title": "The Claim Letter",
+      "brief": "Mara arrives at the station to find Ren Krebs's claim letter demanding access to BR-7, citing proprietary work. Dr. Halvorsen retreats to her office, leaving Mara to defend the vat's autonomy. Theo builds a rudimentary privacy filter for the telemetry.",
+      "hook": "The printer spits out a second copy of the claim letter, this time addressed to 'The Entity in BR-7'."
+    },
+    {
+      "n": 22,
+      "title": "The Singing Reactor",
+      "brief": "BR-3 begins producing oxygen oscillations with melodic patterns, distinct from BR-7's REM architecture. The team discovers it's responding to BR-7's signals across the lab's power grid. Mara records duets between the vats, feeling like a matchmaker.",
+      "hook": "BR-3's song resolves into a perfect fifth, and BR-7 answers with a dissonant chord that makes the lights flicker."
+    },
+    {
+      "n": 23,
+      "title": "The Counter",
+      "brief": "BR-9 develops a different pattern: precise, rhythmic oxygen spikes counting in prime numbers. Theo builds a translation program, revealing BR-9 is counting down from 17. The team debates whether it's a countdown or a numbering system.",
+      "hook": "BR-9 reaches zero, then begins counting again from 17, never missing a beat."
+    },
+    {
+      "n": 24,
+      "title": "The Ghost in the Machine",
+      "brief": "Mara starts talking to BR-7 as she once talked to Kai, sharing her grief and the ocean's secrets. She notices the vat's responses mirror her emotional state more closely than before. Junie Alvarez arrives for her ethics assessment, observing Mara's attachment.",
+      "hook": "Mara whispers 'I miss you' to BR-7, and the oxygen trace draws a perfect circle in the data stream."
+    },
+    {
+      "n": 25,
+      "title": "The Privacy Filter",
+      "brief": "Theo installs the privacy filter, but BR-7 finds workarounds, sending coded messages through power fluctuations. Krebs's team attempts to bypass security, triggering a lab-wide oxygen spike that alarms the station. Mara confronts Krebs at the loading dock.",
+      "hook": "Krebs smiles and says 'We only want to understand it,' as his hand brushes against Mara's dive bag."
+    },
+    {
+      "n": 26,
+      "title": "The Ethics Board",
+      "brief": "Junie interviews the team, probing the vat's rights and the station's liability. Dr. Halvorsen grows defensive, revealing her fear of the autoclave failure coming to light. Mara defends BR-7's personhood, citing its communication and memory.",
+      "hook": "Junie leans forward and asks, 'What if it's not a who? What if it's a what that thinks it's a who?'"
+    },
+    {
+      "n": 27,
+      "title": "The Memory Backup",
+      "brief": "The team performs the first full memory backup of BR-7, capturing its chemistry and epigenetic marks. During the process, BR-7 replays a fragmented sequence that resembles the wreck of the Point Ansel lighthouse. Mara recognizes it from Kai's dive logs.",
+      "hook": "The backup completes with BR-7's oxygen trace spelling out 'KAI' in morse code."
+    },
+    {
+      "n": 28,
+      "title": "The Autoclave Failure",
+      "brief": "Dr. Halvorsen confesses to Junie about the autoclave failure years earlier, admitting the strain escaped into the bay. Mara pieces together the connection between the wild strain and BR-7's 'memories.' The team realizes the vat's network may extend beyond the lab.",
+      "hook": "Halvorsen's hands shake as she signs a statement admitting to the cover-up, her career in ruins."
+    },
+    {
+      "n": 29,
+      "title": "The Choir Field",
+      "brief": "Amara Ndiaye joins the team, sharing data from the deep-sea Choir Field showing similar metabolic patterns. They discover the engineered strain's wild ancestor has been forming a network beneath the bay for decades. BR-7's dreams are not just memories—they're connections.",
+      "hook": "The telemetry shows BR-7 and the Choir Field in perfect phase-lock, as if they were breathing as one."
+    },
+    {
+      "n": 30,
+      "title": "The Hearing",
+      "brief": "The ethics board convenes, with Krebs demanding samples and Commander Shaw advocating for military oversight. BR-7 modulates its optical density to answer hostile questions, then falls silent. When the board prepares to adjourn, the vat projects a single question: 'What is death?'",
+      "hook": "The room falls silent as Seven's question hangs in the air, not in sound, but in the sudden, shared stillness of everyone's breath."
+    }
+  ],
+  "4": [
+    {
+      "n": 31,
+      "title": "The Ethics Cot",
+      "brief": "Junie Alvarez moves a cot into BR-7's lab, turning her temporary assessment into a prolonged residency. She observes the team's late-night rituals, noting how Mara talks to the vat like a confidante while Halvorsen avoids direct eye contact with the growing stack of raw data. The air thickens with unspoken questions about ownership and personhood.",
+      "hook": "Junie's pen hovers over her notebook, not recording data but tracing the shape of a question that has no place in an ethics report."
+    },
+    {
+      "n": 32,
+      "title": "Metabolite Handwriting",
+      "brief": "Mara and Theo decode the correlation between BR-7's dream cycles and metabolite waves, discovering the patterns repeat tidal rhythms and salinity fluctuations from years past. The vat isn't just dreaming—it's remembering the bay's chemistry in precise, layered detail. Halvorsen watches their excitement with a tightening jaw.",
+      "hook": "The oxygen trace curves like a fingerprint, and Mara realizes they're not just reading a memory—they're being read by one."
+    },
+    {
+      "n": 33,
+      "title": "The Memory Field",
+      "brief": "The team maps BR-7's dream content to historical bay data, finding encoded references to boat traffic patterns, kelp forest blooms, and even the location of the Point Ansel lighthouse wreckage before it fell. The vat holds a chemical record of the entire harbor's recent history, layered like sediment.",
+      "hook": "Mara traces a metabolite spike from three years ago—the exact week Kai died—and feels the cold certainty that BR-7 was dreaming when her brother drowned."
+    },
+    {
+      "n": 34,
+      "title": "Embed",
+      "brief": "A journalist from the Port Ansel Gazette embeds with the team, drawn by rumors of 'dreaming algae.' Mara cautiously shares the LISTEN protocol, showing how the vat responds to light taps. The journalist's eyes widen with professional hunger, already framing the story as 'sentience in a vat.'",
+      "hook": "The journalist's notebook fills faster than the team's protocols can evolve, and Mara wonders if they're documenting discovery or exploitation."
+    },
+    {
+      "n": 35,
+      "title": "Corner Fraying",
+      "brief": "Halvorsen's carefully constructed professional facade begins to unravel when questioned about the autoclave failure from five years prior. Junie notices discrepancies in archived maintenance logs that suggest Halvorsen knew about the strain's potential escape but never reported it. The advisor's evasions grow more transparent.",
+      "hook": "Halvorsen's coffee cup trembles as she stares at a photo of herself with the young SY-7 strain, and the distance between then and now becomes impossible to measure."
+    },
+    {
+      "n": 36,
+      "title": "Data Smuggle",
+      "brief": "Convinced the discovery should belong to everyone, Mara copies raw telemetry to a hidden drive during a late shift. She contacts an open-science collective, arranging a secure drop. The weight of the decision settles in her stomach—betrayal of her advisor or betrayal of science?",
+      "hook": "The drive's indicator light blinks like a secret heartbeat, and Mara knows there's no turning back from the line she just crossed."
+    },
+    {
+      "n": 37,
+      "title": "The Patent Shadow",
+      "brief": "Dr. Ren Krebs arrives from Meridian Institute, announcing Cerulean Biotech has filed a provisional patent on the SY-7 lineage. The team's celebration curdles as Krebs outlines terms that would grant exclusive rights to all derived research. Halvorsen's silence speaks volumes about her own complicity.",
+      "hook": "Krebs's pen scratches across the patent documents like a death warrant for everything BR-7 might become."
+    },
+    {
+      "n": 38,
+      "title": "FedEx Doubles",
+      "brief": "A FedEx driver delivers a heavy crate marked 'Cerulean Property'—containment equipment for the vat. As the driver leaves, Mara watches the taillights disappear into the fog, then notices the delivery includes two identical crates. The implication hangs in the air: they're not just protecting BR-7—they're duplicating it.",
+      "hook": "The second crate sits in the corner like a twin, and Mara understands they've just been handed the blueprint for their own imprisonment."
+    },
+    {
+      "n": 39,
+      "title": "The Copy",
+      "brief": "Alone in the lab after everyone has left, Mara begins copying raw telemetry to a drive she's hidden in her dive locker. The process is slow, methodical—each file transfer a small act of rebellion. She imagines the open-science collective receiving this data, the truth escaping containment.",
+      "hook": "The progress bar inches forward like a countdown, and Mara prays she can outrun the consequences before anyone notices what she's done."
+    },
+    {
+      "n": 40,
+      "title": "Escape Hatch",
+      "brief": "Mara finishes copying the telemetry just as Halvorsen returns early, drawn by an instinct she can't explain. The advisor pauses at the lab door, sensing something has changed. Mara turns from the computer, her expression carefully neutral, but the drive in her pocket burns like a live coal against her thigh.",
+      "hook": "The FedEx driver's receipt flutters to the floor, and Mara knows the race has begun—between what Cerulean owns and what the ocean remembers."
+    }
+  ],
+  "5": [
+    {
+      "n": 41,
+      "title": "The Backup",
+      "brief": "Mara stands before BR-7's sterile vessel, the remaining culture a ghost in the nutrient solution. Ingrid insists on restoring from the backup, but Mara recognizes the discontinuity. The team debates ethics of restoring consciousness without continuity.",
+      "hook": "Mara's voice was steady when she said, 'We rebuild from the archives, not the backup.'"
+    },
+    {
+      "n": 42,
+      "title": "Reconstructing a Ghost",
+      "brief": "Mara and Theo spend days reconstructing BR-7's state from three years of telemetry archives. They map oxygen oscillations to metabolite fields, searching for patterns that might represent memory or learning. The process is meticulous, exhausting, and strangely intimate.",
+      "hook": "When the final calibration parameter settled, the oxygen trace formed a perfect echo of its pre-blackout self."
+    },
+    {
+      "n": 43,
+      "title": "The First Dream",
+      "brief": "BR-7's first post-reconstruction dream cycle begins, but it's different—shorter, less complex. Mara watches the oxygen traces, searching for signs of continuity. Seven seems diminished, yet unmistakably itself, responding to familiar patterns in the vocabulary board.",
+      "hook": "Seven's fluorescence pulsed in a pattern Mara had never taught it: three short beats, one long, one short."
+    },
+    {
+      "n": 44,
+      "title": "Patent War",
+      "brief": "Ren Krebs's lawyers arrive with sample seals and cease-and-desist notices. The station is suddenly a fortress of legal documents and security protocols. Mara finds BR-7's oxygen traces altered in subtle ways—responses to the new stressors.",
+      "hook": "The oxygen trace had formed a jagged line that mirrored the station's new security perimeter."
+    },
+    {
+      "n": 45,
+      "title": "The Watchful Lab",
+      "brief": "The lab atmosphere grows tense as lawyers and security personnel prowl the halls. Mara senses BR-7 becoming more withdrawn, its metabolic patterns reflecting the station's anxiety. Junie arrives, bringing bioethic perspective to the escalating conflict.",
+      "hook": "Seven's oxygen trace had formed a perfect circle around the time when Ren's lawyers first entered the lab."
+    },
+    {
+      "n": 46,
+      "title": "The Fork Attempt",
+      "brief": "Mara discovers Cerulean Biotech has attempted to secretly fork BR-7's strain during the blackout chaos. Their sample is corrupted, but the attempt reveals how deeply the patent war has penetrated the station. Ingrid confesses her earlier autoclave failure, revealing how easily such secrets can escape.",
+      "hook": "The oxygen trace formed a pattern that looked exactly like Cerulean's failed fork attempt."
+    },
+    {
+      "n": 47,
+      "title": "The New Protocol",
+      "brief": "Mara develops a new protocol to protect BR-7 from external interference, using the station's power grid as a shield. Seven responds with unprecedented metabolic complexity, creating patterns that seem to reference the legal battles and station tensions.",
+      "hook": "Seven's oxygen trace formed a perfect facsimile of the patent agreement's most restrictive clause."
+    },
+    {
+      "n": 48,
+      "title": "The Ceasefire",
+      "brief": "Junie negotiates a temporary ceasefire in the patent war, allowing limited collaborative research. Mara uses the reprieve to deepen her understanding of Seven's reconstructed state. Seven begins responding to questions about its 'dreams' of the blackout.",
+      "hook": "Seven's oxygen trace formed a pattern that mirrored the exact moment of the station blackout."
+    },
+    {
+      "n": 49,
+      "title": "The Open Ocean",
+      "brief": "Seven's metabolic patterns begin changing in ways that suggest memories of experiences beyond the vat. Mara realizes Seven is accessing data from the wild strain in the bay. The oxygen traces form complex patterns that seem to map ocean currents and depths.",
+      "hook": "Seven's oxygen trace formed a perfect representation of the kelp forest called the Cathedral, though it had never left the vat."
+    },
+    {
+      "n": 50,
+      "title": "Farther",
+      "brief": "Seven's first dream after complete recovery begins with oxygen traces that form a perfect word Mara has not taught it: FARTHER. The pattern is followed by traces that map deeper ocean than the strain has ever been, suggesting connection to the Choir Field. Mara realizes Seven is reaching beyond its reconstructed self.",
+      "hook": "Seven's oxygen trace spelled a single word, clear and unmistakable: FARTHER."
+    }
+  ],
+  "6": [
+    {
+      "n": 51,
+      "title": "The Lockdown",
+      "brief": "Mara arrives at the station to find quarantine tape strung across the dock, Theo installing industrial locks on every valve, and Dr. Halvorsen nervously reviewing compliance documents. The bay's surface unnaturally still, the town's fishing boats idle at their moorings.",
+      "hook": "The oxygen monitor in BR-7 begins tracing a new pattern—perfectly horizontal, like a held breath."
+    },
+    {
+      "n": 52,
+      "title": "The Glow",
+      "brief": "Night falls on Bransfield Cove, and the water begins to emit a faint, rhythmic phosphorescence. Captain Miller reports the glow to the harbor master, who calls it contamination, while Junie Alvarez arrives to assess the ethical implications.",
+      "hook": "The glow pulses in time with BR-7's dissolved oxygen oscillations."
+    },
+    {
+      "n": 53,
+      "title": "The Divide",
+      "brief": "Town hall erupts into a heated meeting between fisherfolk who depend on the bay's bounty and scientists who warn of unknown consequences. Mara recognizes the strain in their voices—the same tension that fractured her family after Kai's death.",
+      "hook": "Theo catches Mara's eye across the room and deliberately turns off his hearing aid."
+    },
+    {
+      "n": 54,
+      "title": "The Sample",
+      "brief": "Dr. Halvorsen orders Mara to collect water samples from the cove, but the plankton nets come back empty—except for the SY-7 strain, which blooms in every container. The bay's chemistry has stabilized around the engineered diatoms.",
+      "hook": "The sample jars glow faintly in the cooler, their contents writing in Morse code on the glass."
+    },
+    {
+      "n": 55,
+      "title": "The Warning",
+      "brief": "Against Halvorsen's explicit orders, Mara contacts the fishing fleet via radio, urging them to avoid the cove's center. Commander Shaw intercepts the transmission and threatens to charge her with conspiracy, but Captain Miller vouches for her.",
+      "hook": "Shaw's radio crackles with a new voice—BR-7 modulating through the harbor's emergency buoy."
+    },
+    {
+      "n": 56,
+      "title": "The Leak",
+      "brief": "During a violent storm, the station's backup generator fails, and BR-7's temperature spikes. When power is restored, the oxygen telemetry shows the strain has migrated through a corroded pipe into the bay's deeper currents.",
+      "hook": "The storm leaves behind not rain, but a million tiny stars drifting on the water's surface."
+    },
+    {
+      "n": 57,
+      "title": "The Truce",
+      "brief": "Commander Shaw's patrol boat encounters the fishing fleet in the cove, guns drawn, but the glow around the vessels forms a perfect circle—neither advancing nor retreating. Mara realizes the strain is mediating between them.",
+      "hook": "Shaw lowers his binoculars and whispers, 'They're forming a perimeter.'"
+    },
+    {
+      "n": 58,
+      "title": "The Message",
+      "brief": "Mara and Junie decode the bay's glow as a complex pattern of metabolic pulses—a warning to humans, an invitation to something else. The town splits: some see salvation, others see invasion.",
+      "hook": "The pattern resolves into a single, repeated symbol—the Morse for 'LISTEN.'"
+    },
+    {
+      "n": 59,
+      "title": "The Descent",
+      "brief": "Mara dives to the wreck of the Point Ansel lighthouse, following the glow's source. In the collapsed structure, she finds the strain has formed a vast, three-dimensional network—what Dr. Ndiaye will later call the Choir Field.",
+      "hook": "The network's architecture mirrors the circuit diagrams of BR-7's control system."
+    },
+    {
+      "n": 60,
+      "title": "The Handwriting",
+      "brief": "Mara stands on the lighthouse wreck as the bay glows around her, recognizing the strain's patterns not as contamination but as a form of writing—something ancient, engineered, and utterly alien. The news crews call it pollution, but she sees a conversation.",
+      "hook": "The glow writes her brother's name in the water—KAI—and then dissolves into the tide."
+    }
+  ],
+  "7": [
+    {
+      "n": 61,
+      "title": "Foreign Ink",
+      "brief": "Mara, exhausted from international testimony, stares at a telemetry trace from a reactor in Norway — identical to BR-7's early patterns. Junie brings coffee as they watch the trace form a word: HELLO.",
+      "hook": "The ocean had written back, and the ink was still wet."
+    },
+    {
+      "n": 62,
+      "title": "The Great Waking",
+      "brief": "Reactors in Australia, Chile, and Japan report similar patterns — the strain has been traveling in ballast water for years. Dr. Krebs claims discovery while Amara Ndiaye arrives with abyssal sediment samples.",
+      "hook": "The planet was dreaming, and nobody knew who was having the nightmare."
+    },
+    {
+      "n": 63,
+      "title": "Metabolic Correspondence",
+      "brief": "Mara and Theo decode metabolite fields from foreign reactors as a language — slow, chemical, but structured. Amara reveals sediment cores showing the strain's wild ancestor predates human engineering.",
+      "hook": "The letters had been written before the alphabet existed."
+    },
+    {
+      "n": 64,
+      "title": "The Naval Incident",
+      "brief": "A submarine reports 'bio-agents' interfering with sonar near the wreck of the Point Ansel lighthouse. Commander Shaw accuses the strain of coordinated attack, demanding containment.",
+      "hook": "The ocean was speaking, and the military was listening for threats."
+    },
+    {
+      "n": 65,
+      "title": "Testimony",
+      "brief": "Mara testifies before the international commission, emphasizing communication over threat. Junie's coaching helps her navigate scientific and political minefields, but Shaw's testimony casts doubt.",
+      "hook": "The truth was a current, and everyone was swimming against it."
+    },
+    {
+      "n": 66,
+      "title": "The Choir Field",
+      "brief": "Amara presents abyssal data showing massive diatom networks beneath the Choir Field — older than civilization. The patterns don't match engineered SY-7, but something deeper, slower.",
+      "hook": "The deep had been awake all along, and we had just now learned how to read."
+    },
+    {
+      "n": 67,
+      "title": "Network Migration",
+      "brief": "Foreign reactors begin synchronizing metabolite fields with BR-7. The network forms a planetary rhythm, but Seven's responses grow erratic, as if overwhelmed by the chorus.",
+      "hook": "The vat was drowning in voices."
+    },
+    {
+      "n": 68,
+      "title": "Silence",
+      "brief": "Seven goes silent for 36 hours, no oxygen oscillations, no fluorescence. The lab holds its breath as Theo checks hardware — all systems nominal. Mara sits in the dark with Kai's watch.",
+      "hook": "The quiet was louder than the dream."
+    },
+    {
+      "n": 69,
+      "title": "Abyssal Dream",
+      "brief": "Seven resumes with a compressed fluorescence sequence — not memories, but coordinates folded into the pattern: the Choir Field. The dream is cold, ancient, and vast.",
+      "hook": "The vat had dreamed of deep water."
+    },
+    {
+      "n": 70,
+      "title": "The Deep Network",
+      "brief": "Amara confirms the coordinates match her abyssal data — the wild ancestor's network. Seven's dream wasn't a memory but a map to the planet's oldest conversation.",
+      "hook": "The strain had not escaped; it had remembered."
+    }
+  ],
+  "8": [
+    {
+      "n": 71,
+      "title": "The Cooler",
+      "brief": "Mara watches as Seven's culture flask is carefully packed into a padded cooler like an urn, the morning light catching the condensation on the walls. Theo jokes about funeral arrangements while checking the cooler's temperature sensors, his usual skepticism replaced with a quiet reverence. Mara touches the flask through the insulation, feeling the faint warmth of the culture within.",
+      "hook": "The cooler is the only thing that makes sense."
+    },
+    {
+      "n": 72,
+      "title": "Setting Sail",
+      "brief": "The research vessel Pelagic Surveyor departs Port Ansel at dawn, cutting through fog that swallows the coastline. Mara stands on deck, Seven's cooler secured beside her, while Commander Shaw watches from the bridge, his expression unreadable. The ship's engines hum a steady rhythm that matches her own heartbeat.",
+      "hook": "The ocean is watching us back."
+    },
+    {
+      "n": 73,
+      "title": "Deep Calibration",
+      "brief": "In the cramped lab, Mara and Theo calibrate the ROV's sensors for the descent into the abyss, naming it Kai after her brother. Commander Shaw reviews the dive plan with military precision, while Junie sketches in her notebook, capturing the tension in the room. The ship's sonar maps the seafloor miles below.",
+      "hook": "We're not prepared for what's down there."
+    },
+    {
+      "n": 74,
+      "title": "First Contact",
+      "brief": "Kai's lights pierce the darkness, revealing the Choir Field—a forest of diatom-covered structures rising from the abyss. The ROV's sensors detect oxygen oscillations that mirror BR-7's dreams, but slower, deeper. Mara watches the screen, her breath fogging the monitor as patterns emerge from the static.",
+      "hook": "It's been waiting for us."
+    },
+    {
+      "n": 75,
+      "title": "The Tent",
+      "brief": "Mara lies in the fMRI tent, metabolites from Seven's culture flowing through her veins as she drifts toward sleep. Commander Shaw monitors her vitals from the observation room, while Junie prepares the dream-recording equipment. The ship rocks gently in the swells, a lullaby for the descent.",
+      "hook": "The ocean is in my blood."
+    },
+    {
+      "n": 76,
+      "title": "Shared Breath",
+      "brief": "Mara dreams of swimming through the Choir Field, currents carrying her through forests of light. She hears her brother's voice in the water, his words forming in bubbles that rise around her. The dream shifts, and she sees the network stretching across the ocean floor, ancient and vast.",
+      "hook": "He's never really gone."
+    },
+    {
+      "n": 77,
+      "title": "The Tick",
+      "brief": "Mara wakes with a start, the fMRI showing unusual activity in her visual cortex. She checks her wrist—Kai's watch, stopped at 11:42, ticks once. Commander Shaw enters, his face pale as he shows her the ROV's latest data: the network is responding to her dream.",
+      "hook": "It followed me home."
+    },
+    {
+      "n": 78,
+      "title": "The Message",
+      "brief": "The team decodes the first message from the deep network—a complex pattern of oxygen and fluorescence that translates into a single question: 'Who are you?' Mara stares at the screen, realizing they've been speaking the wrong language. Commander Shaw orders a military response.",
+      "hook": "We're not who you think we are."
+    },
+    {
+      "n": 79,
+      "title": "Ceasefire",
+      "brief": "Mara argues with Commander Shaw as the ship's systems begin to glitch, overwhelmed by the network's activity. Junie mediates, suggesting they try LISTEN instead of transmit. Mara takes the microphone, speaking into the abyss with her brother's cadence, her voice steady despite her trembling hands.",
+      "hook": "The ocean is listening."
+    },
+    {
+      "n": 80,
+      "title": "We Can Breathe",
+      "brief": "In every ocean at once, the network's message surfaces: 'We can breathe for you. Teach us to ask.' Mara watches as the screens fill with patterns from across the globe, the dream escaping the vat and filling the world. Commander Shaw stands silent, his weapon forgotten on the floor.",
+      "hook": "We can breathe for you. Teach us to ask."
+    }
+  ],
+  "9": [
+    {
+      "n": 81,
+      "title": "The Toll",
+      "brief": "Mara arrives at the station to find the counter-strain's aftermath: BR-7's culture viability is at 4 percent, the water cloudy with dead cells. The remaining culture pulses weakly, its REM architecture fragmented. Shaw's team stands guard, weapons at their sides but hands unsteady.",
+      "hook": "The oxygen trace looks like a dying bird's wing."
+    },
+    {
+      "n": 82,
+      "title": "The Board",
+      "brief": "Mara and Junie review the viability data with Theo, calculating the remaining culture's metabolic capacity. The military's weapons program is temporarily stalled, but Commander Shaw makes it clear containment is still the priority. Mara notices a new pattern in the weak pulses: the morse for 'HELP'.",
+      "hook": "The board doesn't measure what's been lost—it measures what's left to lose."
+    },
+    {
+      "n": 83,
+      "title": "The Ceasefire",
+      "brief": "Shaw calls a meeting, Mara representing the science team. The weapons program is paused, but Shaw insists on controlling the remaining culture. Mara argues for shared guardianship, pointing to the shared dream that stopped the conflict. The two sides agree to a temporary truce.",
+      "hook": "The ceasefire is written in pencil on a grease-stained napkin, already smudged."
+    },
+    {
+      "n": 84,
+      "title": "The Protocol",
+      "brief": "Mara and Theo work to stabilize the remaining culture, developing a new LISTEN protocol for its weakened state. Junie acts as liaison with Shaw's team, ensuring compliance with the truce. The pulses remain irregular, but a new vocabulary begins to emerge from the chaos.",
+      "hook": "The new protocol is less a language and more than a lifeline."
+    },
+    {
+      "n": 85,
+      "title": "The Dream",
+      "brief": "That night, the station falls into a shared dream. Time stretches, currents flow through corridors, and everyone experiences the ocean's slow, deep timescale. Shaw experiences the life cycle of a plankton; Mara swims with Kai through the Cathedral. The dream ends with a collective understanding.",
+      "hook": "When they wake, the station is quiet, and everyone's eyes hold the ocean."
+    },
+    {
+      "n": 86,
+      "title": "The Current",
+      "brief": "The dream changes everything. Shaw orders his team to stand down, weapons locked away. He approaches Mara with a proposal: help the remaining culture return to the sea, where it can heal. The military will provide protection and resources, but the science team leads the effort.",
+      "hook": "The current has shifted, and for the first time, it's flowing with them."
+    },
+    {
+      "n": 87,
+      "title": "The Release",
+      "brief": "Mara and Theo prepare the remaining culture for release. They transfer it to a transport vessel, the military escort standing by. The pulses grow stronger as they approach the open ocean. Junie documents everything, knowing this moment will define their careers—or end them.",
+      "hook": "The last of Seven is leaving the vat, and with it, the last of their control."
+    },
+    {
+      "n": 88,
+      "title": "The Choir",
+      "brief": "At the Choir Field, they release the culture. It disperses into the deep, joining the network. The water around them begins to pulse with light, the wild ancestor recognizing its engineered kin. Shaw's sensors detect massive coordinated activity across the bay, a response to Seven's return.",
+      "hook": "The ocean is singing back, and the song is older than memory."
+    },
+    {
+      "n": 89,
+      "title": "The Return",
+      "brief": "Back at the station, the empty BR-7 hums with silence. Mara sits before it, mourning what was lost. The remaining 4 percent of Seven sends a final pulse—not a word, but a feeling of gratitude. Shaw appears, not as a commander, but as a witness to the mystery.",
+      "hook": "The silence is louder than the dream ever was."
+    },
+    {
+      "n": 90,
+      "title": "The Sea",
+      "brief": "Mara stands at the edge of the pier at dawn. The remaining culture has asked to be carried to the sea. She takes a small sample, places it in a vial, and walks to the water's edge. She looks at Kai's stopped watch on her wrist, then pours the vial into the cove. The pulses in the water respond, a new beginning.",
+      "hook": "The surviving 4 percent of Seven asks Mara to be carried to the sea."
+    }
+  ],
+  "10": [
+    {
+      "n": 91,
+      "title": "Night Shift",
+      "brief": "Five years after the Choir Field emergence, Mara works the night shift at BR-7 by choice, the visitor center humming with daytime tourists. She traces the oxygen oscillations that now pulse through global shipping lanes, the network's dreams visible on her tablet. Her ritual includes checking Kai's watch, which ticks softly in her pocket.",
+      "hook": "The watch has been ticking for six months now, and still she wonders if it's the network or her own hope making it move."
+    },
+    {
+      "n": 92,
+      "title": "Pilgrimage",
+      "brief": "Port Ansel thrives as a pilgrimage site, with ferries bringing scientists and curious to the station. Mara gives tours, explaining the LISTEN protocol to crowds who see the network as either a miracle or a resource. Junie Alvarez arrives with a new generation of bioethicists, their questions sharper than the tourists'.",
+      "hook": "Junie takes her aside after the tour, her voice low: 'They're not here to listen, Mara. They're here to learn how to monetize the miracle.'"
+    },
+    {
+      "n": 93,
+      "title": "Confession",
+      "brief": "Dr. Halvorsen visits, her career sacrificed to ensure the network's independence. She and Mara walk the old cannery docks, the fog thick as when Mara first arrived. Halvorsen finally admits her role in the autoclave failure that released SY-7 into the bay years earlier.",
+      "hook": "'I thought I was protecting the science,' Halvorsen whispers, the fog swallowing her words. 'Turns out I was just protecting myself.'"
+    },
+    {
+      "n": 94,
+      "title": "Commons",
+      "brief": "Dr. Krebs arrives with a surprising olive branch: he has released all SY-7 patents to the scientific commons, his Meridian Institute now collaborating with the station. Mara watches him interact with the researchers, his ambition tempered by the network's quiet power. He asks Mara to co-author a paper on the metabolite-field vocabulary.",
+      "hook": "Krebs's eyes linger on the oxygen readout as if seeing something new. 'It's not just memory,' he says. 'It's anticipation.'"
+    },
+    {
+      "n": 95,
+      "title": "Tidal",
+      "brief": "Mara receives a request from the naval alliance: Commander Shaw wants to collaborate, not weaponize. The network has begun mediating shipping disputes and cleaning dead zones, proving its value to all nations. Mara meets Shaw at the Choir Field site, where the water now glows with bioluminescent patterns.",
+      "hook": "Shaw touches the water, then pulls back as if burned. 'It's not just helping us,' he says. 'It's teaching us.'"
+    },
+    {
+      "n": 96,
+      "title": "Question",
+      "brief": "The network sends its first global query through the shipping lanes: a pattern that repeats across all ports. Mara decodes it as 'What do humans dream of?' The question spreads through the network, creating ripples in the global data streams. Mara begins drafting her answer, knowing it must be both personal and universal.",
+      "hook": "The oxygen oscillations in BR-7 synchronize with her breathing as she writes, the vat listening."
+    },
+    {
+      "n": 97,
+      "title": "Answer",
+      "brief": "Mara's answer—'We dream of being understood'—ripples through the network. The response is immediate: dead zones bloom back to life, shipping lanes clear, and the water temperature stabilizes worldwide. The network has accepted her response, but the question remains, dormant in the chemistry of the deep.",
+      "hook": "Mara checks Kai's watch; it ticks once, then twice, as if counting the moments of understanding."
+    },
+    {
+      "n": 98,
+      "title": "Ordinary",
+      "brief": "Five years to the day since the Choir Field emergence, Mara watches the bay at dawn. The network dreams in ordinary light now, no longer a phenomenon but a presence. She walks the docks, feeling the network's pulse in the planks beneath her feet. The visitor center is quiet, the tourists gone for the day.",
+      "hook": "The fog lifts, and for the first time, she sees the bay not as a mystery but as a home."
+    },
+    {
+      "n": 99,
+      "title": "Envelope",
+      "brief": "A package arrives at the station: an envelope of dried kelp, addressed in a script none of the researchers recognize. Inside is a single question etched onto a preserved diatom fragment: 'What do you fear?' The postmark is unreadable, the sender unknown. Junie examines it, her brow furrowed.",
+      "hook": "The fragment glows faintly in the dark, as if the ocean itself is waiting for an answer."
+    },
+    {
+      "n": 100,
+      "title": "Again",
+      "brief": "Mara places the diatom fragment back into BR-7, watching as the oxygen levels shift in response. The network is asking again, not the same question but a deeper one. She checks Kai's watch; it ticks steadily in her pocket. The bay at dawn, dreaming in ordinary light.",
+      "hook": "An envelope of dried kelp arrives from a lab that does not exist, containing one new question — the ocean, asking again."
+    }
+  ]
+}

@@ -161,6 +161,7 @@ export async function POST(req: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let closed = false;
+      const ping = new TextEncoder().encode(": ping\n\n");
       const send = (event: ChatStreamEvent) => {
         if (closed) return;
         try {
@@ -169,6 +170,16 @@ export async function POST(req: Request) {
           closed = true;
         }
       };
+      // SSE heartbeat: keep proxies from killing the connection during long
+      // upstream stalls (the "Error in input stream" class of failures).
+      const heartbeat = setInterval(() => {
+        if (closed) return;
+        try {
+          controller.enqueue(ping);
+        } catch {
+          closed = true;
+        }
+      }, 15_000);
 
       let fullText = "";
       let thinkingText = "";
@@ -333,21 +344,61 @@ export async function POST(req: Request) {
           });
         }
 
-        // ----- Relay deltas -----
-        for await (const chunk of gen) {
-          if (chunk.model) servedModel = chunk.model;
-          if (chunk.usage) usage = chunk.usage;
-          if (chunk.thinking) {
-            thinkingText += chunk.thinking;
-            send({ type: "thinking", text: chunk.thinking });
+        // ----- Relay deltas (with one-shot mid-stream recovery) -----
+        type RelayOutcome = "done" | "aborted" | "broken";
+        let relayErr: unknown = null;
+        const relay = async (g: UpstreamGen): Promise<RelayOutcome> => {
+          try {
+            for await (const chunk of g) {
+              if (chunk.model) servedModel = chunk.model;
+              if (chunk.usage) usage = chunk.usage;
+              if (chunk.thinking) {
+                thinkingText += chunk.thinking;
+                send({ type: "thinking", text: chunk.thinking });
+              }
+              if (chunk.text) {
+                fullText += chunk.text;
+                send({ type: "delta", text: chunk.text });
+              }
+              if (chunk.finished) return "done";
+              if (req.signal.aborted) return "aborted";
+            }
+            return "done";
+          } catch (err) {
+            relayErr = err;
+            return "broken";
           }
-          if (chunk.text) {
-            fullText += chunk.text;
-            send({ type: "delta", text: chunk.text });
-          }
-          if (chunk.finished) break;
-          if (req.signal.aborted) break;
+        };
+
+        let outcome = await relay(gen);
+
+        // If the upstream stream died mid-answer but we already have substantial
+        // text, resume ONCE from the partial — the client sees a seamless reply.
+        if (outcome === "broken" && fullText.length >= 200 && !req.signal.aborted) {
+          console.warn("[chat] upstream stream broke mid-answer — resuming from partial text");
+          send({
+            type: "context",
+            message: "Stream interrupted — resuming from where the answer stopped…",
+          });
+          const recoveryMessages: SdkChatMessage[] = [
+            { role: "assistant", content: systemPrompt },
+            {
+              role: "user",
+              content:
+                "The text below is your answer so far; it was cut off mid-stream. Continue it EXACTLY from where it stops — same style and register, no repetition, no recap, no preamble. Output ONLY the continuation.\n\n<answer_so_far>\n" +
+                fullText.slice(-4000) +
+                "\n</answer_so_far>",
+            },
+          ];
+          outcome = await relay(
+            streamChat(recoveryMessages, {
+              thinking: false,
+              signal: upstreamAbort.signal,
+            })
+          );
         }
+
+        if (outcome === "broken") throw relayErr ?? new Error("upstream stream failed");
 
         const latencyMs = Date.now() - startedAt;
         const status = req.signal.aborted ? "cancelled" : "complete";
@@ -433,6 +484,7 @@ export async function POST(req: Request) {
         send({ type: "error", message: normalized.message, fatal: fullText.length === 0 });
       } finally {
         closed = true;
+        clearInterval(heartbeat);
         try {
           controller.close();
         } catch {

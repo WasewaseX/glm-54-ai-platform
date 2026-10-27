@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { RealMetrics } from "./real-metrics";
+import { BookForge } from "./book-forge";
 import { useAppStore } from "@/lib/store";
 import { AGENTS } from "@/lib/agents";
 import { cn } from "@/lib/utils";
@@ -154,6 +155,9 @@ export function Welcome() {
 
         {/* Real metrics — live from the database, never fabricated */}
         <RealMetrics />
+
+        {/* Book Forge — long-form novel pipeline with live progress */}
+        <BookForge />
 
         <motion.div
           initial={{ opacity: 0 }}

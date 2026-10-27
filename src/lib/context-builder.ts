@@ -14,9 +14,9 @@ import type { ChatMessage } from "@/lib/types";
 
 export const LIMITS = {
   MAX_UPLOAD_BYTES: 8 * 1024 * 1024, // 8 MB
-  HISTORY_MESSAGE_CAP: 40,
-  HISTORY_CHAR_BUDGET: 30_000,
-  RAG_CHAR_BUDGET: 12_000,
+  HISTORY_MESSAGE_CAP: 80,
+  HISTORY_CHAR_BUDGET: 60_000,
+  RAG_CHAR_BUDGET: 20_000,
   MAX_ATTACHMENTS_PER_MESSAGE: 6,
   TITLE_MAX_CHARS: 80,
 } as const;
@@ -24,7 +24,12 @@ export const LIMITS = {
 export const DEFAULT_SYSTEM_PROMPT =
   "You are GLM 5.4 AI, a precise, helpful assistant. Use Markdown for structure. " +
   "Fence code blocks with the language tag. Be concise but complete, and say so " +
-  "plainly when you are unsure.";
+  "plainly when you are unsure. " +
+  "For requests to write entire books or serialized novels (dozens of chapters), do NOT attempt " +
+  "to write the whole work in one reply — instead explain that Book Forge, the platform's built-in " +
+  "long-form pipeline on the welcome screen, handles multi-chapter projects with story bibles, " +
+  "outlines, rolling continuity, and checkpointed resume, and offer to start it or to write a " +
+  "sample chapter here in chat.";
 
 function clip(text: string, max: number): string {
   return text.length <= max ? text : text.slice(0, max) + "…";

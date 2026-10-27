@@ -18,7 +18,7 @@ import type {
  * GLM Agent Engine — a real multi-step tool-calling loop in the spirit of
  * chat.z.ai's agent mode, implemented honestly on verified gateway tools:
  *
- *   web_search · page_reader · generate_image · artifacts
+ *   web_search · page_reader · generate_image · run_code · artifacts
  *
  * The model communicates intent through inline XML-ish blocks which the
  * engine filters out of the user-visible stream, executes, and feeds back:
@@ -30,11 +30,40 @@ import type {
  * Everything outside those blocks is the user-facing answer and streams live.
  */
 
-const AGENT_MAX_ITERATIONS = 6; // model turns; the last one is reserved for the final answer
-const AGENT_MAX_TOOL_STEPS = 12;
+const AGENT_MAX_ITERATIONS = 10; // model turns; the last one is reserved for the final answer
+const AGENT_MAX_TOOL_STEPS = 24;
 const PAGE_READER_CHAR_BUDGET = 6_000;
 const TOOL_RESULT_CHAR_BUDGET = 9_000;
-const ARTIFACT_MAX_CHARS = 120_000;
+const ARTIFACT_MAX_CHARS = 400_000;
+const CODE_EXEC_URL = "http://127.0.0.1:3010/run";
+
+/** Ensure the code-exec mini-service is running (spawn as child of this server if not). */
+async function ensureCodeExec(): Promise<boolean> {
+  try {
+    const h = await fetch("http://127.0.0.1:3010/health", { signal: AbortSignal.timeout(1_500) });
+    if (h.ok) return true;
+  } catch {
+    /* not running — start it */
+  }
+  try {
+    const { spawn } = await import("node:child_process");
+    const { openSync } = await import("node:fs");
+    const out = openSync("/tmp/code-exec.log", "a");
+    const child = spawn("bun", ["index.ts"], {
+      cwd: "/home/z/my-project/mini-services/code-exec",
+      stdio: ["ignore", out, out],
+      detached: true,
+      env: process.env,
+    });
+    child.unref();
+    // Give it a moment to bind.
+    await new Promise((r) => setTimeout(r, 1_500));
+    const h = await fetch("http://127.0.0.1:3010/health", { signal: AbortSignal.timeout(2_000) });
+    return h.ok;
+  } catch {
+    return false;
+  }
+}
 
 export const AGENT_SYSTEM_PROMPT = `You are GLM Agent, an autonomous task-execution agent inside the GLM 5.4 AI workspace.
 
@@ -50,10 +79,12 @@ Rules: 2-6 steps, each under 80 characters, concrete and ordered.
 <tool>{"name":"web_search","arguments":{"query":"exact search query","num":5}}</tool>
 <tool>{"name":"page_reader","arguments":{"url":"https://example.com/page"}}</tool>
 <tool>{"name":"generate_image","arguments":{"prompt":"vivid image description","size":"1024x1024"}}</tool>
+<tool>{"name":"run_code","arguments":{"code":"...full program...","language":"typescript","tests":"...optional bun:test file..."}}</tool>
 Rules:
 - web_search: current events, facts you are unsure of, or when the user asks to research. num is 1-10 (default 5).
 - page_reader: fetch the full text of a specific URL (often a web_search result).
 - generate_image: create an illustration on request or when it clearly adds value.
+- run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
 - After tool blocks stop generating. The environment replies with <tool_results> and you continue.
 
 3) Artifact — a file the user can open and download in the side panel. Write the FULL content between the tags, never a placeholder:
@@ -378,10 +409,58 @@ async function executeTool(
       };
     }
 
+    case "run_code": {
+      const code = typeof args.code === "string" ? args.code.slice(0, 100_000) : "";
+      if (!code.trim()) return { ok: false, resultText: "run_code failed: missing code.", detail: {} };
+      const language = args.language === "javascript" ? "javascript" : "typescript";
+      const tests = typeof args.tests === "string" ? args.tests.slice(0, 60_000) : undefined;
+      const stdin = typeof args.stdin === "string" ? args.stdin.slice(0, 20_000) : undefined;
+      const timeoutMs = typeof args.timeoutMs === "number" ? Math.round(args.timeoutMs) : undefined;
+      if (!(await ensureCodeExec())) {
+        return { ok: false, resultText: "run_code failed: the code-exec service could not be started.", detail: {} };
+      }
+      try {
+        const res = await fetch(CODE_EXEC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, language, tests, stdin, timeoutMs }),
+          signal: AbortSignal.timeout(30_000),
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          return { ok: false, resultText: `run_code failed: executor HTTP ${res.status} ${clip(t, 300)}`, detail: {} };
+        }
+        const r = (await res.json()) as {
+          exitCode: number;
+          stdout: string;
+          stderr: string;
+          timedOut: boolean;
+          durationMs: number;
+          ranTests: boolean;
+        };
+        const verdict = r.ranTests ? "tests" : "program";
+        const header = r.timedOut
+          ? `run_code: ${verdict} TIMED OUT after ${r.durationMs}ms`
+          : `run_code: ${verdict} ${r.exitCode === 0 ? "PASSED" : `FAILED (exit ${r.exitCode})`} in ${r.durationMs}ms`;
+        const parts = [header, "", "--- stdout ---", clip(r.stdout || "(empty)", 3_500), "--- stderr ---", clip(r.stderr || "(empty)", 3_500)];
+        return {
+          ok: !r.timedOut && r.exitCode === 0,
+          resultText: parts.join("\n"),
+          detail: { exitCode: r.exitCode, timedOut: r.timedOut, durationMs: r.durationMs, ranTests: r.ranTests },
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          resultText: `run_code failed: ${err instanceof Error ? err.message : String(err)} (is the code-exec service on :3010 running?)`,
+          detail: {},
+        };
+      }
+    }
+
     default:
       return {
         ok: false,
-        resultText: `Unknown tool "${name}". Available tools: web_search, page_reader, generate_image.`,
+        resultText: `Unknown tool "${name}". Available tools: web_search, page_reader, generate_image, run_code.`,
         detail: {},
       };
   }
