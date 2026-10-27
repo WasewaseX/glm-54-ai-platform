@@ -52,9 +52,9 @@
       "title": "Vocabulary Board"
     },
     "9": {
-      "status": "pending",
+      "status": "failed",
       "words": 0,
-      "attempts": 1
+      "attempts": 3
     },
     "10": {
       "status": "pending",
@@ -178,7 +178,7 @@
     "30": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "31": {
       "status": "done",
@@ -237,7 +237,7 @@
     "40": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "41": {
       "status": "done",
@@ -290,7 +290,7 @@
     "49": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "50": {
       "status": "pending",
@@ -348,7 +348,7 @@
     "59": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "60": {
       "status": "pending",
@@ -406,7 +406,7 @@
     "69": {
       "status": "failed",
       "words": 0,
-      "attempts": 2
+      "attempts": 3
     },
     "70": {
       "status": "pending",
@@ -470,7 +470,7 @@
     "80": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "81": {
       "status": "done",
@@ -529,7 +529,7 @@
     "90": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "91": {
       "status": "done",
@@ -582,7 +582,7 @@
     "99": {
       "status": "pending",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "100": {
       "status": "pending",
@@ -593,8 +593,9 @@
   "totalWords": 196289,
   "chaptersDone": 86,
   "errors": [
-    "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+    "chapter 9: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T11:10:44.246Z"
+  "updatedAt": "2026-10-27T11:23:08.537Z"
 }
