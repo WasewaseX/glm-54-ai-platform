@@ -184,10 +184,38 @@ SSE events: `meta` · `plan` · `step` · `artifact_delta` (live draft) · `arti
 | Limit | Value |
 | --- | --- |
 | Max upload size | 8 MB / file, 6 files / message |
-| Replayed history | ≤ 40 messages and ≤ 30,000 chars per request |
-| RAG context injection | ≤ 12,000 chars per turn |
+| Replayed history | ≤ 80 messages and ≤ 60,000 chars per request |
+| RAG context injection | ≤ 20,000 chars per turn |
 | Rate limits | chat 30/min · upload 12/min · search 20/min · prompts 60/min |
+| Agent loop | ≤ 10 model turns, ≤ 24 tool steps, artifacts ≤ 400,000 chars |
 | Conversation list | 200 most recent, searchable |
+
+## 📚 Book Forge — long-form serialization (100+ chapters)
+
+The honest architecture for outputs far beyond a single model response:
+
+1. **Deterministic story bible + 10-part arc** — version-controlled creative backbone (`src/lib/novel-engine.ts`).
+2. **LLM-expanded outline** — each part becomes 10 structured chapter briefs (title / brief / hook) as JSON.
+3. **10 block-workers** — chapters within a block are sequential so every chapter opens from the *actual* final words of its predecessor (rolling continuity); the global call gate serializes LLM traffic to respect gateway quota.
+4. **Validation + continuation** — each chapter must reach ~2,200 words; shortfalls get one seamless continuation call.
+5. **Checkpoints** — every finished chapter lands on disk + `state.json`; the run is resumable from any crash (`bun scripts/run-novel.ts the-dreaming-vat`).
+6. **Supervision** — a platform cron job restarts the runner if it dies and assembles deliverables (`scripts/assemble-novel.py` → `.md` + `.pdf`) when the book completes.
+
+Live progress renders on the welcome screen (`/api/novel/status`); runs can be started from the UI (`POST /api/novel/start`).
+
+## 🧪 Code execution for the agent (run_code tool)
+
+`mini-services/code-exec` (port 3010) runs TypeScript/JavaScript in fresh temp dirs under
+`ulimit` memory/CPU constraints with a hard wall-clock timeout, returning real stdout/stderr/exit code.
+The agent engine's `run_code` tool auto-starts the service if it is down, and the agent system prompt
+requires running (and where possible, testing) generated code before presenting it as working:
+
+```bash
+curl -s -X POST http://localhost:3010/run -H 'Content-Type: application/json' \
+  -d '{"code":"export const add=(a:number,b:number)=>a+b","language":"typescript","tests":"import {test,expect} from \"bun:test\"; import {add} from \"./main\"; test(\"add\",()=>expect(add(2,3)).toBe(5));"}'
+```
+
+Isolation is pragmatic (temp dir + ulimits + timeout), not VM-grade — see Known limitations.
 
 ## 🧪 Manual verification checklist (performed via agent-browser)
 
