@@ -15,6 +15,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     BaseDocTemplate,
     Frame,
@@ -23,6 +25,12 @@ from reportlab.platypus import (
     Spacer,
     PageBreak,
 )
+
+FONT_DIR = "/usr/share/fonts/truetype/liberation"
+pdfmetrics.registerFont(TTFont("Serif", f"{FONT_DIR}/LiberationSerif-Regular.ttf"))
+pdfmetrics.registerFont(TTFont("Serif-Bold", f"{FONT_DIR}/LiberationSerif-Bold.ttf"))
+pdfmetrics.registerFont(TTFont("Serif-Italic", f"{FONT_DIR}/LiberationSerif-Italic.ttf"))
+pdfmetrics.registerFontFamily("Serif", normal="Serif", bold="Serif-Bold", italic="Serif-Italic", boldItalic="Serif-Bold")
 
 BOOK = sys.argv[1] if len(sys.argv) > 1 else "the-dreaming-vat"
 ROOT = "/home/z/my-project"
@@ -68,23 +76,23 @@ PAPER = colors.HexColor("#FBFAF7")
 
 styles = {
     "chapter": ParagraphStyle(
-        "chapter", fontName="Georgia-Bold", fontSize=17, leading=23,
+        "chapter", fontName="Serif-Bold", fontSize=17, leading=23,
         spaceBefore=18, spaceAfter=14, textColor=INK,
     ),
     "body": ParagraphStyle(
-        "body", fontName="Georgia", fontSize=10.5, leading=17.5,
+        "body", fontName="Serif", fontSize=10.5, leading=17.5,
         alignment=TA_JUSTIFY, textColor=INK, spaceAfter=7,
     ),
     "break": ParagraphStyle(
-        "break", fontName="Georgia", fontSize=12, leading=18,
+        "break", fontName="Serif", fontSize=12, leading=18,
         alignment=TA_CENTER, textColor=MUTED, spaceBefore=8, spaceAfter=8,
     ),
     "coverTitle": ParagraphStyle(
-        "coverTitle", fontName="Georgia-Bold", fontSize=34, leading=42,
+        "coverTitle", fontName="Serif-Bold", fontSize=34, leading=42,
         alignment=TA_CENTER, textColor=INK, spaceAfter=10,
     ),
     "coverSub": ParagraphStyle(
-        "coverSub", fontName="Georgia-Italic", fontSize=13, leading=20,
+        "coverSub", fontName="Serif-Italic", fontSize=13, leading=20,
         alignment=TA_CENTER, textColor=MUTED, spaceAfter=6,
     ),
 }
@@ -94,7 +102,7 @@ def on_page(canvas, doc):
     canvas.setFillColor(PAPER)
     canvas.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
     canvas.setFillColor(MUTED)
-    canvas.setFont("Georgia", 8)
+    canvas.setFont("Serif", 8)
     canvas.drawString(22 * mm, 14 * mm, state.get("title", BOOK))
     canvas.drawRightString(A4[0] - 22 * mm, 14 * mm, str(canvas.getPageNumber()))
     canvas.setStrokeColor(colors.HexColor("#D8D4CC"))
@@ -131,7 +139,7 @@ for num, title, body in chapters:
             para = para.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             story.append(Paragraph(para, styles["body"]))
         story.append(Paragraph("* * *", styles["break"]))
-    if story and isinstance(story[-1], Paragraph) and story[-1].text == "* * *":
+    while story and getattr(story[-1], "text", None) == "* * *":
         story.pop()  # no trailing break at chapter end
     story.append(PageBreak())
 

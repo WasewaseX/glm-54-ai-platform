@@ -112,9 +112,10 @@
       "title": "The Claim Letter"
     },
     "22": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2459,
+      "attempts": 1,
+      "title": "The Singing Reactor"
     },
     "23": {
       "status": "pending",
@@ -471,7 +472,7 @@
     "92": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "93": {
       "status": "pending",
@@ -514,9 +515,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 23942,
-  "chaptersDone": 10,
+  "totalWords": 26401,
+  "chaptersDone": 11,
   "errors": [],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T09:26:38.105Z"
+  "updatedAt": "2026-10-27T09:31:30.159Z"
 }
