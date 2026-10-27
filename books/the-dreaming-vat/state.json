@@ -237,7 +237,7 @@
     "40": {
       "status": "failed",
       "words": 0,
-      "attempts": 3
+      "attempts": 4
     },
     "41": {
       "status": "done",
@@ -288,9 +288,9 @@
       "title": "The Ceasefire"
     },
     "49": {
-      "status": "pending",
+      "status": "failed",
       "words": 0,
-      "attempts": 2
+      "attempts": 3
     },
     "50": {
       "status": "pending",
@@ -596,8 +596,9 @@
     "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 9: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 30: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
-    "chapter 40: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    "chapter 40: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+    "chapter 49: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T11:47:48.468Z"
+  "updatedAt": "2026-10-27T12:00:04.992Z"
 }
