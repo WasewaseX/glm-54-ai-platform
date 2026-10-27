@@ -15,6 +15,7 @@
 
 import ZAI from "z-ai-web-dev-sdk";
 import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
 const ROOT = "/home/z/my-project";
@@ -258,7 +259,13 @@ async function callLLM(
   let lastErr: unknown = null;
   await acquireSlot();
   try {
-    for (let attempt = 1; attempt <= 8; attempt++) {
+    let attempt = 0;
+    let hardFails = 0;
+    // Rate limits are NEVER fatal: the shared gateway can stay saturated for hours.
+    // Wait patiently (capped, jittered exponential backoff) and retry forever — the
+    // run is checkpointed, so patience costs nothing and wastes no quota.
+    while (true) {
+      attempt++;
       try {
         const res = (await client.chat.completions.create({
           messages,
@@ -271,17 +278,30 @@ async function callLLM(
       } catch (err) {
         lastErr = err;
         const rateLimited = isRateLimitError(err);
-        // Patient backoff: the per-minute quota is small; give it room to refill.
-        const waitMs = rateLimited ? 20_000 * attempt + Math.random() * 5_000 : 3_000 * attempt;
-        log(
-          `LLM call failed (attempt ${attempt}/8${rateLimited ? ", rate-limited" : ""}): ${
-            err instanceof Error ? err.message : String(err)
-          } — waiting ${Math.round(waitMs / 1000)}s`
-        );
-        await sleep(waitMs);
+        if (rateLimited) {
+          const backoff = Math.min(30_000 * 2 ** (attempt - 1), 480_000); // 30s → 8 min cap
+          const waitMs = backoff + Math.random() * 30_000;
+          log(
+            `LLM rate-limited (retry #${attempt}): ${
+              err instanceof Error ? err.message : String(err)
+            } — waiting ${Math.round(waitMs / 1000)}s`
+          );
+          await sleep(waitMs);
+        } else {
+          hardFails++;
+          if (hardFails >= 5) {
+            throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+          }
+          const waitMs = 5_000 * hardFails;
+          log(
+            `LLM call failed (attempt ${attempt}, non-rate-limit): ${
+              err instanceof Error ? err.message : String(err)
+            } — waiting ${Math.round(waitMs / 1000)}s`
+          );
+          await sleep(waitMs);
+        }
       }
     }
-    throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
   } finally {
     releaseSlot();
   }
@@ -495,24 +515,30 @@ async function runBlock(def: BookDef, state: BookState, partIdx: number): Promis
   for (let n = part.range[0]; n <= part.range[1]; n++) {
     const cs = state.chapters[n];
     if (cs?.status === "done") continue; // resumable
-    try {
-      await generateChapter(def, state, n);
-    } catch (err) {
-      const msg = `chapter ${n}: ${err instanceof Error ? err.message : String(err)}`;
-      state.errors.push(msg);
-      state.chapters[n] = { status: "failed", words: 0, attempts: (cs?.attempts ?? 0) + 1 };
-      saveState(state);
-      log(`[ch${n}] FAILED — ${msg}`);
-      // one more try before giving up on this chapter
+    // Rate-limit errors no longer reach this catch (callLLM waits them out forever),
+    // so a failure here is a genuine generation problem. Retry the SAME chapter up
+    // to 3 times, then defer — a later pass re-picks it (everything is checkpointed).
+    let strikes = 0;
+    while (state.chapters[n]?.status !== "done") {
       try {
-        await sleep(5000);
         await generateChapter(def, state, n);
-      } catch (err2) {
-        const msg2 = `chapter ${n} (retry): ${err2 instanceof Error ? err2.message : String(err2)}`;
-        state.errors.push(msg2);
-        state.chapters[n] = { status: "failed", words: 0, attempts: (state.chapters[n]?.attempts ?? 0) + 1 };
+        break;
+      } catch (err) {
+        strikes++;
+        const msg = `chapter ${n}: ${err instanceof Error ? err.message : String(err)}`;
+        state.errors.push(msg);
+        state.chapters[n] = {
+          status: "failed",
+          words: 0,
+          attempts: (state.chapters[n]?.attempts ?? 0) + 1,
+        };
         saveState(state);
-        log(`[ch${n}] FAILED AGAIN — ${msg2}`);
+        log(`[ch${n}] FAILED (strike ${strikes}/3) — ${msg}`);
+        if (strikes >= 3) {
+          log(`[ch${n}] deferred to a later pass`);
+          break;
+        }
+        await sleep(60_000);
       }
     }
   }
@@ -590,5 +616,25 @@ export async function runBook(bookId: string, forceRestart = false): Promise<Boo
   state.phase = failed.length === 0 ? "done" : "chapters"; // resumable if gaps remain
   saveState(state);
   log(`[run] Book Forge finished pass — ${state.chaptersDone}/100 chapters, ${state.totalWords} words, failed: [${failed.join(", ")}]`);
+
+  // Auto-deliver: the moment the book is complete, assemble .md/.txt/.pdf so the
+  // final output never depends on an external nudge.
+  if (state.phase === "done") {
+    try {
+      log("[run] assembling deliverables (.md/.txt/.pdf)…");
+      execFileSync("python3", ["scripts/assemble-novel.py", bookId], {
+        cwd: ROOT,
+        timeout: 300_000,
+      });
+      log("[run] deliverables assembled to public/deliverables/");
+    } catch (err) {
+      log(
+        `[run] auto-assembly failed (can be run manually): ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
+  }
+
   return state;
 }

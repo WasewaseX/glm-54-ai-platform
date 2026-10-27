@@ -411,3 +411,22 @@ Work Log:
 
 Stage Summary:
 - User's "fake 342 customers" complaint answered head-on: an auditable real-data deck (real-platform-report.pptx) plus an in-app live metrics dashboard, plus a transparent corrections slide. GitHub backup is now real and verified (repo: WasewaseX/glm-54-ai-platform). Multi-turn persistence remains green.
+
+---
+Task ID: 18
+Agent: Z.ai Code (main)
+Task: Permanently fix Book Forge 429 rate-limit stall; finish The Dreaming Vat (100 ch) and deliver
+
+Work Log:
+- Diagnosed 6-hour stall: callLLM gave up after 8 attempts (~12 min), runBlock burned one more cycle, marked chapters failed; shared gateway returned 429 on every call since ~10:25Z.
+- Rewrote src/lib/novel-engine.ts resilience:
+  - callLLM: rate-limit errors now retry FOREVER with capped jittered exponential backoff (30s → 8 min cap + 0-30s jitter); non-rate-limit errors get 5 strikes then throw.
+  - runBlock: retries the SAME chapter (3 genuine-failure strikes, then defers to a later pass) — no more skipping/marking-failed churn.
+  - runBook: when phase hits "done", auto-assembles deliverables via scripts/assemble-novel.py (md/txt/pdf) — no external nudge needed.
+- Killed stale runner (pid 1353), verified single instance, restarted via POST /api/novel/start → pid 4179 running new code (log confirms new backoff format).
+- Verified checkpoint integrity: 86 manuscript files, zero strays, state consistent.
+
+Stage Summary:
+- Pipeline is now immune to gateway rate-limit storms: it waits patiently (max one probe per ~8.5 min), never loses progress, and self-delivers on completion.
+- Remaining: ch.87-100 (~31k words). Supervision cron Job 476996 continues every 10 min; it assembles + deletes itself when phase=done.
+- Root cause of 429s is the SHARED gateway pool (key-level) — cannot be eliminated locally; the engine now shrugs it off by design.
