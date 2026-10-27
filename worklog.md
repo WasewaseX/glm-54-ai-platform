@@ -430,3 +430,19 @@ Stage Summary:
 - Pipeline is now immune to gateway rate-limit storms: it waits patiently (max one probe per ~8.5 min), never loses progress, and self-delivers on completion.
 - Remaining: ch.87-100 (~31k words). Supervision cron Job 476996 continues every 10 min; it assembles + deletes itself when phase=done.
 - Root cause of 429s is the SHARED gateway pool (key-level) — cannot be eliminated locally; the engine now shrugs it off by design.
+
+---
+Task ID: 19
+Agent: Z.ai Code (main)
+Task: Book Forge completion — assemble deliverables, verify, retire supervision cron
+
+Work Log:
+- 100/100 chapters completed at 16:09Z (228,978 words per state). Runner exited normally (pid 4179 gone).
+- Engine auto-assembly failed: python3 lacked reportlab → pip installed it, ran scripts/assemble-novel.py the-dreaming-vat.
+- Deliverables verified: public/deliverables/the-dreaming-vat.md (1.33 MB) + .pdf (1.42 MB), 100 chapters / 228,467 words, title page + TOC intact.
+- Deleted supervision cron Job 476996 (41 runs over ~7h; restarted runner 3 times during 429 storms).
+
+Stage Summary:
+- "The Dreaming Vat" (marine-biology grad student discovers her bioreactor is dreaming) is COMPLETE: 100 chapters, ~228.5k words, delivered as md+pdf in public/deliverables/ (also reachable at /deliverables/the-dreaming-vat.md/.pdf via the dev server).
+- Patient-retry engine changes (Task 18) carried the run through the gateway storm: 14 chapters written in ~12 min once quota freed.
+- Book Forge pipeline is now a reusable, storm-proof capability (bible → outline → 10 block-workers → checkpoint → auto-assemble).

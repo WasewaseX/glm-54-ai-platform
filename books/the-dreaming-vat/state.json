@@ -1,7 +1,7 @@
 {
   "bookId": "the-dreaming-vat",
   "title": "The Dreaming Vat",
-  "phase": "chapters",
+  "phase": "done",
   "chapters": {
     "1": {
       "status": "done",
@@ -52,14 +52,16 @@
       "title": "Vocabulary Board"
     },
     "9": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2269,
+      "attempts": 6,
+      "title": "Memory Chemistry"
     },
     "10": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 3
+      "status": "done",
+      "words": 2346,
+      "attempts": 4,
+      "title": "Listen"
     },
     "11": {
       "status": "done",
@@ -176,9 +178,10 @@
       "title": "The Choir Field"
     },
     "30": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2926,
+      "attempts": 6,
+      "title": "The Hearing"
     },
     "31": {
       "status": "done",
@@ -235,9 +238,10 @@
       "title": "The Copy"
     },
     "40": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2388,
+      "attempts": 6,
+      "title": "Escape Hatch"
     },
     "41": {
       "status": "done",
@@ -288,14 +292,16 @@
       "title": "The Ceasefire"
     },
     "49": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2475,
+      "attempts": 6,
+      "title": "The Open Ocean"
     },
     "50": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 3
+      "status": "done",
+      "words": 2326,
+      "attempts": 4,
+      "title": "Farther"
     },
     "51": {
       "status": "done",
@@ -346,14 +352,16 @@
       "title": "The Message"
     },
     "59": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 1903,
+      "attempts": 6,
+      "title": "The Descent"
     },
     "60": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 3
+      "status": "done",
+      "words": 2524,
+      "attempts": 4,
+      "title": "The Handwriting"
     },
     "61": {
       "status": "done",
@@ -404,14 +412,16 @@
       "title": "Silence"
     },
     "69": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 6
+      "status": "done",
+      "words": 2372,
+      "attempts": 7,
+      "title": "Abyssal Dream"
     },
     "70": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 3
+      "status": "done",
+      "words": 2366,
+      "attempts": 4,
+      "title": "The Deep Network"
     },
     "71": {
       "status": "done",
@@ -468,9 +478,10 @@
       "title": "Ceasefire"
     },
     "80": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 1925,
+      "attempts": 6,
+      "title": "We Can Breathe"
     },
     "81": {
       "status": "done",
@@ -527,9 +538,10 @@
       "title": "The Return"
     },
     "90": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2177,
+      "attempts": 6,
+      "title": "The Sea"
     },
     "91": {
       "status": "done",
@@ -580,18 +592,20 @@
       "title": "Ordinary"
     },
     "99": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 5
+      "status": "done",
+      "words": 2352,
+      "attempts": 6,
+      "title": "Envelope"
     },
     "100": {
-      "status": "failed",
-      "words": 0,
-      "attempts": 2
+      "status": "done",
+      "words": 2340,
+      "attempts": 3,
+      "title": "Again"
     }
   },
-  "totalWords": 196289,
-  "chaptersDone": 86,
+  "totalWords": 228978,
+  "chaptersDone": 100,
   "errors": [
     "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 9: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
@@ -619,5 +633,5 @@
     "chapter 100: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T15:57:00.114Z"
+  "updatedAt": "2026-10-27T16:09:04.297Z"
 }
