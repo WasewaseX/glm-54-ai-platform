@@ -14,8 +14,8 @@
  */
 
 import ZAI from "z-ai-web-dev-sdk";
-import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, openSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
 import { join } from "node:path";
 
 const ROOT = "/home/z/my-project";
@@ -365,6 +365,44 @@ export function saveState(state: BookState): void {
 
 export function countWords(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
+}
+
+/** True when a runner process is alive for the book (pid file exists + pid responds). */
+export function isRunnerRunning(bookId: string): boolean {
+  const pidPath = join("/tmp", `novel-${bookId}.pid`);
+  if (!existsSync(pidPath)) return false;
+  try {
+    const pid = Number(readFileSync(pidPath, "utf8").trim());
+    process.kill(pid, 0); // throws when not alive
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Spawn the resumable runner for a book as a detached process (single-instance safe). */
+export function startBookRunner(bookId: string): { started: boolean; message: string } {
+  const def = BOOKS[bookId];
+  if (!def) return { started: false, message: `unknown book: ${bookId}` };
+  if (isRunnerRunning(bookId)) {
+    const pid = Number(readFileSync(join("/tmp", `novel-${bookId}.pid`), "utf8").trim());
+    return { started: false, message: `Runner already active (pid ${pid}).` };
+  }
+  const state = loadState(bookId);
+  if (state?.phase === "done") {
+    return { started: false, message: "Book already complete." };
+  }
+  const logPath = join("/tmp", "novel-run.log");
+  const out = openSync(logPath, "a");
+  const child = spawn("bun", ["scripts/run-novel.ts", bookId], {
+    cwd: ROOT,
+    stdio: ["ignore", out, out],
+    detached: true,
+    env: process.env,
+  });
+  child.unref();
+  writeFileSync(join("/tmp", `novel-${bookId}.pid`), String(child.pid));
+  return { started: true, message: `Book Forge started (pid ${child.pid}).` };
 }
 
 // ---------------------------------------------------------------------------

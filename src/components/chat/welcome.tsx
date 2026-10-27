@@ -26,6 +26,12 @@ const AGENT_ICONS = [Code2, PenLine, FileSearch, Presentation, LayoutTemplate] a
 
 const DELIVERABLES = [
   {
+    href: "/deliverables/the-dreaming-vat.md",
+    icon: BookOpen,
+    title: "The Dreaming Vat",
+    meta: "Original serialized novel · 100 chapters · 228,467 words · .md + .pdf",
+  },
+  {
     href: "/deliverables/real-platform-report.pptx",
     icon: FileCheck2,
     title: "Real Platform Report",
@@ -51,6 +57,7 @@ const FEATURE_CHIPS = [
   { icon: Globe, label: "Web search" },
   { icon: FileSearch, label: "Long-doc RAG" },
   { icon: ShieldCheck, label: "Vision & files" },
+  { icon: BookOpen, label: "Book Forge · 100-chapter novels" },
 ];
 
 export function Welcome() {

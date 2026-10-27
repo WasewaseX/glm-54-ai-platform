@@ -148,17 +148,25 @@ async function readSseBody(res: Response, onPayload: (payload: string) => void):
   }
 }
 
-/** Open a POST SSE stream, throwing a descriptive Error on failure. */
+/** Open a POST SSE stream, throwing a descriptive Error on failure.
+ *  Transient gateway failures (429/5xx/network blips) are retried up to 3
+ *  attempts with a short backoff before the error reaches the user. */
 async function openSseStream(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: withSessionHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify(body),
-    signal,
-  });
-  adoptSessionToken(res);
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 1_200 * attempt + Math.random() * 600));
+    }
+    const res = await fetch(path, {
+      method: "POST",
+      headers: withSessionHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
+      signal,
+    });
+    adoptSessionToken(res);
 
-  if (!res.ok || !res.body) {
+    if (res.ok && res.body) return res;
+
     let message = `Stream request failed (${res.status})`;
     try {
       const data = (await res.json()) as { error?: string };
@@ -166,9 +174,11 @@ async function openSseStream(path: string, body: unknown, signal?: AbortSignal):
     } catch {
       /* keep default */
     }
-    throw new Error(message);
+    // Only transient statuses are retried; other 4xx are terminal.
+    if (!(res.status === 429 || res.status >= 500)) throw new Error(message);
+    lastError = new Error(message);
   }
-  return res;
+  throw lastError ?? new Error("Stream request failed");
 }
 
 /**

@@ -446,3 +446,21 @@ Stage Summary:
 - "The Dreaming Vat" (marine-biology grad student discovers her bioreactor is dreaming) is COMPLETE: 100 chapters, ~228.5k words, delivered as md+pdf in public/deliverables/ (also reachable at /deliverables/the-dreaming-vat.md/.pdf via the dev server).
 - Patient-retry engine changes (Task 18) carried the run through the gateway storm: 14 chapters written in ~12 min once quota freed.
 - Book Forge pipeline is now a reusable, storm-proof capability (bible → outline → 10 block-workers → checkpoint → auto-assemble).
+
+---
+Task ID: 20
+Agent: Z.ai Code (main)
+Task: Fix the platform's own failure on the webnovel test ("you failed your entire goal test") + UI improvements
+
+Work Log:
+- Diagnosed: user typed the exact webnovel request into the PLATFORM chat (Agent mode) → "Stream request failed (502)" + empty bubble. Root causes: (a) src/lib/ai.ts had ZERO retry on gateway 429/502; (b) client openSseStream failed hard on first transient error; (c) agent engine had NO Book Forge tool — long-form requests fell to the raw LLM; (d) error UX = floating banner over empty bubble.
+- Fixed src/lib/ai.ts: withRetry() transient-error layer (429/5xx/network/empty-completion) applied to streamChat, streamVision, chatOnce, webSearch, pageReader, generateImage (2-3 attempts, capped jittered backoff).
+- Fixed src/lib/api-client.ts: openSseStream retries 429/5xx POSTs up to 3 attempts before surfacing an error; non-transient 4xx stay terminal.
+- Added book_forge tool to agent engine: real status/start of the novel pipeline (loadState/startBookRunner/isRunnerRunning shared helpers in novel-engine.ts; /api/novel/start refactored onto startBookRunner). AGENT_SYSTEM_PROMPT updated: report REAL pipeline numbers, never fabricate progress.
+- UI: message-item.tsx error state is now an in-bubble "Generation failed" card with a Retry button; empty bubble shell removed for error-with-no-content. Welcome: The Dreaming Vat added as first deliverable (100 chapters · 228,467 words), new "Book Forge" feature chip.
+- Lint clean. Browser-verified (agent-browser): sent the EXACT original request in Agent mode → agent ran plan + book_forge(status) steps + auto-generated a marine-lab cover image artifact → final answer with REAL numbers (100/100 chapters, 228,978 words) and working /deliverables links (md 200/1.3MB, pdf 200/1.4MB). Regression: plain "Reply with exactly: OK" streamed in 0.8s. DB AgentStep rows confirm real tool detail {"chaptersDone":100,"totalWords":228978}.
+
+Stage Summary:
+- The platform itself now passes the original goal test: typing "write all 100 chapters..." into GLM 5.4 AI returns real pipeline status + deliverables instead of a 502.
+- Resilience stack: 3 layers (LLM-call retry → SSE POST retry → actionable error card with manual retry).
+- Book Forge is now a first-class agent tool — the chat can launch/resume/report novel runs with live checkpoint data.

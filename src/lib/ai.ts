@@ -34,6 +34,48 @@ export function getZAI(): Promise<ZAI> {
   return zaiPromise;
 }
 
+// ---------------------------------------------------------------------------
+// Transient-failure retry — the shared gateway 429s/502s under load, so every
+// LLM touchpoint retries patiently instead of failing the user's turn.
+// ---------------------------------------------------------------------------
+
+const TRANSIENT_ERROR_RE =
+  /status 429|status 5\d\d|ENOTFOUND|ECONNREFUSED|ECONNRESET|fetch failed|timeout|empty completion/i;
+
+export function isTransientAiError(err: unknown): boolean {
+  return TRANSIENT_ERROR_RE.test(err instanceof Error ? err.message : String(err));
+}
+
+function retryDelayMs(attempt: number, baseMs: number, capMs: number): number {
+  return Math.min(capMs, baseMs * 2 ** attempt) + Math.random() * 800;
+}
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  opts: { retries?: number; baseMs?: number; capMs?: number; label?: string } = {}
+): Promise<T> {
+  const retries = opts.retries ?? 3;
+  const baseMs = opts.baseMs ?? 1_200;
+  const capMs = opts.capMs ?? 12_000;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === retries || !isTransientAiError(err)) throw err;
+      const wait = retryDelayMs(attempt, baseMs, capMs);
+      console.warn(
+        `[ai] ${opts.label ?? "call"} failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${Math.round(
+          wait
+        )}ms: ${err instanceof Error ? err.message : String(err)}`
+      );
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
+
 export interface UpstreamChunk {
   text: string;
   thinking: string;
@@ -116,7 +158,10 @@ export async function* streamChat(
     stream: true,
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
-  const stream = (await zai.chat.completions.create(body)) as ReadableStream<Uint8Array> | Response;
+  const stream = (await withRetry(() => zai.chat.completions.create(body), {
+    retries: 3,
+    label: "streamChat",
+  })) as ReadableStream<Uint8Array> | Response;
 
   if (stream instanceof Response || !(stream instanceof ReadableStream)) {
     // Gateway answered non-streaming despite stream:true — degrade gracefully.
@@ -154,9 +199,10 @@ export async function* streamVision(
     stream: true,
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
-  const stream = (await zai.chat.completions.createVision(body)) as
-    | ReadableStream<Uint8Array>
-    | Response;
+  const stream = (await withRetry(() => zai.chat.completions.createVision(body), {
+    retries: 3,
+    label: "streamVision",
+  })) as ReadableStream<Uint8Array> | Response;
 
   if (stream instanceof Response || !(stream instanceof ReadableStream)) {
     const json = await (stream as Response).json();
@@ -180,10 +226,14 @@ export async function chatOnce(
   opts: { thinking?: boolean; maxChars?: number } = {}
 ): Promise<{ text: string; model: string | null; usage: { prompt_tokens: number; completion_tokens: number } | null }> {
   const zai = await getZAI();
-  const completion = (await zai.chat.completions.create({
-    messages,
-    thinking: { type: opts.thinking ? "enabled" : "disabled" },
-  })) as {
+  const completion = (await withRetry(
+    () =>
+      zai.chat.completions.create({
+        messages,
+        thinking: { type: opts.thinking ? "enabled" : "disabled" },
+      }),
+    { retries: 3, label: "chatOnce" }
+  )) as {
     model?: string;
     usage?: { prompt_tokens: number; completion_tokens: number };
     choices?: Array<{ message?: { content?: string } }>;
@@ -201,7 +251,10 @@ export async function webSearch(
   Array<{ url: string; name: string; snippet: string; host_name: string; rank: number; date: string; favicon: string }>
 > {
   const zai = await getZAI();
-  const res = await zai.functions.invoke("web_search", { query, num });
+  const res = (await withRetry(() => zai.functions.invoke("web_search", { query, num }), {
+    retries: 2,
+    label: "webSearch",
+  })) as Array<Record<string, unknown>>;
   if (!Array.isArray(res)) return [];
   return res.slice(0, num).map((r, i) => ({
     url: r.url ?? "",
@@ -217,7 +270,10 @@ export async function webSearch(
 /** Read a web page and extract readable text via the gateway's page_reader tool. */
 export async function pageReader(url: string): Promise<{ title: string; text: string; tokens: number }> {
   const zai = await getZAI();
-  const res = (await zai.functions.invoke("page_reader", { url })) as {
+  const res = (await withRetry(() => zai.functions.invoke("page_reader", { url }), {
+    retries: 2,
+    label: "pageReader",
+  })) as {
     code?: number;
     data?: { html?: string; title?: string; url?: string; usage?: { tokens?: number } };
   };
@@ -258,7 +314,11 @@ export function isImageSize(size: unknown): size is ImageSize {
 /** Generate an image; resolves to base64 PNG data (no data: prefix). */
 export async function generateImage(prompt: string, size: ImageSize = "1024x1024"): Promise<string> {
   const zai = await getZAI();
-  const res = await zai.images.generations.create({ prompt, size });
+  const res = (await withRetry(() => zai.images.generations.create({ prompt, size }), {
+    retries: 2,
+    baseMs: 2_000,
+    label: "generateImage",
+  })) as { data?: Array<{ base64?: string }> };
   const b64 = res?.data?.[0]?.base64;
   if (!b64) throw new Error("Image generation returned no data.");
   return b64;

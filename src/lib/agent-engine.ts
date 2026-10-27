@@ -8,6 +8,7 @@ import {
   isImageSize,
   type SdkChatMessage,
 } from "@/lib/ai";
+import { loadState, startBookRunner, isRunnerRunning, BOOKS } from "@/lib/novel-engine";
 import type {
   AgentStreamEvent,
   ArtifactKind,
@@ -80,11 +81,13 @@ Rules: 2-6 steps, each under 80 characters, concrete and ordered.
 <tool>{"name":"page_reader","arguments":{"url":"https://example.com/page"}}</tool>
 <tool>{"name":"generate_image","arguments":{"prompt":"vivid image description","size":"1024x1024"}}</tool>
 <tool>{"name":"run_code","arguments":{"code":"...full program...","language":"typescript","tests":"...optional bun:test file..."}}</tool>
+<tool>{"name":"book_forge","arguments":{"action":"status","bookId":"the-dreaming-vat"}}</tool>
 Rules:
 - web_search: current events, facts you are unsure of, or when the user asks to research. num is 1-10 (default 5).
 - page_reader: fetch the full text of a specific URL (often a web_search result).
 - generate_image: create an illustration on request or when it clearly adds value.
 - run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
+- book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part outline → parallel block-workers, checkpointed per chapter). For any request to write a novel/webnovel/book of many chapters (e.g. "write 100 chapters"), call book_forge with action "status" first, and action "start" to launch or resume the runner. ALWAYS report the tool's real numbers (phase, chapters done, words) and the deliverable links it returns — never claim you wrote the chapters yourself in one reply, and never invent progress numbers.
 - After tool blocks stop generating. The environment replies with <tool_results> and you continue.
 
 3) Artifact — a file the user can open and download in the side panel. Write the FULL content between the tags, never a placeholder:
@@ -457,10 +460,64 @@ async function executeTool(
       }
     }
 
+    case "book_forge": {
+      const action = args.action === "start" ? "start" : "status";
+      const requested = typeof args.bookId === "string" ? args.bookId : "the-dreaming-vat";
+      const bookId = BOOKS[requested] ? requested : "the-dreaming-vat";
+      const def = BOOKS[bookId];
+
+      let startMessage = "";
+      if (action === "start") {
+        const r = startBookRunner(bookId);
+        startMessage = r.message;
+      }
+
+      const state = loadState(bookId);
+      const running = isRunnerRunning(bookId);
+      const failedChapters = state
+        ? Object.entries(state.chapters)
+            .filter(([, c]) => c.status === "failed")
+            .map(([n]) => Number(n))
+        : [];
+
+      const lines: string[] = [
+        `Book Forge — "${def.title}" (bookId=${bookId})`,
+        state
+          ? `- phase: ${state.phase}`
+          : "- phase: idle (no run started yet)",
+        state
+          ? `- progress: ${state.chaptersDone}/100 chapters, ${state.totalWords.toLocaleString("en-US")} words (target: 100 × ~2,200)`
+          : "- progress: 0/100 chapters, 0 words",
+        `- runner: ${running ? "RUNNING (checkpointed, continues automatically)" : "not running"}`,
+        failedChapters.length > 0
+          ? `- chapters deferred for retry: ${failedChapters.join(", ")}`
+          : "- no failed chapters",
+        `- deliverables (when phase=done): /deliverables/${bookId}.md and /deliverables/${bookId}.pdf — downloadable from the welcome screen`,
+      ];
+      if (startMessage) lines.push(`- start action result: ${startMessage}`);
+      lines.push(
+        "",
+        "Report these REAL numbers to the user verbatim. If phase=done, congratulate and link the deliverables. If still writing, explain the run is checkpointed and finishes automatically; the welcome screen shows live progress."
+      );
+
+      return {
+        ok: true,
+        resultText: clip(lines.join("\n"), TOOL_RESULT_CHAR_BUDGET),
+        detail: {
+          action,
+          bookId,
+          phase: state?.phase ?? "idle",
+          chaptersDone: state?.chaptersDone ?? 0,
+          totalWords: state?.totalWords ?? 0,
+          running,
+        },
+      };
+    }
+
     default:
       return {
         ok: false,
-        resultText: `Unknown tool "${name}". Available tools: web_search, page_reader, generate_image, run_code.`,
+        resultText: `Unknown tool "${name}". Available tools: web_search, page_reader, generate_image, run_code, book_forge.`,
         detail: {},
       };
   }
