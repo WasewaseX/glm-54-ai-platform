@@ -57,9 +57,9 @@
       "attempts": 5
     },
     "10": {
-      "status": "pending",
+      "status": "failed",
       "words": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "11": {
       "status": "done",
@@ -587,7 +587,7 @@
     "100": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     }
   },
   "totalWords": 196289,
@@ -611,8 +611,9 @@
     "chapter 69 (retry): API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 80 (retry): API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
     "chapter 90 (retry): API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
-    "chapter 99 (retry): API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    "chapter 99 (retry): API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+    "chapter 10: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T14:52:55.516Z"
+  "updatedAt": "2026-10-27T15:05:13.091Z"
 }
