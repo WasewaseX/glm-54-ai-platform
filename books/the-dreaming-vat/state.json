@@ -10,14 +10,15 @@
       "title": "The Inheritance"
     },
     "2": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 1963,
+      "attempts": 1,
+      "title": "Ghost in the Machine"
     },
     "3": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "4": {
       "status": "pending",
@@ -61,19 +62,21 @@
       "title": "The Whiteboard"
     },
     "12": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2318,
+      "attempts": 1,
+      "title": "First Words"
     },
     "13": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2114,
+      "attempts": 1,
+      "title": "Echo Chamber"
     },
     "14": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "15": {
       "status": "pending",
@@ -118,14 +121,15 @@
       "title": "The Singing Reactor"
     },
     "23": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2926,
+      "attempts": 1,
+      "title": "The Counter"
     },
     "24": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "25": {
       "status": "pending",
@@ -164,14 +168,15 @@
       "title": "The Ethics Cot"
     },
     "32": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2258,
+      "attempts": 1,
+      "title": "Metabolite Handwriting"
     },
     "33": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "34": {
       "status": "pending",
@@ -215,14 +220,15 @@
       "title": "The Backup"
     },
     "42": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2237,
+      "attempts": 1,
+      "title": "Reconstructing a Ghost"
     },
     "43": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "44": {
       "status": "pending",
@@ -266,14 +272,15 @@
       "title": "The Lockdown"
     },
     "52": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2121,
+      "attempts": 1,
+      "title": "The Glow"
     },
     "53": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "54": {
       "status": "pending",
@@ -317,14 +324,15 @@
       "title": "Foreign Ink"
     },
     "62": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2283,
+      "attempts": 1,
+      "title": "The Great Waking"
     },
     "63": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "64": {
       "status": "pending",
@@ -368,14 +376,16 @@
       "title": "The Cooler"
     },
     "72": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2330,
+      "attempts": 1,
+      "title": "Setting Sail"
     },
     "73": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1978,
+      "attempts": 1,
+      "title": "Deep Calibration"
     },
     "74": {
       "status": "pending",
@@ -419,19 +429,21 @@
       "title": "The Toll"
     },
     "82": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 1966,
+      "attempts": 1,
+      "title": "The Board"
     },
     "83": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2037,
+      "attempts": 1,
+      "title": "The Ceasefire"
     },
     "84": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "85": {
       "status": "pending",
@@ -470,14 +482,15 @@
       "title": "Night Shift"
     },
     "92": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2213,
+      "attempts": 1,
+      "title": "Pilgrimage"
     },
     "93": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "94": {
       "status": "pending",
@@ -515,9 +528,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 26401,
-  "chaptersDone": 11,
+  "totalWords": 55145,
+  "chaptersDone": 24,
   "errors": [],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T09:31:30.159Z"
+  "updatedAt": "2026-10-27T09:40:03.374Z"
 }
