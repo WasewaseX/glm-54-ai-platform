@@ -46,14 +46,15 @@
       "title": "Protocol"
     },
     "8": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2151,
+      "attempts": 1,
+      "title": "Vocabulary Board"
     },
     "9": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "10": {
       "status": "pending",
@@ -115,9 +116,10 @@
       "title": "The Email"
     },
     "20": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2336,
+      "attempts": 1,
+      "title": "Amusement"
     },
     "21": {
       "status": "done",
@@ -168,14 +170,15 @@
       "title": "The Autoclave Failure"
     },
     "29": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2185,
+      "attempts": 1,
+      "title": "The Choir Field"
     },
     "30": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "31": {
       "status": "done",
@@ -226,14 +229,15 @@
       "title": "FedEx Doubles"
     },
     "39": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2498,
+      "attempts": 1,
+      "title": "The Copy"
     },
     "40": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "41": {
       "status": "done",
@@ -400,9 +404,9 @@
       "title": "Silence"
     },
     "69": {
-      "status": "pending",
+      "status": "failed",
       "words": 0,
-      "attempts": 0
+      "attempts": 2
     },
     "70": {
       "status": "pending",
@@ -458,14 +462,15 @@
       "title": "The Message"
     },
     "79": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 3426,
+      "attempts": 1,
+      "title": "Ceasefire"
     },
     "80": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "81": {
       "status": "done",
@@ -516,14 +521,15 @@
       "title": "The Choir"
     },
     "89": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 1999,
+      "attempts": 1,
+      "title": "The Return"
     },
     "90": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "91": {
       "status": "done",
@@ -568,14 +574,15 @@
       "title": "Answer"
     },
     "98": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2230,
+      "attempts": 1,
+      "title": "Ordinary"
     },
     "99": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "100": {
       "status": "pending",
@@ -583,9 +590,11 @@
       "attempts": 0
     }
   },
-  "totalWords": 179464,
-  "chaptersDone": 79,
-  "errors": [],
+  "totalWords": 196289,
+  "chaptersDone": 86,
+  "errors": [
+    "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+  ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T10:10:01.443Z"
+  "updatedAt": "2026-10-27T10:25:03.002Z"
 }
