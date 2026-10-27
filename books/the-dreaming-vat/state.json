@@ -16,19 +16,21 @@
       "title": "Ghost in the Machine"
     },
     "3": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2636,
+      "attempts": 1,
+      "title": "Advisor's Doubt"
     },
     "4": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2202,
+      "attempts": 1,
+      "title": "Engineer's Ear"
     },
     "5": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "6": {
       "status": "pending",
@@ -74,24 +76,27 @@
       "title": "Echo Chamber"
     },
     "14": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2123,
+      "attempts": 1,
+      "title": "The Prediction"
     },
     "15": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2056,
+      "attempts": 1,
+      "title": "The Leak"
     },
     "16": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1940,
+      "attempts": 1,
+      "title": "Cerulean's Eye"
     },
     "17": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "18": {
       "status": "pending",
@@ -127,19 +132,21 @@
       "title": "The Counter"
     },
     "24": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2447,
+      "attempts": 1,
+      "title": "The Ghost in the Machine"
     },
     "25": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2446,
+      "attempts": 1,
+      "title": "The Privacy Filter"
     },
     "26": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "27": {
       "status": "pending",
@@ -174,24 +181,27 @@
       "title": "Metabolite Handwriting"
     },
     "33": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2381,
+      "attempts": 1,
+      "title": "The Memory Field"
     },
     "34": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2023,
+      "attempts": 1,
+      "title": "Embed"
     },
     "35": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2281,
+      "attempts": 1,
+      "title": "Corner Fraying"
     },
     "36": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "37": {
       "status": "pending",
@@ -226,19 +236,21 @@
       "title": "Reconstructing a Ghost"
     },
     "43": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2418,
+      "attempts": 1,
+      "title": "The First Dream"
     },
     "44": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2347,
+      "attempts": 1,
+      "title": "Patent War"
     },
     "45": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "46": {
       "status": "pending",
@@ -278,19 +290,21 @@
       "title": "The Glow"
     },
     "53": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2472,
+      "attempts": 1,
+      "title": "The Divide"
     },
     "54": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1991,
+      "attempts": 1,
+      "title": "The Sample"
     },
     "55": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "56": {
       "status": "pending",
@@ -330,19 +344,21 @@
       "title": "The Great Waking"
     },
     "63": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2141,
+      "attempts": 1,
+      "title": "Metabolic Correspondence"
     },
     "64": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2323,
+      "attempts": 1,
+      "title": "The Naval Incident"
     },
     "65": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "66": {
       "status": "pending",
@@ -388,19 +404,22 @@
       "title": "Deep Calibration"
     },
     "74": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2188,
+      "attempts": 1,
+      "title": "First Contact"
     },
     "75": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2169,
+      "attempts": 1,
+      "title": "The Tent"
     },
     "76": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1941,
+      "attempts": 1,
+      "title": "Shared Breath"
     },
     "77": {
       "status": "pending",
@@ -441,14 +460,15 @@
       "title": "The Ceasefire"
     },
     "84": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2166,
+      "attempts": 1,
+      "title": "The Protocol"
     },
     "85": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "86": {
       "status": "pending",
@@ -488,14 +508,15 @@
       "title": "Pilgrimage"
     },
     "93": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2441,
+      "attempts": 1,
+      "title": "Confession"
     },
     "94": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "95": {
       "status": "pending",
@@ -528,9 +549,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 55145,
-  "chaptersDone": 24,
+  "totalWords": 102277,
+  "chaptersDone": 45,
   "errors": [],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-27T09:40:03.374Z"
+  "updatedAt": "2026-10-27T09:50:12.102Z"
 }
