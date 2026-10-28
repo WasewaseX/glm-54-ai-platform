@@ -511,3 +511,17 @@ Stage Summary:
 - New novel "The Bioreactor's Dream" (bookId the-bioreactor-s-dream) writing live: 31/100 chapters, 73,086 words at last check; runner pid 1867; auto-assembles on completion.
 - Old book being force-corrected to truly meet "each 2200 words" — no fake numbers anywhere.
 - Deliverables: public/deliverables/the-dreaming-vat.{md,pdf}; bioreactor .md/.pdf appear automatically when its phase=done.
+
+---
+Task ID: cron-479831
+Agent: Z.ai Code (supervision)
+Task: Book Forge supervision for ALL books (generic)
+
+Work Log:
+- the-bioreactor-s-dream: chapters, 46/100, 107,969 words, runner alive (pid 1867); deliverable correctly absent (not done)
+- the-dreaming-vat: done, 100/100, 237,640 words (extender raising all chapters to 2200+); deliverable STALE
+- extend-chapters (pid 3333) still running (~ch55 of 36 targets) — let it work; reassembly deferred to avoid reading mid-rewrite chapters; will assemble on a later cycle once it exits
+- No restarts, no code changes
+
+Stage Summary:
+- Both books healthy; cron 479831 kept active

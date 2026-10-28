@@ -22,14 +22,15 @@
       "title": "The Dive"
     },
     "4": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2312,
+      "attempts": 1,
+      "title": "The Dream"
     },
     "5": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "6": {
       "status": "pending",
@@ -75,14 +76,16 @@
       "title": "Unauthorized Transfers"
     },
     "14": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2583,
+      "attempts": 1,
+      "title": "The Military Connection"
     },
     "15": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2027,
+      "attempts": 1,
+      "title": "Thorne's Reaction"
     },
     "16": {
       "status": "pending",
@@ -134,14 +137,15 @@
       "title": "Aris's Doubts"
     },
     "25": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 1934,
+      "attempts": 1,
+      "title": "The Patent Plot"
     },
     "26": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "27": {
       "status": "pending",
@@ -190,7 +194,7 @@
     "35": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "36": {
       "status": "pending",
@@ -236,14 +240,15 @@
       "title": "A Risky Alliance"
     },
     "44": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2122,
+      "attempts": 1,
+      "title": "Digital Dreams"
     },
     "45": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "46": {
       "status": "pending",
@@ -289,19 +294,21 @@
       "title": "The Ghost in the Machine"
     },
     "54": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2367,
+      "attempts": 1,
+      "title": "Father's Secrets"
     },
     "55": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2682,
+      "attempts": 1,
+      "title": "Carter's Revelation"
     },
     "56": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "57": {
       "status": "pending",
@@ -348,14 +355,15 @@
       "title": "The Weight of Water"
     },
     "65": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2344,
+      "attempts": 1,
+      "title": "Breaking Surface"
     },
     "66": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "67": {
       "status": "pending",
@@ -396,14 +404,15 @@
       "title": "Glass and Steel"
     },
     "74": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2317,
+      "attempts": 1,
+      "title": "Deep Currents"
     },
     "75": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "76": {
       "status": "pending",
@@ -449,19 +458,21 @@
       "title": "The Weight of Water"
     },
     "84": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2289,
+      "attempts": 1,
+      "title": "Pressure Points"
     },
     "85": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2006,
+      "attempts": 1,
+      "title": "Light in the Abyss"
     },
     "86": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "87": {
       "status": "pending",
@@ -502,19 +513,21 @@
       "title": "The Human Element"
     },
     "94": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2465,
+      "attempts": 1,
+      "title": "Fractured Alliance"
     },
     "95": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2120,
+      "attempts": 1,
+      "title": "Memory's Echo"
     },
     "96": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "97": {
       "status": "pending",
@@ -537,9 +550,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 78401,
-  "chaptersDone": 33,
+  "totalWords": 107969,
+  "chaptersDone": 46,
   "errors": [],
   "startedAt": "2026-10-28T07:13:07.002Z",
-  "updatedAt": "2026-10-28T07:53:29.253Z"
+  "updatedAt": "2026-10-28T08:02:35.764Z"
 }
