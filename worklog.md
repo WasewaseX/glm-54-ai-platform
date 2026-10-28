@@ -614,3 +614,16 @@ Work Log:
 
 Stage Summary:
 - Holding pattern; pending: bioreactor phase=done → assemble md → extend 18 short done-chapters via server-spawned extender → re-assemble; then cron self-delete criteria check
+
+---
+Task ID: cron-479831-1718
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 17:18)
+
+Work Log:
+- Sweep: bioreactor 68/100 (159,857w), runner 1867 ALIVE; vat done/FRESH (247,824w); no extender
+- 429 storm persists upstream: retries #7 (09:08) and #8 (09:16, 504s backoff, next ~09:25 UTC); no chapter progress since 08:44 — ghosts are dead so this is account/gateway-level limiting, not self-inflicted
+- No action per rules: runner alive (infinite-retry design will carry through), no extender conflict, vat fresh
+
+Stage Summary:
+- Watch: if storm persists past several more cycles, consider checking gateway quota outside engine code; otherwise holding pattern
