@@ -101,7 +101,7 @@
     },
     "17": {
       "status": "done",
-      "words": 2056,
+      "words": 2578,
       "attempts": 1,
       "title": "The Board Meeting"
     },
@@ -167,7 +167,7 @@
     },
     "28": {
       "status": "done",
-      "words": 1917,
+      "words": 2614,
       "attempts": 1,
       "title": "The Autoclave Failure"
     },
@@ -604,7 +604,7 @@
       "title": "Again"
     }
   },
-  "totalWords": 232997,
+  "totalWords": 234216,
   "chaptersDone": 100,
   "errors": [
     "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
@@ -633,5 +633,5 @@
     "chapter 100: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-28T07:45:25.146Z"
+  "updatedAt": "2026-10-28T07:51:46.435Z"
 }

@@ -487,3 +487,27 @@ Work Log:
 
 Stage Summary:
 - +14 chapters in 15 min, healthy pace; cron kept active
+
+---
+Task ID: 20
+Agent: Z.ai Code (main session)
+Task: Fix the REAL goal-test failure — chat agent could not start a NEW webnovel (looped on "I understand you'd like...") — plus UI improvements.
+
+Work Log:
+- Diagnosed root cause: BOOKS registry was hardcoded to "the-dreaming-vat"; the agent tool book_forge silently fell back to it; NO create-book capability existed anywhere. Plain chat path (/api/chat) had no tools at all. That is why the agent only talked and never acted.
+- novel-engine.ts: added dynamic book forging — createBook(premise, title?) generates a story bible (LLM call 1) + 10-part arc (LLM call 2), persists books/<id>/bookdef.json; getBookDef() resolves seeded + forged books; listBooks() enumerates all books with live progress; startBookRunner/runBook now use getBookDef; STYLE_RULES made story-agnostic.
+- agent-engine.ts: book_forge tool gained action="create"; status/start list known books instead of silent fallback; system prompt mandates create for new-novel requests.
+- DETERMINISTIC INTENT (the real fix): model-only compliance failed E2E (model asked permission). Added src/lib/novel-intent.ts (NOVEL_INTENT_RE + confirm-followup detection + premise extraction) and made BOTH paths act before the model speaks: runAgent (agent mode) and /api/chat (plain mode) detect novel-scale requests, call createBook + startBookRunner, and inject a <system_note> with the real bookId/title so the model reports facts instead of offering options. Verified E2E in browser: goal prompt now yields real book "Bioreactor Dreams" + honest reply (book removed afterward as a test duplicate; the API-forged "The Bioreactor's Dream" is the canonical new novel).
+- ai.ts: chat stream retries hardened (3→6 retries, 3s base/30s cap) so user chat survives gateway 429 storms while writers run.
+- API: /api/novel/start accepts {premise|bookId}; new GET /api/novel/books; new POST /api/novel/extend (server-spawned extender — shell-spawned children get reaped, server-spawned survive); /api/novel/status generalized (?bookId=).
+- scripts/extend-chapters.ts: rewrites any chapter under target to ≥2,200 words (keeps events + hook line), checkpointed, infinite 429 patience.
+- HONESTY AUDIT of The Dreaming Vat: 12 chapters were 1,898–1,999 words, 24 more in 2,000–2,199 — user's "each 2200" was NOT fully met. Extender running (server-spawned pid 3333); state already 228,978 → 233,519 words; deliverables re-assembly will be triggered by cron when extender finishes (state.json newer than .md).
+- UI: BookForge card replaced by Book Forge Library (src/components/chat/book-forge.tsx): all books, live per-book progress bars, phase badges, words + words/chapter, resume button, download links; fixed left-alignment + RealMetrics mobile flex bug.
+- Supervision: replaced per-book cron with generic all-books supervisor (Job 479831, 15 min, self-deletes when all done + deliverables fresh).
+- GitHub backup: PAT was lost in session reset; restored GITHUB_BACKUP_TOKEN to .env, configured origin remote, pushed (per standing "never stop backing up" instruction).
+
+Stage Summary:
+- The platform can now START A NEW 100-chapter novel from any premise in chat (agent or plain mode) — verified end-to-end in the real UI with screenshots.
+- New novel "The Bioreactor's Dream" (bookId the-bioreactor-s-dream) writing live: 31/100 chapters, 73,086 words at last check; runner pid 1867; auto-assembles on completion.
+- Old book being force-corrected to truly meet "each 2200 words" — no fake numbers anywhere.
+- Deliverables: public/deliverables/the-dreaming-vat.{md,pdf}; bioreactor .md/.pdf appear automatically when its phase=done.
