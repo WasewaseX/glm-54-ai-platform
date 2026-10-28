@@ -128,14 +128,15 @@
       "title": "The Hidden Data Stream"
     },
     "24": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2426,
+      "attempts": 1,
+      "title": "Aris's Doubts"
     },
     "25": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "26": {
       "status": "pending",
@@ -181,9 +182,10 @@
       "title": "Carter's Revelation"
     },
     "34": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2889,
+      "attempts": 1,
+      "title": "Corporate Shadow"
     },
     "35": {
       "status": "pending",
@@ -348,7 +350,7 @@
     "65": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "66": {
       "status": "pending",
@@ -535,9 +537,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 73086,
-  "chaptersDone": 31,
+  "totalWords": 78401,
+  "chaptersDone": 33,
   "errors": [],
   "startedAt": "2026-10-28T07:13:07.002Z",
-  "updatedAt": "2026-10-28T07:45:05.009Z"
+  "updatedAt": "2026-10-28T07:53:29.253Z"
 }
