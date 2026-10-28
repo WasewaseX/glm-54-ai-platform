@@ -657,3 +657,16 @@ Work Log:
 Stage Summary:
 - Operating reality: sandbox reboots every ~15 min; cron-per-cycle runner restart IS the recovery mechanism — each boot the runner gets a work window; 429 storm still active (will clear when quota eases)
 - No engine/server changes; protocol holding
+
+---
+Task ID: cron-479831-1803
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 18:03) — third reboot cycle
+
+Work Log:
+- Sandbox rebooted again (~10:03 UTC): runner 1291 killed, /tmp + forge.log wiped; book data intact (68/100, 159,857w; vat done/fresh); platform commit e023855 @ 09:50
+- RESTARTED runner per protocol → pid 1285, resumed 68/100; immediately hit 429 (retry #1, 59s) — storm continues ~1.5h now
+- Dev server 200; no extender; no action beyond restart per rules
+
+Stage Summary:
+- Steady-state loop: reboot every ~15min + cron restart per cycle = recovery working, but 429 storm is the bottleneck for chapter progress
