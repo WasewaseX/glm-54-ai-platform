@@ -525,3 +525,20 @@ Work Log:
 
 Stage Summary:
 - Both books healthy; cron 479831 kept active
+
+---
+Task ID: cron-479831-1618
+Agent: main (cron supervision loop)
+Task: Book Forge supervision for ALL books (Job 479831 @ 16:18)
+
+Work Log:
+- Read state.json for both books; checked /tmp/novel-*.pid (kill -0) and pgrep extend-chapters
+- the-bioreactor-s-dream: phase=chapters, 66/100 done, 155,328 words, runner pid 1867 ALIVE, state updated 46s ago -> no action (writing normally, ~+35 chapters since 15:45)
+- the-dreaming-vat: phase=done, 100/100, 246,964 words, extender pid 3333 alive, only ch97 (1,969 words) still under 2200; md STALE -> skipped re-assembly this cycle (extender would re-stale it within minutes)
+- Noted the-bioreactor-s-dream has 17/66 done chapters under 2,200 words (writer accepts slightly-short chapters); extension needed after it completes
+
+Stage Summary:
+- PLAN for next cron cycles (follow through in order):
+  1. When extend-chapters (pid 3333) exits and ch97 >= 2200: run `python3 scripts/assemble-novel.py the-dreaming-vat`, verify .md/.pdf exist
+  2. When the-bioreactor-s-dream phase=done: if md missing run `python3 scripts/assemble-novel.py the-bioreactor-s-dream`; ALSO it has 17 short chapters -> after assembly, POST /api/novel/extend {"bookId":"the-bioreactor-s-dream","target":2200} (server-spawned, survives), then re-assemble when extender exits and md is fresh
+  3. Only DELETE cron 479831 when: no runner, no extender, both books phase=done, both deliverables fresh

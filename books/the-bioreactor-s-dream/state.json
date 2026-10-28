@@ -28,24 +28,27 @@
       "title": "The Dream"
     },
     "5": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2246,
+      "attempts": 1,
+      "title": "The Discovery"
     },
     "6": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2240,
+      "attempts": 1,
+      "title": "The Warning"
     },
     "7": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 1909,
+      "attempts": 1,
+      "title": "The Betrayal"
     },
     "8": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "9": {
       "status": "pending",
@@ -88,14 +91,16 @@
       "title": "Thorne's Reaction"
     },
     "16": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2459,
+      "attempts": 1,
+      "title": "Aris's Confession"
     },
     "17": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2003,
+      "attempts": 1,
+      "title": "Dr. Carter's Warning"
     },
     "18": {
       "status": "pending",
@@ -143,14 +148,15 @@
       "title": "The Patent Plot"
     },
     "26": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2220,
+      "attempts": 1,
+      "title": "The Midnight Meeting"
     },
     "27": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "28": {
       "status": "pending",
@@ -192,19 +198,21 @@
       "title": "Corporate Shadow"
     },
     "35": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2436,
+      "attempts": 1,
+      "title": "The Father's Son"
     },
     "36": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2835,
+      "attempts": 1,
+      "title": "Pressure Points"
     },
     "37": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "38": {
       "status": "pending",
@@ -246,19 +254,21 @@
       "title": "Digital Dreams"
     },
     "45": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2189,
+      "attempts": 1,
+      "title": "The Security Breach"
     },
     "46": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2242,
+      "attempts": 1,
+      "title": "The Parking Garage Meeting"
     },
     "47": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "48": {
       "status": "pending",
@@ -306,19 +316,21 @@
       "title": "Carter's Revelation"
     },
     "56": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2465,
+      "attempts": 1,
+      "title": "The Biological Processor"
     },
     "57": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 3120,
+      "attempts": 1,
+      "title": "Eva's Net Tightens"
     },
     "58": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "59": {
       "status": "pending",
@@ -361,19 +373,21 @@
       "title": "Breaking Surface"
     },
     "66": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2322,
+      "attempts": 1,
+      "title": "Pressure Cooker"
     },
     "67": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2546,
+      "attempts": 1,
+      "title": "The Descent"
     },
     "68": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "69": {
       "status": "pending",
@@ -410,19 +424,21 @@
       "title": "Deep Currents"
     },
     "75": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2385,
+      "attempts": 1,
+      "title": "The Weight of Water"
     },
     "76": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2734,
+      "attempts": 1,
+      "title": "Pressure Points"
     },
     "77": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "78": {
       "status": "pending",
@@ -470,19 +486,21 @@
       "title": "Light in the Abyss"
     },
     "86": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2408,
+      "attempts": 1,
+      "title": "Fractured Allegiances"
     },
     "87": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2066,
+      "attempts": 1,
+      "title": "Tidal Forces"
     },
     "88": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "89": {
       "status": "pending",
@@ -525,19 +543,21 @@
       "title": "Memory's Echo"
     },
     "96": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2074,
+      "attempts": 1,
+      "title": "Ethical Crossroads"
     },
     "97": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2460,
+      "attempts": 1,
+      "title": "Consciousness Defined"
     },
     "98": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "99": {
       "status": "pending",
@@ -550,9 +570,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 107969,
-  "chaptersDone": 46,
+  "totalWords": 155328,
+  "chaptersDone": 66,
   "errors": [],
   "startedAt": "2026-10-28T07:13:07.002Z",
-  "updatedAt": "2026-10-28T08:02:35.764Z"
+  "updatedAt": "2026-10-28T08:18:07.922Z"
 }
