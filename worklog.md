@@ -572,3 +572,30 @@ Work Log:
 
 Stage Summary:
 - Holding pattern; next cycle expect ~70+/100 if gateway eases. Cron stays alive
+
+---
+Task ID: fix-502-dedup
+Agent: main (user message response: "omfg ... 502")
+Task: Diagnose and fix the 502 "Generation failed" loop on novel requests
+
+Work Log:
+- Ground truth at 08:32: THREE duplicate books had been forged by the user's message + Retry clicks at 08:21 (the-bioreactor-s-dream-2, -3, the-coral-consciousness — all same premise, 4 concurrent runners saturating the shared gateway)
+- Killed the 3 duplicate runners, deleted their dirs + pid files; original the-bioreactor-s-dream untouched (67/100 and climbing)
+- the-dreaming-vat: extender had finished (0 chapters under 2,200); re-assembled deliverables (247,313 words, .md 1.4MB + .pdf 1.5MB both fresh)
+- Dev server incident: I killed the boot-time dev server; plain setsid/nohup relaunches were killed at session end (Bash tool cgroup/tree cleanup). FIX: double-fork orphan trick (python fork→setsid→fork→exec, reparented to init) — server survives across invocations (sess leader, ppid→init)
+- Root cause of the 502 loop (two compounding bugs):
+  1) NO DEDUP — every re-sent premise forged a NEW book + runner; Retry made it worse (vicious cycle)
+  2) Chat stream gave up under 429 storm — user saw "Generation failed (502)"
+- Fixes (commit 8efe2a0, + 4fd63ba captured bulk):
+  - novel-engine: BookDef.originPremise; findExistingBookForPremise (token overlap: originPremise ≥0.6, bible corpus ≥0.34); forgeOrExisting() → created|writing|resumed|complete (resumes stalled runner instead of duplicating)
+  - novel-intent: forceNew=true only for short confirmations ("write a new one") — those bypass dedup; plain messages dedup
+  - chat route: outcome-tailored <system_note>; forgeFallbackReply() — when stream dies with 0 tokens but a forge result exists, stream an honest deterministic status reply (real title/chapters/words) instead of failing
+  - agent-engine: book_forge create tool + deterministic block both dedup (forceNew arg); /api/novel/start premise path dedups too
+- E2E verified in real UI: same premise → dedup hit (forgeKind=writing, "token match 100%"), 0 new books; stream exhausted 7 patient retries under storm → deterministic fallback streamed "📖 this exact novel already exists… 68/100 chapters, 159,857 words… did NOT create a duplicate"; persisted as normal assistant message
+- Confirmed hardened retries live: log shows "attempt 6/7" (old code was 4 fast attempts dying in 9s)
+
+Stage Summary:
+- The 502 loop is structurally impossible now: retries dedup to the same book, and the user always gets an honest reply (LLM-worded or deterministic forge status)
+- Library: exactly 2 books — the-bioreactor-s-dream (writing, ~68/100, pid 1867) + the-dreaming-vat (done, deliverables fresh)
+- New failure-mode rule: gateway saturation → deterministic forge reply, never a failed turn
+- Dev server running via double-fork orphan (sess 7125); writer pid 1867 alive; cron 479831 supervision continues per plan above
