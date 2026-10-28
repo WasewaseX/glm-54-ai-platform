@@ -599,3 +599,18 @@ Stage Summary:
 - Library: exactly 2 books — the-bioreactor-s-dream (writing, ~68/100, pid 1867) + the-dreaming-vat (done, deliverables fresh)
 - New failure-mode rule: gateway saturation → deterministic forge reply, never a failed turn
 - Dev server running via double-fork orphan (sess 7125); writer pid 1867 alive; cron 479831 supervision continues per plan above
+
+---
+Task ID: cron-479831-1703
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 17:03)
+
+Work Log:
+- Sweep: bioreactor 68/100 (159,857w), runner 1867 ALIVE (up 1h54m), vat done/FRESH (247,824w, 0 short chapters, md+pdf newer than state)
+- Confirmed fix-502-dedup cleanup held: books/ has exactly 2 dirs, single runner process (bun run-novel.ts the-bioreactor-s-dream), no stray writers, no extend-chapters
+- Runner in 429 backoff (retry #6 @ 09:00 UTC, 489s wait, next attempt ~09:08) — sole writer, infinite retry will carry through; state age 25min consistent with backoff
+- Dev server http 200 (double-fork orphan holding)
+- No action taken per rules: runner alive → no restart; book writing → no extender; vat done+fresh → no reassembly
+
+Stage Summary:
+- Holding pattern; pending: bioreactor phase=done → assemble md → extend 18 short done-chapters via server-spawned extender → re-assemble; then cron self-delete criteria check
