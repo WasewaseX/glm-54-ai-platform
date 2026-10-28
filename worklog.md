@@ -476,3 +476,14 @@ Work Log:
 
 Stage Summary:
 - Writing in progress (~17%), healthy; cron 479749 kept active for next check
+
+---
+Task ID: cron-479749
+Agent: Z.ai Code (supervision)
+Task: Book Forge supervision for 'the-bioreactor-s-dream'
+
+Work Log:
+- state: phase=chapters, 31/100, 73,086 words; runner pid 1867 alive; no action needed
+
+Stage Summary:
+- +14 chapters in 15 min, healthy pace; cron kept active

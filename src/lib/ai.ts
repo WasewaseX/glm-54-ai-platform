@@ -159,7 +159,9 @@ export async function* streamChat(
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
   const stream = (await withRetry(() => zai.chat.completions.create(body), {
-    retries: 3,
+    retries: 6,
+    baseMs: 3_000,
+    capMs: 30_000,
     label: "streamChat",
   })) as ReadableStream<Uint8Array> | Response;
 
@@ -200,7 +202,9 @@ export async function* streamVision(
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
   const stream = (await withRetry(() => zai.chat.completions.createVision(body), {
-    retries: 3,
+    retries: 6,
+    baseMs: 3_000,
+    capMs: 30_000,
     label: "streamVision",
   })) as ReadableStream<Uint8Array> | Response;
 
@@ -232,7 +236,7 @@ export async function chatOnce(
         messages,
         thinking: { type: opts.thinking ? "enabled" : "disabled" },
       }),
-    { retries: 3, label: "chatOnce" }
+    { retries: 6, baseMs: 3_000, capMs: 30_000, label: "chatOnce" }
   )) as {
     model?: string;
     usage?: { prompt_tokens: number; completion_tokens: number };

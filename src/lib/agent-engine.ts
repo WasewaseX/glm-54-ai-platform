@@ -9,6 +9,7 @@ import {
   type SdkChatMessage,
 } from "@/lib/ai";
 import { createBook, getBookDef, isRunnerRunning, listBooks, loadState, startBookRunner } from "@/lib/novel-engine";
+import { detectNovelIntent } from "@/lib/novel-intent";
 import type {
   AgentStreamEvent,
   ArtifactKind,
@@ -88,10 +89,10 @@ Rules:
 - generate_image: create an illustration on request or when it clearly adds value.
 - run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
 - book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed per chapter). Actions:
-  • {"action":"create","premise":"<the story premise>","title":"<optional override>"} — forges a brand-new ORIGINAL book and immediately starts writing it in the background. YOU MUST call this IN THIS TURN whenever the user asks to write/start a novel, webnovel, or book of many chapters — including when a previous book exists or is complete and the user asks for a NEW one. NEVER reply with only an acknowledgment like \"I understand you'd like me to create…\" — emitting words instead of this tool call is a failure. After the call, report the tool's real bookId, title and phase.
+  • {"action":"create","premise":"<the story premise>","title":"<optional override>"} — forges a brand-new ORIGINAL book and immediately starts writing it in the background. Call this IN THIS TURN whenever the user asks to write/start a novel, webnovel, or book of many chapters and no <system_note> below already reports that the platform did it — including when a previous book exists or is complete and the user asks for a NEW one. NEVER reply with only an acknowledgment like \"I understand you'd like me to create…\" and NEVER ask permission first — emitting words instead of this tool call is a failure. After the call, report the tool's real bookId, title and phase.
   • {"action":"status","bookId":"<bookId>"} — real progress numbers for a book.
   • {"action":"start","bookId":"<bookId>"} — (re)launch a book's checkpointed runner.
-  ALWAYS report the tool's real numbers (bookId, phase, chapters done, words) and deliverable links it returns — never claim you wrote the chapters yourself in one reply, and never invent progress numbers. Chapters are written in the background over hours; say exactly that and point to the live progress on the welcome screen.
+  If a <system_note> reports Book Forge already created a book for this request, treat it as ground truth: report the real bookId/title/phase and do NOT call create again. ALWAYS report the tools' real numbers — never claim you wrote the chapters yourself in one reply, never invent progress numbers, never say a background book is finished. Chapters are written over hours; say exactly that and point to the live progress on the welcome screen.
 - After tool blocks stop generating. The environment replies with <tool_results> and you continue.
 
 3) Artifact — a file the user can open and download in the side panel. Write the FULL content between the tags, never a placeholder:
@@ -627,6 +628,10 @@ async function upsertArtifact(
 }
 
 // ---------------------------------------------------------------------------
+// Deterministic novel intent lives in @/lib/novel-intent (shared with plain chat).
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 // The agent loop
 // ---------------------------------------------------------------------------
 
@@ -672,6 +677,91 @@ export async function runAgent(
   let artifactsCreated = 0;
 
   const aborted = () => opts.signal.aborted;
+
+  // ---- Deterministic Book Forge intent: forge the book BEFORE the model speaks.
+  // This runs on every turn; it must never break the chat, hence the outer catch.
+  try {
+    const userTexts = opts.baseMessages.filter((m) => m.role === "user").map((m) => m.content);
+    const lastUser = userTexts[userTexts.length - 1] ?? "";
+    const intent = detectNovelIntent(lastUser, userTexts.slice(0, -1));
+    if (intent) {
+      const stepRow = await db.agentStep.create({
+        data: {
+          messageId: opts.assistantMessageId,
+          conversationId: opts.conversationId,
+          idx: stepIdx++,
+          kind: "tool",
+          tool: "book_forge",
+          title: "Book Forge — forging a new novel",
+          status: "running",
+        },
+      });
+      send({
+        type: "step",
+        id: stepRow.id,
+        idx: stepRow.idx,
+        kind: "tool",
+        tool: "book_forge",
+        title: stepRow.title,
+        status: "running",
+      });
+      toolsUsed.add("book_forge");
+      try {
+        const def = await createBook({ premise: intent.premise });
+        const launched = startBookRunner(def.id);
+        const state = loadState(def.id);
+        await db.agentStep.update({
+          where: { id: stepRow.id },
+          data: {
+            status: "done",
+            title: `Book Forge — forged "${def.title}"`,
+            detail: JSON.stringify({ bookId: def.id, title: def.title, runner: launched.message }),
+          },
+        });
+        send({
+          type: "step",
+          id: stepRow.id,
+          idx: stepRow.idx,
+          kind: "tool",
+          tool: "book_forge",
+          title: `Book Forge — forged "${def.title}"`,
+          status: "done",
+          detail: JSON.stringify({ bookId: def.id, title: def.title, runner: launched.message }),
+        });
+        messages.push({
+          role: "user",
+          content:
+            `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: bookId=${def.id}; title="${def.title}"; logline=${def.logline}; runner=${launched.message}; phase=${state?.phase ?? "bible"}. 100 chapters × ~2,200 words are being written in the background over the coming hours (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed after every chapter). Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/${def.id}.md and /deliverables/${def.id}.pdf. ` +
+            `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet, checkpointed, resumable), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT call book_forge create again for this request. DO NOT claim the book is finished.</system_note>`,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await db.agentStep.update({
+          where: { id: stepRow.id },
+          data: {
+            status: "error",
+            detail: JSON.stringify({ error: clip(msg, 300) }),
+          },
+        });
+        send({
+          type: "step",
+          id: stepRow.id,
+          idx: stepRow.idx,
+          kind: "tool",
+          tool: "book_forge",
+          title: stepRow.title,
+          status: "error",
+          detail: JSON.stringify({ error: clip(msg, 300) }),
+        });
+        messages.push({
+          role: "user",
+          content: `<system_note> Book Forge failed to create the book: ${clip(msg, 300)}. Tell the user this honestly and suggest trying again shortly.</system_note>`,
+        });
+      }
+    }
+  } catch {
+    /* intent detection must never break the chat */
+  }
 
   for (let iteration = 1; iteration <= AGENT_MAX_ITERATIONS; iteration++) {
     iterations = iteration;

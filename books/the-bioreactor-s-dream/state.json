@@ -16,14 +16,15 @@
       "title": "The Pattern"
     },
     "3": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 1975,
+      "attempts": 1,
+      "title": "The Dive"
     },
     "4": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "5": {
       "status": "pending",
@@ -68,14 +69,15 @@
       "title": "First Glances"
     },
     "13": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2443,
+      "attempts": 1,
+      "title": "Unauthorized Transfers"
     },
     "14": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "15": {
       "status": "pending",
@@ -120,14 +122,15 @@
       "title": "Restricted Access"
     },
     "23": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2498,
+      "attempts": 1,
+      "title": "The Hidden Data Stream"
     },
     "24": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "25": {
       "status": "pending",
@@ -166,19 +169,21 @@
       "title": "Topographic Echoes"
     },
     "32": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2552,
+      "attempts": 1,
+      "title": "The Memory Matrix"
     },
     "33": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2294,
+      "attempts": 1,
+      "title": "Carter's Revelation"
     },
     "34": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "35": {
       "status": "pending",
@@ -223,14 +228,15 @@
       "title": "The Aftermath"
     },
     "43": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2203,
+      "attempts": 1,
+      "title": "A Risky Alliance"
     },
     "44": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "45": {
       "status": "pending",
@@ -269,19 +275,21 @@
       "title": "Unauthorized Access"
     },
     "52": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2536,
+      "attempts": 1,
+      "title": "Patterns in the Abyss"
     },
     "53": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 3103,
+      "attempts": 1,
+      "title": "The Ghost in the Machine"
     },
     "54": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "55": {
       "status": "pending",
@@ -326,14 +334,16 @@
       "title": "Pressure Points"
     },
     "63": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2130,
+      "attempts": 1,
+      "title": "Deep Currents"
     },
     "64": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2405,
+      "attempts": 1,
+      "title": "The Weight of Water"
     },
     "65": {
       "status": "pending",
@@ -378,14 +388,15 @@
       "title": "Static"
     },
     "73": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2490,
+      "attempts": 1,
+      "title": "Glass and Steel"
     },
     "74": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "75": {
       "status": "pending",
@@ -430,14 +441,15 @@
       "title": "Echoes in the Code"
     },
     "83": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2235,
+      "attempts": 1,
+      "title": "The Weight of Water"
     },
     "84": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "85": {
       "status": "pending",
@@ -476,19 +488,21 @@
       "title": "System Override"
     },
     "92": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2502,
+      "attempts": 1,
+      "title": "Digital Defenders"
     },
     "93": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 0
+      "status": "done",
+      "words": 2065,
+      "attempts": 1,
+      "title": "The Human Element"
     },
     "94": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "95": {
       "status": "pending",
@@ -521,9 +535,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 39655,
-  "chaptersDone": 17,
+  "totalWords": 73086,
+  "chaptersDone": 31,
   "errors": [],
   "startedAt": "2026-10-28T07:13:07.002Z",
-  "updatedAt": "2026-10-28T07:30:22.695Z"
+  "updatedAt": "2026-10-28T07:45:05.009Z"
 }

@@ -19,6 +19,8 @@ import {
 import { estimateTokens, retrieveChunks } from "@/lib/rag";
 import { requireUser } from "@/lib/auth";
 import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
+import { createBook, loadState, startBookRunner } from "@/lib/novel-engine";
+import { detectNovelIntent } from "@/lib/novel-intent";
 import type { ChatStreamEvent, WebSearchResult } from "@/lib/types";
 import type { Conversation } from "@prisma/client";
 import { z } from "zod";
@@ -240,6 +242,48 @@ export async function POST(req: Request) {
             }))
         );
 
+        // ----- Deterministic Book Forge intent (plain chat mode) -----
+        // The platform ACTS on novel-scale requests even without agent mode:
+        // Book Forge creates the book and starts writing before the model speaks.
+        let forgeNote = "";
+        try {
+          const earlierUserTexts = historyRows
+            .filter((m) => m.role === "user" && m.id !== userMessage.id)
+            .map((m) => m.content);
+          const intent = detectNovelIntent(userText, earlierUserTexts);
+          if (intent) {
+            send({
+              type: "tool",
+              tool: "book_forge",
+              status: "start",
+              message: "Book Forge — forging a new novel…",
+            });
+            const def = await createBook({ premise: intent.premise });
+            const launched = startBookRunner(def.id);
+            const state = loadState(def.id);
+            const runnerMsg = launched.started ? "writing now" : launched.message;
+            send({
+              type: "tool",
+              tool: "book_forge",
+              status: "done",
+              message: `Book Forge created "${def.title}" (bookId ${def.id}) — runner ${runnerMsg}`,
+            });
+            forgeNote =
+              `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: bookId=${def.id}; title="${def.title}"; logline=${def.logline}; runner=${runnerMsg}; phase=${state?.phase ?? "bible"}. 100 chapters × ~2,200 words are being written in the background over the coming hours (checkpointed after every chapter, resumable). Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/${def.id}.md and /deliverables/${def.id}.pdf. ` +
+              `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT claim the book is finished.</system_note>`;
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error("[chat] book_forge intent failed:", err);
+          send({
+            type: "tool",
+            tool: "book_forge",
+            status: "done",
+            message: `Book Forge could not create the book: ${msg.slice(0, 200)}`,
+          });
+          forgeNote = `<system_note> Book Forge failed to create the book: ${msg.slice(0, 300)}. Tell the user this honestly and suggest trying again shortly.</system_note>`;
+        }
+
         const textDocs = documents.filter((d) => d.kind === "text" && d.content);
         let ragContext = "";
         if (textDocs.length > 0 && userText) {
@@ -280,6 +324,9 @@ export async function POST(req: Request) {
           finalText =
             (userText ? userText + "\n\n" : "") +
             "Answer using the retrieved document context provided above if relevant.";
+        }
+        if (forgeNote) {
+          finalText = (finalText ? finalText + "\n\n" : "") + forgeNote;
         }
 
         const contentItems: Array<
