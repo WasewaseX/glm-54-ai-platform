@@ -158,10 +158,15 @@ export async function* streamChat(
     stream: true,
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
+  // Interactive profile: fail fast (~20s worst case) so the chat UI never
+  // sits "thinking" for minutes during a gateway storm. Background writers
+  // (novel engine) run their own patient retry loops — see novel-engine.ts.
+  // When the gateway keeps failing, the chat route streams an honest
+  // deterministic fallback reply instead of a 502 (see chat route).
   const stream = (await withRetry(() => zai.chat.completions.create(body), {
-    retries: 6,
-    baseMs: 3_000,
-    capMs: 30_000,
+    retries: 2,
+    baseMs: 2_000,
+    capMs: 8_000,
     label: "streamChat",
   })) as ReadableStream<Uint8Array> | Response;
 
@@ -202,9 +207,9 @@ export async function* streamVision(
     thinking: { type: opts.thinking ? "enabled" : "disabled" },
   };
   const stream = (await withRetry(() => zai.chat.completions.createVision(body), {
-    retries: 6,
-    baseMs: 3_000,
-    capMs: 30_000,
+    retries: 2,
+    baseMs: 2_000,
+    capMs: 8_000,
     label: "streamVision",
   })) as ReadableStream<Uint8Array> | Response;
 
@@ -236,7 +241,7 @@ export async function chatOnce(
         messages,
         thinking: { type: opts.thinking ? "enabled" : "disabled" },
       }),
-    { retries: 6, baseMs: 3_000, capMs: 30_000, label: "chatOnce" }
+    { retries: 2, baseMs: 2_000, capMs: 8_000, label: "chatOnce" }
   )) as {
     model?: string;
     usage?: { prompt_tokens: number; completion_tokens: number };

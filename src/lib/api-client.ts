@@ -89,19 +89,40 @@ function withSessionHeaders(extra?: HeadersInit): Headers {
   return headers;
 }
 
-/** Fetch JSON, throwing a descriptive Error on failure. */
+/** Fetch JSON, throwing a descriptive Error on failure.
+ *  Idempotent requests (GET/HEAD) ride out transient gateway failures —
+ *  429/5xx/network blips are retried twice with a short backoff so background
+ *  polling doesn't surface errors during sandbox reboots or quota storms. */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    ...init,
-    headers: withSessionHeaders({
-      ...(init?.body && !(init.body instanceof FormData)
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...init?.headers,
-    }),
-  });
-  adoptSessionToken(res);
-  if (!res.ok) {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const retryable = method === "GET" || method === "HEAD";
+  const attempts = retryable ? 3 : 1;
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 900 * attempt + Math.random() * 500));
+    }
+    let res: Response;
+    try {
+      res = await fetch(path, {
+        ...init,
+        headers: withSessionHeaders({
+          ...(init?.body && !(init.body instanceof FormData)
+            ? { "Content-Type": "application/json" }
+            : {}),
+          ...init?.headers,
+        }),
+      });
+    } catch (err) {
+      // Network-level failure (server rebooting, DNS hiccup, etc.)
+      if (!retryable) throw err;
+      lastError = err instanceof Error ? err : new Error(String(err));
+      continue;
+    }
+    adoptSessionToken(res);
+    if (res.ok) return (await res.json()) as T;
+
     let message = `Request failed (${res.status})`;
     try {
       const data = (await res.json()) as { error?: string };
@@ -109,9 +130,11 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       /* keep default */
     }
-    throw new Error(message);
+    const transient = res.status === 429 || res.status >= 500;
+    if (!retryable || !transient) throw new Error(message);
+    lastError = new Error(message);
   }
-  return (await res.json()) as T;
+  throw lastError ?? new Error("Request failed");
 }
 
 export interface ChatRequestBody {
@@ -149,13 +172,14 @@ async function readSseBody(res: Response, onPayload: (payload: string) => void):
 }
 
 /** Open a POST SSE stream, throwing a descriptive Error on failure.
- *  Transient gateway failures (429/5xx/network blips) are retried up to 3
- *  attempts with a short backoff before the error reaches the user. */
+ *  Transient gateway failures (429/5xx/network blips) are retried up to 5
+ *  attempts with escalating backoff (~25s total) before the error reaches the
+ *  user — enough to ride out sandbox reboot windows transparently. */
 async function openSseStream(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt <= 2; attempt++) {
+  for (let attempt = 0; attempt <= 4; attempt++) {
     if (attempt > 0) {
-      await new Promise((r) => setTimeout(r, 1_200 * attempt + Math.random() * 600));
+      await new Promise((r) => setTimeout(r, [0, 1_500, 4_000, 8_000, 12_000][attempt] + Math.random() * 800));
     }
     const res = await fetch(path, {
       method: "POST",

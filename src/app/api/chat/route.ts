@@ -19,7 +19,7 @@ import {
 import { estimateTokens, retrieveChunks } from "@/lib/rag";
 import { requireUser } from "@/lib/auth";
 import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
-import { forgeOrExisting, type ForgeOutcome } from "@/lib/novel-engine";
+import { forgeOrExisting, listBooks, type ForgeOutcome } from "@/lib/novel-engine";
 import { detectNovelIntent } from "@/lib/novel-intent";
 import type { ChatStreamEvent, WebSearchResult } from "@/lib/types";
 import type { Conversation } from "@prisma/client";
@@ -113,6 +113,34 @@ function forgeFallbackReply(outcome: ForgeOutcome): string {
     `It's checkpointed every chapter and finishes automatically over the coming hours — the **Book Forge Library** card on the welcome screen shows live progress, and full downloads appear at ${deliverables} when done.\n\n` +
     `If you actually wanted a DIFFERENT new novel, say “write a new one” with the new premise.\n\n` +
     `(Reply composed directly by Book Forge — the AI gateway was rate-limiting, but the status above is real.)`
+  );
+}
+
+/**
+ * Last-resort honest reply when the gateway gave us zero tokens and there is
+ * no forge outcome to report. Still never fails the user's turn: the message
+ * states what happened and reports any live Book Forge progress (real,
+ * read from disk — works even while the LLM gateway is completely down).
+ */
+function gatewayFallbackReply(reason: string): string {
+  let novelLine = "";
+  try {
+    const writing = listBooks().find(
+      (b) => b.phase === "bible" || b.phase === "outline" || b.phase === "chapters"
+    );
+    if (writing) {
+      novelLine =
+        `\n\nMeanwhile, Book Forge is unaffected and still writing in the background: **${writing.title}** — ` +
+        `**${writing.chaptersDone}/100 chapters**, ${writing.totalWords.toLocaleString()} words so far ` +
+        `(live progress in the Book Forge Library card).`;
+    }
+  } catch {
+    /* status enrichment is best-effort */
+  }
+  return (
+    `⚠️ I couldn't generate a reply just now — the AI gateway is saturated (${reason}). Your message reached the platform and nothing was lost, but this turn came back empty.\n\n` +
+    `Please send it again in a minute — the gateway recovers on its own, and replies go straight through once it does.` +
+    novelLine
   );
 }
 
@@ -530,7 +558,17 @@ export async function POST(req: Request) {
             fullText = forgeFallbackReply(lastForge);
             send({ type: "delta", text: fullText });
           } else {
-            throw relayErr ?? new Error("upstream stream failed");
+            // No forge outcome either — still never fail the turn with a 502.
+            // An honest "gateway saturated, retry soon" reply beats
+            // "Generation failed", and any live book progress is real data.
+            console.warn("[chat] gateway exhausted retries with no forge result — streaming deterministic gateway reply");
+            send({
+              type: "context",
+              message: "AI gateway saturated — sending an honest status reply instead of failing.",
+            });
+            const reason = normalizeAiError(relayErr ?? new Error("upstream stream failed")).message;
+            fullText = gatewayFallbackReply(reason);
+            send({ type: "delta", text: fullText });
           }
         }
 
