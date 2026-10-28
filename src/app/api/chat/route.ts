@@ -76,6 +76,46 @@ function forgeSystemNote(outcome: ForgeOutcome, forceNew: boolean): string {
   );
 }
 
+/**
+ * Deterministic user-facing reply, used when the LLM gateway is too saturated
+ * to word a reply. The forge already knows the ground truth, so the platform
+ * answers honestly on its own instead of showing "Generation failed".
+ */
+function forgeFallbackReply(outcome: ForgeOutcome): string {
+  const { def, state, kind } = outcome;
+  const chapters = state?.chaptersDone ?? 0;
+  const words = (state?.totalWords ?? 0).toLocaleString();
+  const deliverables = `/deliverables/${def.id}.md · /deliverables/${def.id}.pdf`;
+  if (kind === "created") {
+    return (
+      `📕 Book Forge has started writing a brand-new novel: **${def.title}** (bookId \`${def.id}\`).\n\n` +
+      `Logline: ${def.logline}\n\n` +
+      `The pipeline is running in the background right now — story bible ✓, 10-part arc ✓, next it expands chapter briefs and writes all 100 chapters (× ~2,200 words), checkpointed after every chapter. This takes a few hours, not one reply — watch the **Book Forge Library** card on the welcome screen for live progress. When it's done, the full book downloads appear at ${deliverables}.\n\n` +
+      `(Reply composed directly by Book Forge — the AI gateway was rate-limiting, but your book is real and writing.)`
+    );
+  }
+  if (kind === "complete") {
+    return (
+      `✅ This premise is already a finished novel in your library: **${def.title}** — ${chapters}/100 chapters, ${words} words. No new book was created.\n\n` +
+      `Read or download it: ${deliverables}.\n\n` +
+      `Want a brand-NEW novel from this same premise? Say “write a new one” and Book Forge will forge a fresh book.`
+    );
+  }
+  if (kind === "resumed") {
+    return (
+      `📖 This premise is already a book in your library — **${def.title}** (${chapters}/100 chapters, ${words} words). Its writer had stalled, so Book Forge just resumed it from the last checkpoint. No duplicate was created.\n\n` +
+      `It's writing again right now — watch the **Book Forge Library** card for live progress. When finished, downloads appear at ${deliverables}.`
+    );
+  }
+  return (
+    `📖 Good news — this exact novel already exists and is being written right now: **${def.title}** (bookId \`${def.id}\`).\n\n` +
+    `Real progress: **${chapters}/100 chapters**, ${words} words so far. Your message looked like a retry of the same request, so Book Forge did NOT create a duplicate or launch a second writer.\n\n` +
+    `It's checkpointed every chapter and finishes automatically over the coming hours — the **Book Forge Library** card on the welcome screen shows live progress, and full downloads appear at ${deliverables} when done.\n\n` +
+    `If you actually wanted a DIFFERENT new novel, say “write a new one” with the new premise.\n\n` +
+    `(Reply composed directly by Book Forge — the AI gateway was rate-limiting, but the status above is real.)`
+  );
+}
+
 export async function POST(req: Request) {
   const user = await requireUser();
 
@@ -281,6 +321,7 @@ export async function POST(req: Request) {
         // Book Forge dedups against existing books, creates + starts writing
         // when genuinely new, and resumes a stalled runner instead of duplicating.
         let forgeNote = "";
+        let lastForge: ForgeOutcome | null = null;
         try {
           const earlierUserTexts = historyRows
             .filter((m) => m.role === "user" && m.id !== userMessage.id)
@@ -294,6 +335,7 @@ export async function POST(req: Request) {
               message: "Book Forge — checking the library, then forging…",
             });
             const outcome = await forgeOrExisting({ premise: intent.premise, forceNew: intent.forceNew });
+            lastForge = outcome;
             send({
               type: "tool",
               tool: "book_forge",
@@ -475,7 +517,22 @@ export async function POST(req: Request) {
           );
         }
 
-        if (outcome === "broken") throw relayErr ?? new Error("upstream stream failed");
+        if (outcome === "broken") {
+          if (fullText.length === 0 && lastForge) {
+            // The gateway never gave us a single token. The forge outcome is
+            // ground truth, so answer deterministically instead of failing the
+            // user's turn — honest status beats "Generation failed".
+            console.warn("[chat] gateway exhausted retries with forge result — streaming deterministic forge reply");
+            send({
+              type: "context",
+              message: "AI gateway saturated — replying with verified Book Forge status directly.",
+            });
+            fullText = forgeFallbackReply(lastForge);
+            send({ type: "delta", text: fullText });
+          } else {
+            throw relayErr ?? new Error("upstream stream failed");
+          }
+        }
 
         const latencyMs = Date.now() - startedAt;
         const status = req.signal.aborted ? "cancelled" : "complete";
