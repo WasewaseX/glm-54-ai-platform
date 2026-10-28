@@ -627,3 +627,18 @@ Work Log:
 
 Stage Summary:
 - Watch: if storm persists past several more cycles, consider checking gateway quota outside engine code; otherwise holding pattern
+
+---
+Task ID: cron-479831-1733
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 17:33) — SNAPSHOT RESTORE INCIDENT
+
+Work Log:
+- Platform snapshot-restore hit at ~09:33 UTC: killed runner 1867 + wiped /tmp/*.pid + forge.log; book data SURVIVED intact (bioreactor 68/100, 159,857w; vat done 247,824w, md+pdf fresh)
+- Dev server survived (http 200); git HEAD now platform backup commit d0b3729 (09:19 UTC)
+- Verified fix-502-dedup code survived restore: 8efe2a0 in history; forgeOrExisting in engine, forceNew in novel-intent + chat route
+- RESTARTED runner per protocol: POST /api/novel/start {bookId} → pid 1368, resumed 68/100, 159,857 words
+
+Stage Summary:
+- Data loss: NONE (book data + code fixes intact); process loss: 1 runner (restarted). The 429 storm at death makes progress-recovery cheap — resume costs nothing
+- Watch next cycles: runner 1368 progress past 68; 429 storm status
