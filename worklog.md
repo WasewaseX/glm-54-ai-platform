@@ -464,3 +464,15 @@ Stage Summary:
 - The platform itself now passes the original goal test: typing "write all 100 chapters..." into GLM 5.4 AI returns real pipeline status + deliverables instead of a 502.
 - Resilience stack: 3 layers (LLM-call retry → SSE POST retry → actionable error card with manual retry).
 - Book Forge is now a first-class agent tool — the chat can launch/resume/report novel runs with live checkpoint data.
+
+---
+Task ID: cron-479749
+Agent: Z.ai Code (supervision)
+Task: Book Forge supervision for 'the-bioreactor-s-dream'
+
+Work Log:
+- Read state.json: phase=chapters, chaptersDone=17/100, totalWords=39,655
+- Runner alive: pid 1867 (kill -0 OK); no restart needed, engine/deliverables untouched
+
+Stage Summary:
+- Writing in progress (~17%), healthy; cron 479749 kept active for next check

@@ -1,0 +1,529 @@
+{
+  "bookId": "the-bioreactor-s-dream",
+  "title": "The Bioreactor's Dream",
+  "phase": "chapters",
+  "chapters": {
+    "1": {
+      "status": "done",
+      "words": 2475,
+      "attempts": 1,
+      "title": "The Flicker"
+    },
+    "2": {
+      "status": "done",
+      "words": 2344,
+      "attempts": 1,
+      "title": "The Pattern"
+    },
+    "3": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "4": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "5": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "6": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "7": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "8": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "9": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "10": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "11": {
+      "status": "done",
+      "words": 2404,
+      "attempts": 1,
+      "title": "The Data Drive"
+    },
+    "12": {
+      "status": "done",
+      "words": 2305,
+      "attempts": 1,
+      "title": "First Glances"
+    },
+    "13": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "14": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "15": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "16": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "17": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "18": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "19": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "20": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "21": {
+      "status": "done",
+      "words": 2222,
+      "attempts": 1,
+      "title": "The Inspector's Arrival"
+    },
+    "22": {
+      "status": "done",
+      "words": 2788,
+      "attempts": 1,
+      "title": "Restricted Access"
+    },
+    "23": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "24": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "25": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "26": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "27": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "28": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "29": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "30": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "31": {
+      "status": "done",
+      "words": 2365,
+      "attempts": 1,
+      "title": "Topographic Echoes"
+    },
+    "32": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "33": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "34": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "35": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "36": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "37": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "38": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "39": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "40": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "41": {
+      "status": "done",
+      "words": 2413,
+      "attempts": 1,
+      "title": "The Weight of Evidence"
+    },
+    "42": {
+      "status": "done",
+      "words": 2035,
+      "attempts": 1,
+      "title": "The Aftermath"
+    },
+    "43": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "44": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "45": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "46": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "47": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "48": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "49": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "50": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "51": {
+      "status": "done",
+      "words": 2738,
+      "attempts": 1,
+      "title": "Unauthorized Access"
+    },
+    "52": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "53": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "54": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "55": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "56": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "57": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "58": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "59": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "60": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "61": {
+      "status": "done",
+      "words": 2095,
+      "attempts": 1,
+      "title": "The Ghost in the Machine"
+    },
+    "62": {
+      "status": "done",
+      "words": 2034,
+      "attempts": 1,
+      "title": "Pressure Points"
+    },
+    "63": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "64": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "65": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "66": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "67": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "68": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "69": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "70": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "71": {
+      "status": "done",
+      "words": 2393,
+      "attempts": 1,
+      "title": "The Labyrinth"
+    },
+    "72": {
+      "status": "done",
+      "words": 1913,
+      "attempts": 1,
+      "title": "Static"
+    },
+    "73": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "74": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "75": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "76": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "77": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "78": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "79": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "80": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "81": {
+      "status": "done",
+      "words": 2322,
+      "attempts": 1,
+      "title": "Neural Bridge"
+    },
+    "82": {
+      "status": "done",
+      "words": 2416,
+      "attempts": 1,
+      "title": "Echoes in the Code"
+    },
+    "83": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "84": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "85": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "86": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "87": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "88": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "89": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "90": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "91": {
+      "status": "done",
+      "words": 2393,
+      "attempts": 1,
+      "title": "System Override"
+    },
+    "92": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 1
+    },
+    "93": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "94": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "95": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "96": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "97": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "98": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "99": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    },
+    "100": {
+      "status": "pending",
+      "words": 0,
+      "attempts": 0
+    }
+  },
+  "totalWords": 39655,
+  "chaptersDone": 17,
+  "errors": [],
+  "startedAt": "2026-10-28T07:13:07.002Z",
+  "updatedAt": "2026-10-28T07:30:22.695Z"
+}

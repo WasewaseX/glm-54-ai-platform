@@ -1,0 +1,892 @@
+     1→import "server-only";
+     2→import { db } from "@/lib/db";
+     3→import {
+     4→  streamChat,
+     5→  webSearch,
+     6→  pageReader,
+     7→  generateImage,
+     8→  isImageSize,
+     9→  type SdkChatMessage,
+    10→} from "@/lib/ai";
+    11→import { loadState, startBookRunner, isRunnerRunning, BOOKS } from "@/lib/novel-engine";
+    12→import type {
+    13→  AgentStreamEvent,
+    14→  ArtifactKind,
+    15→  WebSearchResult,
+    16→} from "@/lib/types";
+    17→
+    18→/**
+    19→ * GLM Agent Engine — a real multi-step tool-calling loop in the spirit of
+    20→ * chat.z.ai's agent mode, implemented honestly on verified gateway tools:
+    21→ *
+    22→ *   web_search · page_reader · generate_image · run_code · artifacts
+    23→ *
+    24→ * The model communicates intent through inline XML-ish blocks which the
+    25→ * engine filters out of the user-visible stream, executes, and feeds back:
+    26→ *
+    27→ *   <plan>{"steps":["...","..."]}</plan>              optional, once, up front
+    28→ *   <tool>{"name":"web_search","arguments":{...}}</tool>
+    29→ *   <artifact title="..." kind="markdown">raw content</artifact>
+    30→ *
+    31→ * Everything outside those blocks is the user-facing answer and streams live.
+    32→ */
+    33→
+    34→const AGENT_MAX_ITERATIONS = 10; // model turns; the last one is reserved for the final answer
+    35→const AGENT_MAX_TOOL_STEPS = 24;
+    36→const PAGE_READER_CHAR_BUDGET = 6_000;
+    37→const TOOL_RESULT_CHAR_BUDGET = 9_000;
+    38→const ARTIFACT_MAX_CHARS = 400_000;
+    39→const CODE_EXEC_URL = "http://127.0.0.1:3010/run";
+    40→
+    41→/** Ensure the code-exec mini-service is running (spawn as child of this server if not). */
+    42→async function ensureCodeExec(): Promise<boolean> {
+    43→  try {
+    44→    const h = await fetch("http://127.0.0.1:3010/health", { signal: AbortSignal.timeout(1_500) });
+    45→    if (h.ok) return true;
+    46→  } catch {
+    47→    /* not running — start it */
+    48→  }
+    49→  try {
+    50→    const { spawn } = await import("node:child_process");
+    51→    const { openSync } = await import("node:fs");
+    52→    const out = openSync("/tmp/code-exec.log", "a");
+    53→    const child = spawn("bun", ["index.ts"], {
+    54→      cwd: "/home/z/my-project/mini-services/code-exec",
+    55→      stdio: ["ignore", out, out],
+    56→      detached: true,
+    57→      env: process.env,
+    58→    });
+    59→    child.unref();
+    60→    // Give it a moment to bind.
+    61→    await new Promise((r) => setTimeout(r, 1_500));
+    62→    const h = await fetch("http://127.0.0.1:3010/health", { signal: AbortSignal.timeout(2_000) });
+    63→    return h.ok;
+    64→  } catch {
+    65→    return false;
+    66→  }
+    67→}
+    68→
+    69→export const AGENT_SYSTEM_PROMPT = `You are GLM Agent, an autonomous task-execution agent inside the GLM 5.4 AI workspace.
+    70→
+    71→You solve the user's task by working in steps: you may plan, call tools, create artifacts, and write a final answer. Everything you write OUTSIDE the special blocks below is streamed to the user as your reply.
+    72→
+    73→# TOOL PROTOCOL (exact syntax)
+    74→
+    75→1) Optional plan — at most once, as the very first thing you output, only for multi-step tasks:
+    76→<plan>{"steps":["Research the topic","Draft the document","Review key claims"]}</plan>
+    77→Rules: 2-6 steps, each under 80 characters, concrete and ordered.
+    78→
+    79→2) Tool call — one call per block. After emitting tool block(s) you MUST end your turn so the environment can run them:
+    80→<tool>{"name":"web_search","arguments":{"query":"exact search query","num":5}}</tool>
+    81→<tool>{"name":"page_reader","arguments":{"url":"https://example.com/page"}}</tool>
+    82→<tool>{"name":"generate_image","arguments":{"prompt":"vivid image description","size":"1024x1024"}}</tool>
+    83→<tool>{"name":"run_code","arguments":{"code":"...full program...","language":"typescript","tests":"...optional bun:test file..."}}</tool>
+    84→<tool>{"name":"book_forge","arguments":{"action":"status","bookId":"the-dreaming-vat"}}</tool>
+    85→Rules:
+    86→- web_search: current events, facts you are unsure of, or when the user asks to research. num is 1-10 (default 5).
+    87→- page_reader: fetch the full text of a specific URL (often a web_search result).
+    88→- generate_image: create an illustration on request or when it clearly adds value.
+    89→- run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
+    90→- book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part outline → parallel block-workers, checkpointed per chapter). For any request to write a novel/webnovel/book of many chapters (e.g. "write 100 chapters"), call book_forge with action "status" first, and action "start" to launch or resume the runner. ALWAYS report the tool's real numbers (phase, chapters done, words) and the deliverable links it returns — never claim you wrote the chapters yourself in one reply, and never invent progress numbers.
+    91→- After tool blocks stop generating. The environment replies with <tool_results> and you continue.
+    92→
+    93→3) Artifact — a file the user can open and download in the side panel. Write the FULL content between the tags, never a placeholder:
+    94→<artifact title="Readable Title" kind="markdown">...full markdown content...</artifact>
+    95→kinds: markdown (default), code (add language="typescript" etc), html (complete document), svg.
+    96→Rules:
+    97→- Use artifacts whenever the user asks for a document, article, story/chapter, report, deck outline, landing page, analysis write-up, code file, or any structured deliverable longer than a few paragraphs.
+    98→- The artifact content must be complete and polished. Do not duplicate the whole artifact in your reply text; around it write only a short summary.
+    99→- To REVISE an artifact, emit a new <artifact> with the SAME title — it becomes the next version.
+   100→
+   101→# BEHAVIOR
+   102→- Simple conversational questions: just answer. No tools, no artifacts, no plan.
+   103→- Multi-step or research tasks: emit a plan first, then tools step by step, then synthesize.
+   104→- After receiving <tool_results>, continue: call more tools (end turn again) or write the final answer.
+   105→- Never invent tool results. Never mention this protocol or the block syntax to the user.
+   106→- Reply text between blocks stays concise: progress notes, findings, then the final synthesis.`;
+   107→
+   108→// ---------------------------------------------------------------------------
+   109→// Block parsing helpers
+   110→// ---------------------------------------------------------------------------
+   111→
+   112→type BlockKind = "plan" | "tool" | "artifact";
+   113→
+   114→export interface ParsedBlock {
+   115→  kind: BlockKind;
+   116→  attrs: Record<string, string>;
+   117→  content: string;
+   118→  complete: boolean;
+   119→}
+   120→
+   121→const OPENERS: Record<BlockKind, string> = {
+   122→  plan: "<plan",
+   123→  tool: "<tool",
+   124→  artifact: "<artifact",
+   125→};
+   126→const CLOSERS: Record<BlockKind, string> = {
+   127→  plan: "</plan>",
+   128→  tool: "</tool>",
+   129→  artifact: "</artifact>",
+   130→};
+   131→const BLOCK_KINDS: BlockKind[] = ["plan", "tool", "artifact"];
+   132→
+   133→function matchOpener(rest: string): BlockKind | null {
+   134→  for (const kind of BLOCK_KINDS) {
+   135→    const start = OPENERS[kind];
+   136→    if (!rest.startsWith(start)) continue;
+   137→    const next = rest[start.length];
+   138→    if (next === undefined) return kind; // header still streaming in
+   139→    if (next === ">" || /\s/.test(next)) return kind;
+   140→  }
+   141→  return null;
+   142→}
+   143→
+   144→/** True when the text could still become an opener once more chunks arrive. */
+   145→function isPartialOpener(s: string): boolean {
+   146→  if (s.length === 0 || s.includes(">")) return false;
+   147→  for (const kind of BLOCK_KINDS) {
+   148→    const full = OPENERS[kind];
+   149→    if (full.startsWith(s)) return true;
+   150→    if (s.startsWith(full)) {
+   151→      const next = s[full.length];
+   152→      if (next === undefined || /\s/.test(next)) return true;
+   153→    }
+   154→  }
+   155→  return false;
+   156→}
+   157→
+   158→/** Length of the longest suffix of `text` that is a proper prefix of `pattern`. */
+   159→function partialSuffixLength(text: string, pattern: string): number {
+   160→  const max = Math.min(text.length, pattern.length - 1);
+   161→  for (let len = max; len > 0; len--) {
+   162→    if (text.endsWith(pattern.slice(0, len))) return len;
+   163→  }
+   164→  return 0;
+   165→}
+   166→
+   167→function parseAttrs(raw: string): Record<string, string> {
+   168→  const attrs: Record<string, string> = {};
+   169→  const re = /([a-zA-Z_][\w-]*)\s*=\s*"([^"]*)"|([a-zA-Z_][\w-]*)\s*=\s*'([^']*)'/g;
+   170→  let m: RegExpExecArray | null;
+   171→  while ((m = re.exec(raw)) !== null) {
+   172→    attrs[m[1]] = (m[2] ?? m[4] ?? "").trim();
+   173→  }
+   174→  return attrs;
+   175→}
+   176→
+   177→// ---------------------------------------------------------------------------
+   178→// Streaming block filter
+   179→// ---------------------------------------------------------------------------
+   180→
+   181→/**
+   182→ * Streams model output to the user while suppressing plan/tool/artifact
+   183→ * blocks. Partial openers/closers at chunk boundaries are buffered until
+   184→ * resolved. Artifact bodies additionally stream out live via onArtifactDelta.
+   185→ */
+   186→export class BlockStreamFilter {
+   187→  private buffer = "";
+   188→  private block: { kind: BlockKind; attrs: Record<string, string>; content: string; sent: number } | null =
+   189→    null;
+   190→  readonly blocks: ParsedBlock[] = [];
+   191→  private artifactIndex = 0;
+   192→
+   193→  constructor(
+   194→    private readonly onVisible: (text: string) => void,
+   195→    private readonly onArtifactDelta: (tempId: string, text: string) => void
+   196→  ) {}
+   197→
+   198→  push(text: string): void {
+   199→    if (!text) return;
+   200→    this.buffer += text;
+   201→    this.process(false);
+   202→  }
+   203→
+   204→  /** Flush at end of stream; finalizes unclosed blocks. Returns all parsed blocks. */
+   205→  end(): ParsedBlock[] {
+   206→    this.process(true);
+   207→    if (this.block) {
+   208→      this.finalizeBlock(this.block.content, false);
+   209→      this.block = null;
+   210→    }
+   211→    if (this.buffer) {
+   212→      this.onVisible(this.buffer);
+   213→      this.buffer = "";
+   214→    }
+   215→    return this.blocks;
+   216→  }
+   217→
+   218→  private process(flush: boolean): void {
+   219→    let progress = true;
+   220→    while (progress) {
+   221→      progress = false;
+   222→
+   223→      if (this.block) {
+   224→        const closer = CLOSERS[this.block.kind];
+   225→        const closeIdx = this.buffer.indexOf(closer);
+   226→        if (closeIdx >= 0) {
+   227→          const part = this.buffer.slice(0, closeIdx);
+   228→          this.emitArtifactPart(part);
+   229→          this.buffer = this.buffer.slice(closeIdx + closer.length);
+   230→          this.finalizeBlock(this.block.content, true);
+   231→          this.block = null;
+   232→          progress = true;
+   233→        } else if (flush) {
+   234→          this.emitArtifactPart(this.buffer);
+   235→          this.buffer = "";
+   236→          this.finalizeBlock(this.block.content, false);
+   237→          this.block = null;
+   238→          progress = true;
+   239→        } else {
+   240→          const hold = partialSuffixLength(this.buffer, closer);
+   241→          const emitLen = this.buffer.length - hold;
+   242→          if (emitLen > 0) {
+   243→            const part = this.buffer.slice(0, emitLen);
+   244→            this.emitArtifactPart(part);
+   245→            this.buffer = this.buffer.slice(emitLen);
+   246→          }
+   247→        }
+   248→        continue;
+   249→      }
+   250→
+   251→      // Normal mode: find the next '<' that could start one of our openers.
+   252→      let lt = this.buffer.indexOf("<");
+   253→      if (lt === -1) {
+   254→        if (this.buffer) {
+   255→          this.onVisible(this.buffer);
+   256→          this.buffer = "";
+   257→        }
+   258→        continue;
+   259→      }
+   260→
+   261→      if (lt > 0) {
+   262→        this.onVisible(this.buffer.slice(0, lt));
+   263→        this.buffer = this.buffer.slice(lt);
+   264→        lt = 0;
+   265→      }
+   266→
+   267→      const rest = this.buffer;
+   268→      const opener = matchOpener(rest);
+   269→      if (opener) {
+   270→        const nameLen = OPENERS[opener].length;
+   271→        const gt = this.buffer.indexOf(">", nameLen);
+   272→        if (gt === -1) {
+   273→          if (flush) {
+   274→            // Malformed opener at EOF — treat as visible text.
+   275→            this.onVisible(this.buffer.slice(0, 1));
+   276→            this.buffer = this.buffer.slice(1);
+   277→            progress = true;
+   278→            continue;
+   279→          }
+   280→          return; // wait for the rest of the header
+   281→        }
+   282→        const attrText = this.buffer.slice(nameLen, gt);
+   283→        this.buffer = this.buffer.slice(gt + 1);
+   284→        this.block = {
+   285→          kind: opener,
+   286→          attrs: opener === "artifact" ? parseAttrs(attrText) : {},
+   287→          content: "",
+   288→          sent: 0,
+   289→        };
+   290→        if (opener === "artifact") this.artifactIndex += 1;
+   291→        progress = true;
+   292→        continue;
+   293→      }
+   294→
+   295→      if (!flush && isPartialOpener(rest)) return; // wait for more chunks
+   296→
+   297→      // Emit this '<' and keep scanning.
+   298→      this.onVisible(this.buffer.slice(0, 1));
+   299→      this.buffer = this.buffer.slice(1);
+   300→      progress = true;
+   301→    }
+   302→  }
+   303→
+   304→  private emitArtifactPart(part: string): void {
+   305→    if (!this.block || !part) return;
+   306→    this.block.content += part;
+   307→    if (this.block.kind === "artifact") {
+   308→      const unsent = this.block.content.slice(this.block.sent);
+   309→      if (unsent) {
+   310→        this.onArtifactDelta(`pending-artifact-${this.artifactIndex}`, unsent);
+   311→        this.block.sent = this.block.content.length;
+   312→      }
+   313→    }
+   314→  }
+   315→
+   316→  private finalizeBlock(content: string, complete: boolean): void {
+   317→    if (!this.block) return;
+   318→    this.blocks.push({
+   319→      kind: this.block.kind,
+   320→      attrs: this.block.attrs,
+   321→      content,
+   322→      complete,
+   323→    });
+   324→  }
+   325→}
+   326→
+   327→// ---------------------------------------------------------------------------
+   328→// Tool execution
+   329→// ---------------------------------------------------------------------------
+   330→
+   331→interface ToolOutcome {
+   332→  ok: boolean;
+   333→  resultText: string;
+   334→  detail: Record<string, unknown>;
+   335→  /** Extra artifact created as a side effect (images). */
+   336→  imageArtifact?: { title: string; documentId: string };
+   337→}
+   338→
+   339→function clip(text: string, max: number): string {
+   340→  return text.length <= max ? text : text.slice(0, max) + "…";
+   341→}
+   342→
+   343→function formatSearchResults(results: WebSearchResult[]): string {
+   344→  if (results.length === 0) return "No results found.";
+   345→  return results
+   346→    .map((r, i) => {
+   347→      const date = r.date ? ` (${r.date})` : "";
+   348→      return `[${i + 1}] ${r.name}${date} — ${r.host_name}\nURL: ${r.url}\n${clip(r.snippet, 400)}`;
+   349→    })
+   350→    .join("\n\n");
+   351→}
+   352→
+   353→async function executeTool(
+   354→  userId: string,
+   355→  name: string,
+   356→  args: Record<string, unknown>
+   357→): Promise<ToolOutcome> {
+   358→  switch (name) {
+   359→    case "web_search": {
+   360→      const query = typeof args.query === "string" ? args.query.trim().slice(0, 400) : "";
+   361→      if (!query) return { ok: false, resultText: "web_search failed: missing query.", detail: {} };
+   362→      const numRaw = typeof args.num === "number" ? Math.round(args.num) : 5;
+   363→      const num = Math.min(10, Math.max(1, Number.isFinite(numRaw) ? numRaw : 5));
+   364→      const results = await webSearch(query, num);
+   365→      return {
+   366→        ok: true,
+   367→        resultText: `web_search("${query}") → ${results.length} results:\n\n${formatSearchResults(results)}`,
+   368→        detail: { query, count: results.length },
+   369→      };
+   370→    }
+   371→
+   372→    case "page_reader": {
+   373→      const url = typeof args.url === "string" ? args.url.trim().slice(0, 2_000) : "";
+   374→      if (!/^https?:\/\//i.test(url)) {
+   375→        return { ok: false, resultText: "page_reader failed: a valid http(s) URL is required.", detail: { url } };
+   376→      }
+   377→      const page = await pageReader(url);
+   378→      const text = clip(page.text || "(no extractable text)", PAGE_READER_CHAR_BUDGET);
+   379→      return {
+   380→        ok: true,
+   381→        resultText: `page_reader("${url}") — "${page.title}" (${text.length} chars extracted):\n\n${text}`,
+   382→        detail: { url, title: page.title, chars: text.length },
+   383→      };
+   384→    }
+   385→
+   386→    case "generate_image": {
+   387→      const prompt = typeof args.prompt === "string" ? args.prompt.trim().slice(0, 1_000) : "";
+   388→      if (!prompt) return { ok: false, resultText: "generate_image failed: missing prompt.", detail: {} };
+   389→      const size = isImageSize(args.size) ? args.size : "1024x1024";
+   390→      const b64 = await generateImage(prompt, size);
+   391→      const slug =
+   392→        prompt
+   393→          .toLowerCase()
+   394→          .replace(/[^a-z0-9]+/g, "-")
+   395→          .replace(/^-+|-+$/g, "")
+   396→          .slice(0, 48) || "image";
+   397→      const doc = await db.document.create({
+   398→        data: {
+   399→          userId,
+   400→          name: `${slug}.png`,
+   401→          mime: "image/png",
+   402→          size: Math.round((b64.length * 3) / 4),
+   403→          kind: "image",
+   404→          content: b64,
+   405→        },
+   406→      });
+   407→      return {
+   408→        ok: true,
+   409→        resultText: `generate_image ok. The illustration is saved as artifact "${slug}" and shown to the user automatically. documentId=${doc.id}`,
+   410→        detail: { prompt, size, documentId: doc.id },
+   411→        imageArtifact: { title: slug, documentId: doc.id },
+   412→      };
+   413→    }
+   414→
+   415→    case "run_code": {
+   416→      const code = typeof args.code === "string" ? args.code.slice(0, 100_000) : "";
+   417→      if (!code.trim()) return { ok: false, resultText: "run_code failed: missing code.", detail: {} };
+   418→      const language = args.language === "javascript" ? "javascript" : "typescript";
+   419→      const tests = typeof args.tests === "string" ? args.tests.slice(0, 60_000) : undefined;
+   420→      const stdin = typeof args.stdin === "string" ? args.stdin.slice(0, 20_000) : undefined;
+   421→      const timeoutMs = typeof args.timeoutMs === "number" ? Math.round(args.timeoutMs) : undefined;
+   422→      if (!(await ensureCodeExec())) {
+   423→        return { ok: false, resultText: "run_code failed: the code-exec service could not be started.", detail: {} };
+   424→      }
+   425→      try {
+   426→        const res = await fetch(CODE_EXEC_URL, {
+   427→          method: "POST",
+   428→          headers: { "Content-Type": "application/json" },
+   429→          body: JSON.stringify({ code, language, tests, stdin, timeoutMs }),
+   430→          signal: AbortSignal.timeout(30_000),
+   431→        });
+   432→        if (!res.ok) {
+   433→          const t = await res.text();
+   434→          return { ok: false, resultText: `run_code failed: executor HTTP ${res.status} ${clip(t, 300)}`, detail: {} };
+   435→        }
+   436→        const r = (await res.json()) as {
+   437→          exitCode: number;
+   438→          stdout: string;
+   439→          stderr: string;
+   440→          timedOut: boolean;
+   441→          durationMs: number;
+   442→          ranTests: boolean;
+   443→        };
+   444→        const verdict = r.ranTests ? "tests" : "program";
+   445→        const header = r.timedOut
+   446→          ? `run_code: ${verdict} TIMED OUT after ${r.durationMs}ms`
+   447→          : `run_code: ${verdict} ${r.exitCode === 0 ? "PASSED" : `FAILED (exit ${r.exitCode})`} in ${r.durationMs}ms`;
+   448→        const parts = [header, "", "--- stdout ---", clip(r.stdout || "(empty)", 3_500), "--- stderr ---", clip(r.stderr || "(empty)", 3_500)];
+   449→        return {
+   450→          ok: !r.timedOut && r.exitCode === 0,
+   451→          resultText: parts.join("\n"),
+   452→          detail: { exitCode: r.exitCode, timedOut: r.timedOut, durationMs: r.durationMs, ranTests: r.ranTests },
+   453→        };
+   454→      } catch (err) {
+   455→        return {
+   456→          ok: false,
+   457→          resultText: `run_code failed: ${err instanceof Error ? err.message : String(err)} (is the code-exec service on :3010 running?)`,
+   458→          detail: {},
+   459→        };
+   460→      }
+   461→    }
+   462→
+   463→    case "book_forge": {
+   464→      const action = args.action === "start" ? "start" : "status";
+   465→      const requested = typeof args.bookId === "string" ? args.bookId : "the-dreaming-vat";
+   466→      const bookId = BOOKS[requested] ? requested : "the-dreaming-vat";
+   467→      const def = BOOKS[bookId];
+   468→
+   469→      let startMessage = "";
+   470→      if (action === "start") {
+   471→        const r = startBookRunner(bookId);
+   472→        startMessage = r.message;
+   473→      }
+   474→
+   475→      const state = loadState(bookId);
+   476→      const running = isRunnerRunning(bookId);
+   477→      const failedChapters = state
+   478→        ? Object.entries(state.chapters)
+   479→            .filter(([, c]) => c.status === "failed")
+   480→            .map(([n]) => Number(n))
+   481→        : [];
+   482→
+   483→      const lines: string[] = [
+   484→        `Book Forge — "${def.title}" (bookId=${bookId})`,
+   485→        state
+   486→          ? `- phase: ${state.phase}`
+   487→          : "- phase: idle (no run started yet)",
+   488→        state
+   489→          ? `- progress: ${state.chaptersDone}/100 chapters, ${state.totalWords.toLocaleString("en-US")} words (target: 100 × ~2,200)`
+   490→          : "- progress: 0/100 chapters, 0 words",
+   491→        `- runner: ${running ? "RUNNING (checkpointed, continues automatically)" : "not running"}`,
+   492→        failedChapters.length > 0
+   493→          ? `- chapters deferred for retry: ${failedChapters.join(", ")}`
+   494→          : "- no failed chapters",
+   495→        `- deliverables (when phase=done): /deliverables/${bookId}.md and /deliverables/${bookId}.pdf — downloadable from the welcome screen`,
+   496→      ];
+   497→      if (startMessage) lines.push(`- start action result: ${startMessage}`);
+   498→      lines.push(
+   499→        "",
+   500→        "Report these REAL numbers to the user verbatim. If phase=done, congratulate and link the deliverables. If still writing, explain the run is checkpointed and finishes automatically; the welcome screen shows live progress."
+   501→      );
+   502→
+   503→      return {
+   504→        ok: true,
+   505→        resultText: clip(lines.join("\n"), TOOL_RESULT_CHAR_BUDGET),
+   506→        detail: {
+   507→          action,
+   508→          bookId,
+   509→          phase: state?.phase ?? "idle",
+   510→          chaptersDone: state?.chaptersDone ?? 0,
+   511→          totalWords: state?.totalWords ?? 0,
+   512→          running,
+   513→        },
+   514→      };
+   515→    }
+   516→
+   517→    default:
+   518→      return {
+   519→        ok: false,
+   520→        resultText: `Unknown tool "${name}". Available tools: web_search, page_reader, generate_image, run_code, book_forge.`,
+   521→        detail: {},
+   522→      };
+   523→  }
+   524→}
+   525→
+   526→// ---------------------------------------------------------------------------
+   527→// Artifacts
+   528→// ---------------------------------------------------------------------------
+   529→
+   530→const ARTIFACT_KINDS: ArtifactKind[] = ["markdown", "code", "html", "svg", "image"];
+   531→
+   532→function normalizeArtifactInput(attrs: Record<string, string>, content: string) {
+   533→  const rawKind = (attrs.kind ?? "markdown").toLowerCase() as ArtifactKind;
+   534→  const kind: ArtifactKind = ARTIFACT_KINDS.includes(rawKind) ? rawKind : "markdown";
+   535→  const title = (attrs.title ?? "Untitled").replace(/\s+/g, " ").trim().slice(0, 120) || "Untitled";
+   536→  const language = attrs.language ? attrs.language.trim().slice(0, 40) : null;
+   537→  return { kind, title, language, content: content.slice(0, ARTIFACT_MAX_CHARS) };
+   538→}
+   539→
+   540→async function upsertArtifact(
+   541→  conversationId: string,
+   542→  messageId: string,
+   543→  input: { title: string; kind: ArtifactKind; language: string | null; content: string }
+   544→) {
+   545→  const existing = await db.artifact.findMany({
+   546→    where: { conversationId },
+   547→    select: { id: true, title: true },
+   548→  });
+   549→  const match = existing.find((a) => a.title.toLowerCase() === input.title.toLowerCase());
+   550→  if (match) {
+   551→    const updated = await db.artifact.update({
+   552→      where: { id: match.id },
+   553→      data: {
+   554→        messageId,
+   555→        kind: input.kind,
+   556→        language: input.language,
+   557→        content: input.content,
+   558→        version: { increment: 1 },
+   559→      },
+   560→    });
+   561→    return updated;
+   562→  }
+   563→  return db.artifact.create({
+   564→    data: {
+   565→      conversationId,
+   566→      messageId,
+   567→      title: input.title,
+   568→      kind: input.kind,
+   569→      language: input.language,
+   570→      content: input.content,
+   571→    },
+   572→  });
+   573→}
+   574→
+   575→// ---------------------------------------------------------------------------
+   576→// The agent loop
+   577→// ---------------------------------------------------------------------------
+   578→
+   579→export interface AgentRunOptions {
+   580→  userId: string;
+   581→  conversationId: string;
+   582→  assistantMessageId: string;
+   583→  /** [system, ...history, user turn] — composed by the route. */
+   584→  baseMessages: SdkChatMessage[];
+   585→  thinking: boolean;
+   586→  signal: AbortSignal;
+   587→}
+   588→
+   589→export interface AgentRunStats {
+   590→  fullText: string;
+   591→  thinkingText: string;
+   592→  model: string | null;
+   593→  usage: { prompt_tokens: number; completion_tokens: number } | null;
+   594→  iterations: number;
+   595→  status: "complete" | "cancelled";
+   596→  toolsUsed: string[];
+   597→  artifactsCreated: number;
+   598→}
+   599→
+   600→/**
+   601→ * Runs the agent loop, streaming events through `send`. Persists agent steps
+   602→ * and artifacts as they happen. Throws on upstream failure (route handles).
+   603→ */
+   604→export async function runAgent(
+   605→  opts: AgentRunOptions,
+   606→  send: (event: AgentStreamEvent) => void
+   607→): Promise<AgentRunStats> {
+   608→  const messages: SdkChatMessage[] = [...opts.baseMessages];
+   609→  const startedAt = Date.now();
+   610→
+   611→  let fullText = ""; // user-visible accumulation (incl. [[artifact:id]] markers)
+   612→  let thinkingText = "";
+   613→  let model: string | null = null;
+   614→  let usage: { prompt_tokens: number; completion_tokens: number } | null = null;
+   615→  let stepIdx = 0;
+   616→  let iterations = 0;
+   617→  const toolsUsed = new Set<string>();
+   618→  let artifactsCreated = 0;
+   619→
+   620→  const aborted = () => opts.signal.aborted;
+   621→
+   622→  for (let iteration = 1; iteration <= AGENT_MAX_ITERATIONS; iteration++) {
+   623→    iterations = iteration;
+   624→    const isFinalIteration = iteration === AGENT_MAX_ITERATIONS;
+   625→    if (isFinalIteration) {
+   626→      messages.push({
+   627→        role: "user",
+   628→        content:
+   629→          "Tool budget reached. Write your final answer NOW. Do not emit any plan, tool, or artifact blocks.",
+   630→      });
+   631→    }
+   632→
+   633→    // ---- One model turn, streamed through the block filter ----
+   634→    const deltas: string[] = [];
+   635→    const artifactDeltas: Array<{ tempId: string; text: string }> = [];
+   636→    const filter = new BlockStreamFilter(
+   637→      (t) => deltas.push(t),
+   638→      (tempId, t) => artifactDeltas.push({ tempId, text: t })
+   639→    );
+   640→    const iterStart = fullText.length;
+   641→
+   642→    for await (const chunk of streamChat(messages, { thinking: opts.thinking, signal: opts.signal })) {
+   643→      if (chunk.model) model = chunk.model;
+   644→      if (chunk.usage) usage = chunk.usage;
+   645→      if (chunk.thinking) {
+   646→        thinkingText += chunk.thinking;
+   647→        send({ type: "thinking", text: chunk.thinking });
+   648→      }
+   649→      if (chunk.text) {
+   650→        deltas.length = 0;
+   651→        artifactDeltas.length = 0;
+   652→        filter.push(chunk.text);
+   653→        for (const d of deltas) {
+   654→          fullText += d;
+   655→          send({ type: "delta", text: d });
+   656→        }
+   657→        for (const a of artifactDeltas) send({ type: "artifact_delta", tempId: a.tempId, text: a.text });
+   658→      }
+   659→      if (chunk.finished || aborted()) break;
+   660→    }
+   661→
+   662→    deltas.length = 0;
+   663→    artifactDeltas.length = 0;
+   664→    const blocks = filter.end();
+   665→    for (const d of deltas) {
+   666→      fullText += d;
+   667→      send({ type: "delta", text: d });
+   668→    }
+   669→    for (const a of artifactDeltas) send({ type: "artifact_delta", tempId: a.tempId, text: a.text });
+   670→
+   671→    const visibleThisIter = fullText.slice(iterStart);
+   672→    let executedTools = false;
+   673→    const toolResults: string[] = [];
+   674→
+   675→    // ---- Execute blocks ----
+   676→    for (const block of blocks) {
+   677→      if (aborted()) break;
+   678→
+   679→      if (block.kind === "plan") {
+   680→        let steps: string[] = [];
+   681→        try {
+   682→          const parsed = JSON.parse(block.content.trim());
+   683→          if (Array.isArray(parsed?.steps)) {
+   684→            steps = parsed.steps
+   685→              .filter((s: unknown): s is string => typeof s === "string" && s.trim().length > 0)
+   686→              .map((s: string) => s.trim().slice(0, 120))
+   687→              .slice(0, 6);
+   688→          }
+   689→        } catch {
+   690→          /* malformed plan — ignore */
+   691→        }
+   692→        if (steps.length > 0) {
+   693→          const row = await db.agentStep.create({
+   694→            data: {
+   695→              messageId: opts.assistantMessageId,
+   696→              conversationId: opts.conversationId,
+   697→              idx: stepIdx++,
+   698→              kind: "plan",
+   699→              title: `Plan: ${steps.length} step${steps.length === 1 ? "" : "s"}`,
+   700→              detail: JSON.stringify({ steps }),
+   701→              status: "done",
+   702→            },
+   703→          });
+   704→          send({ type: "plan", steps });
+   705→          send({
+   706→            type: "step",
+   707→            id: row.id,
+   708→            idx: row.idx,
+   709→            kind: "plan",
+   710→            tool: null,
+   711→            title: row.title,
+   712→            status: "done",
+   713→            detail: row.detail,
+   714→          });
+   715→        }
+   716→        continue;
+   717→      }
+   718→
+   719→      if (block.kind === "tool") {
+   720→        executedTools = true;
+   721→        if (stepIdx >= AGENT_MAX_TOOL_STEPS) {
+   722→          toolResults.push("Tool budget exhausted — proceed without further tool calls.");
+   723→          continue;
+   724→        }
+   725→        let name = "unknown";
+   726→        let args: Record<string, unknown> = {};
+   727→        try {
+   728→          const parsed = JSON.parse(block.content.trim());
+   729→          if (typeof parsed?.name === "string") name = parsed.name;
+   730→          if (parsed?.arguments && typeof parsed.arguments === "object") args = parsed.arguments;
+   731→        } catch {
+   732→          toolResults.push(`Malformed tool call skipped: ${clip(block.content, 200)}`);
+   733→          continue;
+   734→        }
+   735→
+   736→        const titles: Record<string, string> = {
+   737→          web_search: "Searching the web",
+   738→          page_reader: "Reading the page",
+   739→          generate_image: "Generating an image",
+   740→        };
+   741→        const title = titles[name] ?? `Calling ${name}`;
+   742→
+   743→        const runningRow = await db.agentStep.create({
+   744→          data: {
+   745→            messageId: opts.assistantMessageId,
+   746→            conversationId: opts.conversationId,
+   747→            idx: stepIdx++,
+   748→            kind: "tool",
+   749→            tool: name,
+   750→            title,
+   751→            status: "running",
+   752→          },
+   753→        });
+   754→        toolsUsed.add(name);
+   755→        send({
+   756→          type: "step",
+   757→          id: runningRow.id,
+   758→          idx: runningRow.idx,
+   759→          kind: "tool",
+   760→          tool: name,
+   761→          title,
+   762→          status: "running",
+   763→        });
+   764→
+   765→        try {
+   766→          const outcome = await executeTool(opts.userId, name, args);
+   767→          await db.agentStep.update({
+   768→            where: { id: runningRow.id },
+   769→            data: {
+   770→              status: outcome.ok ? "done" : "error",
+   771→              detail: JSON.stringify(outcome.detail),
+   772→            },
+   773→          });
+   774→          send({
+   775→            type: "step",
+   776→            id: runningRow.id,
+   777→            idx: runningRow.idx,
+   778→            kind: "tool",
+   779→            tool: name,
+   780→            title,
+   781→            status: outcome.ok ? "done" : "error",
+   782→            detail: JSON.stringify(outcome.detail),
+   783→          });
+   784→          toolResults.push(clip(outcome.resultText, TOOL_RESULT_CHAR_BUDGET));
+   785→
+   786→          if (outcome.imageArtifact) {
+   787→            const artifact = await upsertArtifact(opts.conversationId, opts.assistantMessageId, {
+   788→              title: outcome.imageArtifact.title,
+   789→              kind: "image",
+   790→              language: null,
+   791→              content: outcome.imageArtifact.documentId,
+   792→            });
+   793→            fullText += `\n\n[[artifact:${artifact.id}]]\n\n`;
+   794→            artifactsCreated += 1;
+   795→            send({
+   796→              type: "artifact",
+   797→              id: artifact.id,
+   798→              title: artifact.title,
+   799→              kind: "image",
+   800→              language: null,
+   801→              version: artifact.version,
+   802→              updatedAt: artifact.updatedAt.toISOString(),
+   803→            });
+   804→            await db.agentStep.create({
+   805→              data: {
+   806→                messageId: opts.assistantMessageId,
+   807→                conversationId: opts.conversationId,
+   808→                idx: stepIdx++,
+   809→                kind: "artifact",
+   810→                tool: "image",
+   811→                title: `Image: ${artifact.title}`,
+   812→                detail: JSON.stringify({ artifactId: artifact.id }),
+   813→                status: "done",
+   814→              },
+   815→            });
+   816→          }
+   817→        } catch (err) {
+   818→          const message = err instanceof Error ? err.message : "Tool execution failed.";
+   819→          await db.agentStep.update({
+   820→            where: { id: runningRow.id },
+   821→            data: { status: "error", detail: JSON.stringify({ error: clip(message, 300) }) },
+   822→          });
+   823→          send({
+   824→            type: "step",
+   825→            id: runningRow.id,
+   826→            idx: runningRow.idx,
+   827→            kind: "tool",
+   828→            tool: name,
+   829→            title,
+   830→            status: "error",
+   831→            detail: JSON.stringify({ error: clip(message, 300) }),
+   832→          });
+   833→          toolResults.push(`Tool "${name}" failed: ${clip(message, 500)}. Continue without it.`);
+   834→        }
+   835→        continue;
+   836→      }
+   837→
+   838→      // ---- artifact ----
+   839→      const input = normalizeArtifactInput(block.attrs, block.content);
+   840→      const artifact = await upsertArtifact(opts.conversationId, opts.assistantMessageId, input);
+   841→      artifactsCreated += 1;
+   842→      fullText += `\n\n[[artifact:${artifact.id}]]\n\n`;
+   843→      send({
+   844→        type: "artifact",
+   845→        id: artifact.id,
+   846→        title: artifact.title,
+   847→        kind: input.kind,
+   848→        language: input.language,
+   849→        version: artifact.version,
+   850→        updatedAt: artifact.updatedAt.toISOString(),
+   851→      });
+   852→      await db.agentStep.create({
+   853→        data: {
+   854→          messageId: opts.assistantMessageId,
+   855→          conversationId: opts.conversationId,
+   856→          idx: stepIdx++,
+   857→          kind: "artifact",
+   858→          tool: "artifact",
+   859→          title: `Artifact: ${artifact.title}${artifact.version > 1 ? ` (v${artifact.version})` : ""}`,
+   860→          detail: JSON.stringify({ artifactId: artifact.id, kind: input.kind, version: artifact.version }),
+   861→          status: "done",
+   862→        },
+   863→      });
+   864→    }
+   865→
+   866→    if (aborted()) break;
+   867→
+   868→    // Tools were executed → feed results back and continue; otherwise done.
+   869→    if (!executedTools || isFinalIteration) break;
+   870→
+   871→    const trimmedVisible = visibleThisIter.trim();
+   872→    if (trimmedVisible) messages.push({ role: "assistant", content: clip(trimmedVisible, 8_000) });
+   873→    messages.push({
+   874→      role: "user",
+   875→      content:
+   876→        `<tool_results>\n\n${toolResults.join("\n\n---\n\n")}\n\n</tool_results>\n\n` +
+   877→        "Continue the task: call more tools if genuinely needed (end your turn right after the tool blocks), otherwise write the final answer now.",
+   878→    });
+   879→  }
+   880→
+   881→  return {
+   882→    fullText,
+   883→    thinkingText,
+   884→    model,
+   885→    usage,
+   886→    iterations,
+   887→    status: aborted() ? "cancelled" : "complete",
+   888→    toolsUsed: [...toolsUsed],
+   889→    artifactsCreated,
+   890→  };
+   891→}
+   892→

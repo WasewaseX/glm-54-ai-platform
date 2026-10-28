@@ -1,13 +1,13 @@
 // Book Forge CLI runner — resumable marathon job for one book.
 // Usage: bun scripts/run-novel.ts <bookId> [--restart]
-import { runBook, loadState, BOOKS } from "../src/lib/novel-engine";
+import { runBook, loadState, getBookDef } from "../src/lib/novel-engine";
 import { writeFileSync } from "node:fs";
 
 const bookId = process.argv[2] ?? "the-dreaming-vat";
 const restart = process.argv.includes("--restart");
 
-if (!BOOKS[bookId]) {
-  console.error(`Unknown book "${bookId}". Available: ${Object.keys(BOOKS).join(", ")}`);
+if (!getBookDef(bookId)) {
+  console.error(`Unknown book "${bookId}".`);
   process.exit(1);
 }
 

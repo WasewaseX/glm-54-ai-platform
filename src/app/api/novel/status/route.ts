@@ -1,24 +1,37 @@
 import "server-only";
-import { loadState, BOOKS } from "@/lib/novel-engine";
+import { getBookDef, listBooks, loadState } from "@/lib/novel-engine";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const dynamic = "force-dynamic";
 
-const BOOK_ID = "the-dreaming-vat";
-
-export async function GET() {
-  const def = BOOKS[BOOK_ID];
-  if (!def) return Response.json({ error: "unknown book" }, { status: 404 });
-
-  const state = loadState(BOOK_ID);
-  if (!state) {
-    return Response.json({ phase: "idle", bookId: BOOK_ID, title: def.title });
+/** GET /api/novel/status?bookId=… — defaults to the most recently updated book. */
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  let bookId = (url.searchParams.get("bookId") ?? "").trim();
+  if (!bookId) {
+    bookId = listBooks()[0]?.bookId ?? "the-dreaming-vat";
   }
 
-  // A run is "live" if a runner process has the book's PID file and it's alive.
+  const def = getBookDef(bookId);
+  if (!def) return Response.json({ error: "unknown book" }, { status: 404 });
+
+  const state = loadState(bookId);
+  if (!state) {
+    return Response.json({
+      bookId,
+      title: def.title,
+      phase: "idle",
+      running: false,
+      chaptersDone: 0,
+      totalChapters: 100,
+      totalWords: 0,
+    });
+  }
+
+  // A run is "live" if a runner process holds the book's PID file and is alive.
   let running = false;
-  const pidPath = join("/tmp", `novel-${BOOK_ID}.pid`);
+  const pidPath = join("/tmp", `novel-${bookId}.pid`);
   if (existsSync(pidPath)) {
     try {
       const pid = Number(readFileSync(pidPath, "utf8").trim());

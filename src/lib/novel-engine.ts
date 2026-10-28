@@ -14,7 +14,7 @@
  */
 
 import ZAI from "z-ai-web-dev-sdk";
-import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, openSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, openSync, readdirSync } from "node:fs";
 import { execFileSync, spawn } from "node:child_process";
 import { join } from "node:path";
 
@@ -44,8 +44,8 @@ export interface PartDef {
 }
 
 const STYLE_RULES = `STYLE CONTRACT (violations make the chapter unusable):
-- Close third person, past tense, anchored to Mara Voss unless a scene explicitly follows another listed character.
-- Grounded literary science fiction. Concrete sensory detail: instruments, seawater, light, sound, fatigue.
+- Close third person, past tense, anchored to the protagonist defined in the story bible unless a scene explicitly follows another listed character.
+- Grounded literary genre fiction as defined by the story bible. Concrete sensory detail drawn from the story's world: instruments, places, light, sound, fatigue.
 - Dialogue is natural and subtext-heavy. No info-dumps. No head-hopping within a scene.
 - At most one scene break (a single line containing only * * *).
 - NEVER use markdown lists, bold, italics-markers, or headers other than the one title line.
@@ -203,6 +203,220 @@ BANS
 export const BOOKS: Record<string, BookDef> = {
   "the-dreaming-vat": THE_DREAMING_VAT,
 };
+
+// ---------------------------------------------------------------------------
+// Dynamic books — Book Forge can forge a NEW BookDef from any premise
+// ---------------------------------------------------------------------------
+
+const bookDefCache = new Map<string, BookDef>();
+
+/** Resolve a book definition: seeded registry first, then forged books on disk. */
+export function getBookDef(bookId: string): BookDef | null {
+  const seeded = BOOKS[bookId];
+  if (seeded) return seeded;
+  const cached = bookDefCache.get(bookId);
+  if (cached) return cached;
+  const p = join(bookDir(bookId), "bookdef.json");
+  if (!existsSync(p)) return null;
+  try {
+    const def = JSON.parse(readFileSync(p, "utf8")) as BookDef;
+    if (def?.id !== bookId || !Array.isArray(def.parts) || def.parts.length !== 10) return null;
+    bookDefCache.set(bookId, def);
+    return def;
+  } catch {
+    return null;
+  }
+}
+
+export interface BookSummary {
+  bookId: string;
+  title: string;
+  logline: string;
+  phase: BookState["phase"];
+  running: boolean;
+  chaptersDone: number;
+  totalWords: number;
+  updatedAt: string;
+  deliverable: boolean;
+}
+
+/** Every known book (seeded + forged), most recently updated first. */
+export function listBooks(): BookSummary[] {
+  if (!existsSync(BOOKS_DIR)) return [];
+  const out: BookSummary[] = [];
+  for (const entry of readdirSync(BOOKS_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const bookId = entry.name;
+    const state = loadState(bookId);
+    if (!state) continue;
+    const def = getBookDef(bookId);
+    out.push({
+      bookId,
+      title: def?.title ?? state.title,
+      logline: def?.logline ?? "",
+      phase: state.phase,
+      running: isRunnerRunning(bookId),
+      chaptersDone: state.chaptersDone,
+      totalWords: state.totalWords,
+      updatedAt: state.updatedAt,
+      deliverable: existsSync(join(ROOT, "public", "deliverables", `${bookId}.md`)),
+    });
+  }
+  return out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+}
+
+function slugify(text: string, max = 48): string {
+  const s = text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, max)
+    .replace(/-+$/g, "");
+  return s || "book";
+}
+
+function uniqueBookId(base: string): string {
+  let id = base;
+  let n = 2;
+  while (existsSync(bookDir(id))) id = `${base}-${n++}`;
+  return id;
+}
+
+/** Pull the first balanced-looking JSON object/array out of a model reply. */
+function extractJson(raw: string): unknown {
+  const fenced = raw
+    .replace(/^\s*```(?:json)?/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+  const candidates = [fenced.indexOf("{"), fenced.indexOf("[")].filter((i) => i >= 0);
+  if (candidates.length === 0) throw new Error("no JSON found in model output");
+  const start = Math.min(...candidates);
+  const closeChar = fenced[start] === "{" ? "}" : "]";
+  const end = fenced.lastIndexOf(closeChar);
+  if (end <= start) throw new Error("unterminated JSON in model output");
+  return JSON.parse(fenced.slice(start, end + 1));
+}
+
+const FORGE_ARCHITECT_SYSTEM =
+  "You are the story architect of Book Forge, a serialized-novel pipeline. You output only valid JSON.";
+
+export interface CreateBookInput {
+  premise: string;
+  title?: string;
+}
+
+/**
+ * Forge a brand-new BookDef from an arbitrary premise: one LLM call for the
+ * story bible, one for the 10-part arc. Persisted to books/<id>/bookdef.json
+ * so it survives restarts. Returns the real definition (never a stub).
+ */
+export async function createBook(input: CreateBookInput): Promise<BookDef> {
+  const premise = input.premise.trim().slice(0, 4_000);
+  if (premise.length < 20) throw new Error("premise too short: give at least a sentence");
+
+  // --- Call 1: story bible ---
+  const biblePrompt = `Design an ORIGINAL serialized novel: exactly 100 chapters in 10 parts of 10 chapters each, built from this premise:
+
+PREMISE: ${premise}
+
+Requirements:
+- If the premise resembles a well-known or existing story, you MUST still produce a genuinely DIFFERENT original take: fresh character names, a fresh setting, a fresh voice, and a fresh plot engine. Never recycle another book's characters or beats.
+- A named protagonist with a concrete job, a personal wound, and an arc; 4-6 supporting characters with their own stakes; a named, specific setting.
+- An escalation engine that keeps 100 chapters tense (e.g. anomaly -> protocol -> scrutiny -> loss -> wider world -> descent -> sacrifice -> resolution), with recurring motifs set up early and paid off late.
+- Grounded and materialist: every strange phenomenon has a plausible mechanism; never resolve the deepest ambiguity with metaphysics.
+- No supernatural forces, no chosen-one prophecy, no mind control, no real living public figures, no brand names.
+
+Return ONLY valid JSON (no markdown fences):
+{"title":"...","logline":"one sentence","bible":"STORY BIBLE, 600-900 words, with sections PREMISE / SETTING / RULES OR SCIENCE / CHARACTERS / VOICE AND MOTIFS / BANS. This text is ground truth the chapter writers will obey."}`;
+
+  let title = "";
+  let logline = "";
+  let bible = "";
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const raw = await callLLM(
+        [
+          { role: "system", content: FORGE_ARCHITECT_SYSTEM },
+          { role: "user", content: biblePrompt },
+        ],
+        4096
+      );
+      const parsed = extractJson(raw) as { title?: unknown; logline?: unknown; bible?: unknown };
+      title = typeof parsed.title === "string" ? parsed.title.trim().slice(0, 120) : "";
+      logline = typeof parsed.logline === "string" ? parsed.logline.trim().slice(0, 300) : "";
+      bible = typeof parsed.bible === "string" ? parsed.bible.trim() : "";
+      if (title && logline && bible.length >= 1_500) break;
+      throw new Error(
+        `bible too thin (title=${!!title}, logline=${!!logline}, bible=${bible.length} chars)`
+      );
+    } catch (err) {
+      if (attempt >= 3) throw err;
+      log(`[create] bible attempt ${attempt} failed: ${err instanceof Error ? err.message : String(err)}`);
+      await sleep(10_000);
+    }
+  }
+  if (!title) throw new Error("story bible generation failed: no title");
+  if (input.title?.trim()) title = input.title.trim().slice(0, 120);
+
+  // --- Call 2: ten-part arc ---
+  const partsPrompt = `You are the story architect for the novel "${title}".
+
+STORY BIBLE (ground truth):
+${bible}
+
+Split the novel into 10 parts of exactly 10 chapters (chapters 1-10, 11-20, ..., 91-100). For each part give: a short name, a synopsis of 3-5 sentences describing the concrete events that move the escalation engine forward, an openingBeat (the exact state the part's first chapter opens from), and a closingBeat (the exact state the part's final chapter must land on).
+
+Return ONLY a valid JSON array of exactly 10 objects (no markdown fences):
+[{"index":1,"name":"...","range":[1,10],"synopsis":"...","openingBeat":"...","closingBeat":"..."}]`;
+
+  let parts: PartDef[] = [];
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const raw = await callLLM(
+        [
+          { role: "system", content: FORGE_ARCHITECT_SYSTEM },
+          { role: "user", content: partsPrompt },
+        ],
+        4096
+      );
+      const parsed = extractJson(raw) as Array<Partial<PartDef>>;
+      if (!Array.isArray(parsed) || parsed.length !== 10) {
+        throw new Error(`expected 10 parts, got ${Array.isArray(parsed) ? parsed.length : typeof parsed}`);
+      }
+      parts = parsed.map((p, i) => ({
+        index: i + 1,
+        name: String(p.name ?? `Part ${i + 1}`).slice(0, 80),
+        range: [i * 10 + 1, i * 10 + 10] as [number, number],
+        synopsis: String(p.synopsis ?? "").trim(),
+        openingBeat: String(p.openingBeat ?? "").trim(),
+        closingBeat: String(p.closingBeat ?? "").trim(),
+      }));
+      const thin = parts.find((p) => p.synopsis.length < 120 || !p.openingBeat || !p.closingBeat);
+      if (thin) throw new Error(`part ${thin.index} too thin to write from`);
+      break;
+    } catch (err) {
+      if (attempt >= 3) throw err;
+      log(`[create] parts attempt ${attempt} failed: ${err instanceof Error ? err.message : String(err)}`);
+      await sleep(10_000);
+    }
+  }
+  if (parts.length !== 10) throw new Error("part generation failed");
+
+  const def: BookDef = {
+    id: uniqueBookId(slugify(title)),
+    title,
+    author: "GLM 5.4 AI",
+    logline,
+    bible,
+    parts,
+  };
+  mkdirSync(bookDir(def.id), { recursive: true });
+  writeFileSync(join(bookDir(def.id), "bookdef.json"), JSON.stringify(def, null, 2));
+  writeFileSync(join(bookDir(def.id), "bible.md"), def.bible);
+  bookDefCache.set(def.id, def);
+  log(`[create] forged "${def.title}" as book ${def.id} (bible ${def.bible.length} chars, 10 parts)`);
+  return def;
+}
 
 // ---------------------------------------------------------------------------
 // LLM plumbing
@@ -382,7 +596,7 @@ export function isRunnerRunning(bookId: string): boolean {
 
 /** Spawn the resumable runner for a book as a detached process (single-instance safe). */
 export function startBookRunner(bookId: string): { started: boolean; message: string } {
-  const def = BOOKS[bookId];
+  const def = getBookDef(bookId);
   if (!def) return { started: false, message: `unknown book: ${bookId}` };
   if (isRunnerRunning(bookId)) {
     const pid = Number(readFileSync(join("/tmp", `novel-${bookId}.pid`), "utf8").trim());
@@ -584,7 +798,7 @@ async function runBlock(def: BookDef, state: BookState, partIdx: number): Promis
 
 /** Run the full book: outline (parallel) then 10 parallel block-workers. */
 export async function runBook(bookId: string, forceRestart = false): Promise<BookState> {
-  const def = BOOKS[bookId];
+  const def = getBookDef(bookId);
   if (!def) throw new Error(`unknown book: ${bookId}`);
 
   mkdirSync(bookDir(bookId), { recursive: true });

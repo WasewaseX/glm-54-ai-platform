@@ -113,9 +113,13 @@ export function RealMetrics() {
 
       <p className="mt-3 flex items-start gap-1.5 text-left text-[10px] leading-relaxed text-muted-foreground">
         <Activity className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
-        Every value is queried live from the platform&apos;s SQLite database via <code className="font-mono">/api/stats</code> —
-        unlike the earlier investor deck (demo outline by glm-4-plus), nothing here is invented.
-        Full audit: <code className="font-mono">scripts/collect-real-metrics.ts</code> · repo: github.com/WasewaseX/glm-54-ai-platform.
+        <span className="min-w-0 flex-1">
+          Every value is queried live from the platform&apos;s SQLite database via{" "}
+          <code className="font-mono">/api/stats</code> — unlike the earlier investor deck (demo outline by
+          glm-4-plus), nothing here is invented. Full audit:{" "}
+          <code className="font-mono">scripts/collect-real-metrics.ts</code> · repo:
+          github.com/WasewaseX/glm-54-ai-platform.
+        </span>
       </p>
     </section>
   );

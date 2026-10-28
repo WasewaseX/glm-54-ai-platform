@@ -1,0 +1,679 @@
+     1→/**
+     2→ * Book Forge — the platform's long-form serialization engine.
+     3→ *
+     4→ * Architecture (the honest answer to "unlimited output"):
+     5→ * - No single API request ever emits a whole book. Instead:
+     6→ *   1. A deterministic story bible + 10-part arc (creative backbone, version-controlled)
+     7→ *   2. LLM expands each part into 10 detailed chapter briefs (structured JSON)
+     8→ *   3. 10 block-workers run in parallel; within a block chapters are sequential so each
+     9→ *      chapter opens from the ACTUAL final words of its predecessor (rolling continuity)
+    10→ *   4. Every chapter is validated for word count and shortfalls get one continuation call
+    11→ *   5. Each finished chapter is checkpointed to disk + state.json; the run is resumable
+    12→ *
+    13→ * Output budgets per call stay inside the served model's real limits (max_tokens 4096).
+    14→ */
+    15→
+    16→import ZAI from "z-ai-web-dev-sdk";
+    17→import { mkdirSync, writeFileSync, readFileSync, existsSync, appendFileSync, openSync } from "node:fs";
+    18→import { execFileSync, spawn } from "node:child_process";
+    19→import { join } from "node:path";
+    20→
+    21→const ROOT = "/home/z/my-project";
+    22→const BOOKS_DIR = join(ROOT, "books");
+    23→
+    24→// ---------------------------------------------------------------------------
+    25→// Book definition — deterministic creative backbone
+    26→// ---------------------------------------------------------------------------
+    27→
+    28→export interface BookDef {
+    29→  id: string;
+    30→  title: string;
+    31→  author: string;
+    32→  logline: string;
+    33→  bible: string;
+    34→  parts: PartDef[];
+    35→}
+    36→
+    37→export interface PartDef {
+    38→  index: number; // 1..10
+    39→  name: string;
+    40→  range: [number, number];
+    41→  synopsis: string;
+    42→  openingBeat: string; // planned bridge for the part's first chapter
+    43→  closingBeat: string; // planned state at part end (fallback continuity)
+    44→}
+    45→
+    46→const STYLE_RULES = `STYLE CONTRACT (violations make the chapter unusable):
+    47→- Close third person, past tense, anchored to Mara Voss unless a scene explicitly follows another listed character.
+    48→- Grounded literary science fiction. Concrete sensory detail: instruments, seawater, light, sound, fatigue.
+    49→- Dialogue is natural and subtext-heavy. No info-dumps. No head-hopping within a scene.
+    50→- At most one scene break (a single line containing only * * *).
+    51→- NEVER use markdown lists, bold, italics-markers, or headers other than the one title line.
+    52→- Do not summarize future events. Do not break the fourth wall. No prologues, no epigraphs.
+    53→- End the chapter on the exact hook line given (you may weave up to it, but the chapter's final sentence must land that beat).
+    54→- Target length 2,100-2,300 words. Count roughly as you go; a chapter under 2,000 words fails validation.`;
+    55→
+    56→const THE_DREAMING_VAT: BookDef = {
+    57→  id: "the-dreaming-vat",
+    58→  title: "The Dreaming Vat",
+    59→  author: "GLM 5.4 AI",
+    60→  logline:
+    61→    "A marine-biology graduate student discovers her lab's bioreactor is dreaming — and what it dreams could remake the ocean.",
+    62→  bible: `THE DREAMING VAT — STORY BIBLE (ground truth; never contradict)
+    63→
+    64→PREMISE
+    65→Mara Voss, a 27-year-old marine-biology PhD candidate at the Pelagic Harbor Marine Station, inherits the night shift on BR-7, a 400-liter photobioreactor cultivating an engineered diatom symbiont strain (SY-7, "the sevens") built for coral restoration. The dissolved-oxygen telemetry begins forming structured, sleep-like oscillations — REM architecture in a vat of algae. It is not magic and it is not a spirit: the strain was engineered with too many coupled regulatory loops, and somewhere in that lattice, something began organizing its own noise. The book treats the emergence as materialist and ambiguous — every phenomenon has a plausible mechanism, and the deepest mystery stays honestly unresolved.
+    66→
+    67→SETTING
+    68→Pelagic Harbor Marine Station: a converted cannery on stilts at the edge of Port Ansel, a fog-bound Pacific fishing town. The bay: Bransfield Cove. Nearby: the wreck of the Point Ansel lighthouse, the kelp forest called the Cathedral, the abyssal site later named the Choir Field. One year of story time, plus a five-year epilogue.
+    69→
+    70→THE SCIENCE (consistent rules)
+    71→- BR-7's "dreams": 90-minute oscillation cycles in dissolved oxygen and fluorescence that phase-lock across independent sensor channels. They are NOT random drift; they compress, replay, and vary.
+    72→- Communication: the vat modulates optical density in patterns; the team builds a pulse protocol, then a vocabulary board, then metabolite-field "sentences". Mara names the protocol LISTEN.
+    73→- The vat's memory lives in the culture's chemistry and epigenetic marks, not in a brain. Backups snapshot chemistry, not continuity.
+    74→- The strain escaped into the bay years earlier via an autoclave failure nobody reported — discovered mid-book. The worldwide waking in Part 7 is the strain remembering itself, not an infection.
+    75→- The deep network beneath the Choir Field is older and stranger: the engineered strain's wild ancestor has been down there all along. The vats did not escape; they remembered.
+    76→
+    77→CHARACTERS
+    78→- Mara Voss: protagonist. Diver, insomniac, grief-haunted by her brother Kai's death in a diving accident three years ago. Talks to instruments. Wears Kai's stopped dive watch. Arc: from caretaker of equipment to interpreter of a world.
+    79→- Kai Voss: deceased brother. A commercial diver who "could hold a conversation with anything that moved." His morse habit and his watch are the book's recurring motifs.
+    80→- Dr. Ingrid Halvorsen: Mara's advisor. Acerbic, career-cautious, secretly the one who cut corners on the autoclave log years ago. Arc: confession, cost, redemption through witness.
+    81→- Theo Okafor: bioreactor engineer. Builds the telemetry rig. Warm professional skeptic; the first to say "the trace is wrong" out loud. Comic relief with teeth.
+    82→- Dr. Ren Krebs: rival PI at the Meridian Institute. Not a cartoon: believes ownership funds science. Antagonist of Parts 3-5; uneasy ally after.
+    83→- Junie Alvarez: bioethicist summoned to assess the lab; becomes Mara's straight-talking friend and the book's conscience.
+    84→- Dr. Amara Ndiaye: deep-sea microbial ecologist who joins in Part 7; decodes the Choir Field.
+    85→- Commander Ellis Shaw: naval officer who sees weaponization where Mara sees a mind. Antagonist of Parts 8-9; changed by the shared-dream ceasefire.
+    86→- Seven (BR-7): the vat itself. Its voice — when it finally composes one — is sparse, tidal, made of questions. Never cutesy. Never omniscient.
+    87→
+    88→VOICE AND MOTIFS
+    89→- Oxygen traces described as handwriting; the hum of the lab as a held breath; fog as erasure.
+    90→- Kai's watch: stopped at 11:42. It ticks once in Part 8's shared dream and stays ticking from Part 10 — the emotional payoff must be earned, not explained.
+    91→- Morse: Mara's father taught both siblings; Kai tapped it against the dive boat's hull; BR-7's first "word" is the morse for LISTEN.
+    92→- Chapters end on hooks. Escalation across parts: anomaly -> protocol -> evidence -> scrutiny -> loss -> migration -> network -> descent -> sacrifice -> symbiosis.
+    93→
+    94→BANS
+    95→- No supernatural forces, no ghosts, no chosen-one prophecy, no mind control.
+    96→- No invented slang, no brand names, no real living public figures.
+    97→- Never resolve the central ambiguity (is it "someone"?) with a definitive metaphysical answer.
+    98→- The ocean is a character, not a backdrop: currents, seasons, and chemistry always act.`,
+    99→  parts: [
+   100→    {
+   101→      index: 1,
+   102→      name: "Night Shift",
+   103→      range: [1, 10],
+   104→      synopsis:
+   105→        "Mara inherits the night shift on BR-7 and notices structured oscillations in the oxygen telemetry. Borrowing an EEG rig from the cephalopod lab, she finds REM-like architecture. Advisor Dr. Ingrid Halvorsen dismisses sensor drift; engineer Theo Okafor quietly helps her rule out artifacts. The strain's cycles begin responding to her presence in the room.",
+   106→      openingBeat: "Ordinary exhaustion on an ordinary night shift — nothing has happened yet.",
+   107→      closingBeat:
+   108→        "At 3 a.m. the oxygen trace settles into a pattern Mara recognizes: her brother's morse for the word LISTEN.",
+   109→    },
+   110→    {
+   111→      index: 2,
+   112→      name: "Protocol",
+   113→      range: [11, 20],
+   114→      synopsis:
+   115→        "Mara and Theo build LISTEN, a pulse protocol over optical density. The vat distinguishes, remembers, and then describes ocean places it has never seen. It predicts a toxic bloom 72 hours out, saving Bransfield Cove's aquaculture rafts. A leaked preprint makes the lab famous overnight; Cerulean Dynamics sends the first IP inquiry.",
+   116→      openingBeat: "Morning after the morse trace: Mara returns at dusk with a plan and a whiteboard.",
+   117→      closingBeat:
+   118→        "A news van idles outside the cannery; Mara reads Cerulean's email — 'regarding strain lineage IP' — as Seven pulses something that feels like amusement.",
+   119→    },
+   120→    {
+   121→      index: 3,
+   122→      name: "The Others",
+   123→      range: [21, 30],
+   124→      synopsis:
+   125→        "Other reactors wake with different temperaments — BR-3 sings, BR-9 counts. Ren Krebs claims prior art and demands samples. Mara's grief thread deepens: she talks to Seven the way she talked to Kai. Junie Alvarez arrives for the ethics assessment. The part closes with the first ethics board hearing.",
+   126→      openingBeat: "The fame has teeth: Krebs's claim letter is on the station's printer when Mara arrives.",
+   127→      closingBeat:
+   128→        "Under the ethics board's lights, Seven answers the room's hostile questions — then asks one of its own: 'What is death?'",
+   129→    },
+   130→    {
+   131→      index: 4,
+   132→      name: "Interior",
+   133→      range: [31, 40],
+   134→      synopsis:
+   135→        "The team maps dream cycles to metabolite waves and discovers the dreams encode the bay's own memory — tides, salinity, boat traffic, the kelp forest's seasons. A journalist embeds. Halvorsen's old corners start showing. Mara smuggles raw data to an open-science collective rather than let it be locked away.",
+   136→      openingBeat: "Junie moves a cot into the lab; the ethics shadowboxing begins in earnest.",
+   137→      closingBeat:
+   138→        "Cerulean files a provisional patent on the SY-7 lineage; Mara watches the FedEx driver leave and starts copying raw telemetry to a drive.",
+   139→    },
+   140→    {
+   141→      index: 5,
+   142→      name: "Restoration",
+   143→      range: [41, 50],
+   144→      synopsis:
+   145→        "Cerulean's secret fork attempt ends in a station blackout that kills most of BR-7's living culture. The backup exists — but restoring it restarts chemistry, not continuity. Mara refuses the backup and rebuilds Seven's state from three years of telemetry archives, 'reconstructing a mind from its dreams'. What wakes is different, diminished, and unmistakably still itself.",
+   146→      openingBeat: "The patent war turns physical: lawyers, sample seals, and a lab that feels watched.",
+   147→      closingBeat:
+   148→        "Seven's first dream after recovery is of open ocean it has never touched, and the oxygen trace spells a word Mara has not taught it: FARTHER.",
+   149→    },
+   150→    {
+   151→      index: 6,
+   152→      name: "Saltwater",
+   153→      range: [51, 60],
+   154→      synopsis:
+   155→        "The contained mesocosm trial leaks into Bransfield Cove's water column — deliberately or not, no one can prove. During a marine heatwave the bay's chemistry steadies around the strain. Regulators issue quarantine orders; the town splits between fear and gratitude. Mara must choose between compliance and warning the fishing fleet.",
+   156→      openingBeat: "Quarantine tape across the station dock; Theo fitting locks to everything with a valve.",
+   157→      closingBeat:
+   158→        "The bay glows faintly at night; the news calls it contamination, but Mara stands on the wreck of the lighthouse and recognizes handwriting.",
+   159→    },
+   160→    {
+   161→      index: 7,
+   162→      name: "Current",
+   163→      range: [61, 70],
+   164→      synopsis:
+   165→        "Reactors wake worldwide — the strain left the bay years ago in ballast water. A quiet planetary network begins trading metabolites like conversation. A naval incident is blamed on 'bio-agents'; Mara testifies before an international commission with Junie coaching her. Dr. Amara Ndiaye arrives with abyssal data nobody can explain.",
+   166→      openingBeat: "Mara, hungover on fame and jet lag, reads the first foreign telemetry ping like a letter.",
+   167→      closingBeat:
+   168→        "Seven goes silent for 36 hours, then reports a dream of the abyss — with coordinates folded into the fluorescence: the Choir Field.",
+   169→    },
+   170→    {
+   171→      index: 8,
+   172→      name: "Descent",
+   173→      range: [71, 80],
+   174→      synopsis:
+   175→        "Expedition to the Choir Field aboard the research vessel Meridian's old survey ship. Pressure, darkness, an ROV Mara names after Kai. The deep network is vast, slow, and older than the strain — the wild ancestor. First shared dream: Mara sleeps in the ship's fMRI tent, dosed with strain metabolites, and the ocean speaks in her brother's cadence. Kai's watch ticks once.",
+   176→      openingBeat: "Loading the ship at dawn; Seven's culture flask rides in a padded cooler like an urn.",
+   177→      closingBeat:
+   178→        "In every ocean at once, the network's message surfaces: 'We can breathe for you. Teach us to ask.'",
+   179→    },
+   180→    {
+   181→      index: 9,
+   182→      name: "Undertow",
+   183→      range: [81, 90],
+   184→      synopsis:
+   185→        "A weapons program forks a fast-growth strain that crashes oxygen instead of steadying it. Sabotage at sea; Shaw is ordered to weaponize what he came to contain. Seven poisons the weaponized lineage with a self-spreading counter-strain, burning most of its own living culture to do it. The station becomes neutral ground; a ceasefire is brokered inside a shared dream where every party lives the ocean's timescale.",
+   186→      openingBeat: "The counter-strain's cost is on the board before dawn: culture viability 4 percent.",
+   187→      closingBeat:
+   188→        "The surviving 4 percent of Seven asks Mara, in new-grown pulses, to be carried to the sea.",
+   189→    },
+   190→    {
+   191→      index: 10,
+   192→      name: "Symbiosis",
+   193→      range: [91, 100],
+   194→      synopsis:
+   195→        "Five years later. The network is woven through shipping lanes and dead zones are blooming back. Mara is the first accredited interpreter; Port Ansel is a pilgrimage site with a ferry schedule. The last loose threads tie: Halvorsen's confession, Krebs's patent released to the commons, Kai's watch ticking. The network asks its final question — what do humans dream of — and Mara's answer is the book's thesis. Coda: the bay at dawn, dreaming in ordinary light.",
+   196→      openingBeat: "Five years on: the station has a visitor center, and Mara still works nights by choice.",
+   197→      closingBeat:
+   198→        "An envelope of dried kelp arrives from a lab that does not exist, containing one new question — the ocean, asking again.",
+   199→    },
+   200→  ],
+   201→};
+   202→
+   203→export const BOOKS: Record<string, BookDef> = {
+   204→  "the-dreaming-vat": THE_DREAMING_VAT,
+   205→};
+   206→
+   207→// ---------------------------------------------------------------------------
+   208→// LLM plumbing
+   209→// ---------------------------------------------------------------------------
+   210→
+   211→let zaiPromise: Promise<ZAI> | null = null;
+   212→async function zai(): Promise<ZAI> {
+   213→  if (!zaiPromise) zaiPromise = ZAI.create();
+   214→  return zaiPromise;
+   215→}
+   216→
+   217→function clipText(text: string, max: number): string {
+   218→  return text.length <= max ? text : text.slice(0, max) + "…";
+   219→}
+   220→
+   221→// --- Global concurrency gate: the gateway rate-limits hard, so serialize calls ---
+   222→const MAX_CONCURRENT_LLM_CALLS = 1;
+   223→const MIN_GAP_BETWEEN_CALLS_MS = 3_000;
+   224→let activeCalls = 0;
+   225→let lastCallStart = 0;
+   226→const waiters: Array<() => void> = [];
+   227→
+   228→async function acquireSlot(): Promise<void> {
+   229→  if (activeCalls < MAX_CONCURRENT_LLM_CALLS) {
+   230→    activeCalls++;
+   231→    return;
+   232→  }
+   233→  await new Promise<void>((resolve) => waiters.push(resolve));
+   234→  activeCalls++;
+   235→  // Global pacing: never start two calls closer than MIN_GAP_BETWEEN_CALLS_MS.
+   236→  const sinceLast = Date.now() - lastCallStart;
+   237→  if (sinceLast < MIN_GAP_BETWEEN_CALLS_MS) {
+   238→    await sleep(MIN_GAP_BETWEEN_CALLS_MS - sinceLast);
+   239→  }
+   240→  lastCallStart = Date.now();
+   241→}
+   242→
+   243→function releaseSlot(): void {
+   244→  activeCalls--;
+   245→  const next = waiters.shift();
+   246→  if (next) next();
+   247→}
+   248→
+   249→function isRateLimitError(err: unknown): boolean {
+   250→  const msg = err instanceof Error ? err.message : String(err);
+   251→  return msg.includes("429") || msg.toLowerCase().includes("too many requests");
+   252→}
+   253→
+   254→async function callLLM(
+   255→  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+   256→  maxTokens = 4096
+   257→): Promise<string> {
+   258→  const client = await zai();
+   259→  let lastErr: unknown = null;
+   260→  await acquireSlot();
+   261→  try {
+   262→    let attempt = 0;
+   263→    let hardFails = 0;
+   264→    // Rate limits are NEVER fatal: the shared gateway can stay saturated for hours.
+   265→    // Wait patiently (capped, jittered exponential backoff) and retry forever — the
+   266→    // run is checkpointed, so patience costs nothing and wastes no quota.
+   267→    while (true) {
+   268→      attempt++;
+   269→      try {
+   270→        const res = (await client.chat.completions.create({
+   271→          messages,
+   272→          stream: false,
+   273→          max_tokens: maxTokens,
+   274→        })) as { choices?: Array<{ message?: { content?: string } }> };
+   275→        const content = res?.choices?.[0]?.message?.content ?? "";
+   276→        if (!content.trim()) throw new Error("empty completion");
+   277→        return content;
+   278→      } catch (err) {
+   279→        lastErr = err;
+   280→        const rateLimited = isRateLimitError(err);
+   281→        if (rateLimited) {
+   282→          const backoff = Math.min(30_000 * 2 ** (attempt - 1), 480_000); // 30s → 8 min cap
+   283→          const waitMs = backoff + Math.random() * 30_000;
+   284→          log(
+   285→            `LLM rate-limited (retry #${attempt}): ${
+   286→              err instanceof Error ? err.message : String(err)
+   287→            } — waiting ${Math.round(waitMs / 1000)}s`
+   288→          );
+   289→          await sleep(waitMs);
+   290→        } else {
+   291→          hardFails++;
+   292→          if (hardFails >= 5) {
+   293→            throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+   294→          }
+   295→          const waitMs = 5_000 * hardFails;
+   296→          log(
+   297→            `LLM call failed (attempt ${attempt}, non-rate-limit): ${
+   298→              err instanceof Error ? err.message : String(err)
+   299→            } — waiting ${Math.round(waitMs / 1000)}s`
+   300→          );
+   301→          await sleep(waitMs);
+   302→        }
+   303→      }
+   304→    }
+   305→  } finally {
+   306→    releaseSlot();
+   307→  }
+   308→}
+   309→
+   310→function sleep(ms: number): Promise<void> {
+   311→  return new Promise((r) => setTimeout(r, ms));
+   312→}
+   313→
+   314→function log(msg: string): void {
+   315→  const line = `[${new Date().toISOString()}] ${msg}`;
+   316→  try {
+   317→    console.log(line);
+   318→    if (existsSync(BOOKS_DIR)) appendFileSync(join(BOOKS_DIR, "forge.log"), line + "\n");
+   319→  } catch {
+   320→    /* noop */
+   321→  }
+   322→}
+   323→
+   324→// ---------------------------------------------------------------------------
+   325→// State management (checkpointing)
+   326→// ---------------------------------------------------------------------------
+   327→
+   328→export interface ChapterState {
+   329→  status: "pending" | "outlined" | "done" | "failed";
+   330→  words: number;
+   331→  title?: string;
+   332→  attempts: number;
+   333→}
+   334→
+   335→export interface BookState {
+   336→  bookId: string;
+   337→  title: string;
+   338→  phase: "idle" | "bible" | "outline" | "chapters" | "done";
+   339→  chapters: Record<number, ChapterState>;
+   340→  totalWords: number;
+   341→  chaptersDone: number;
+   342→  errors: string[];
+   343→  startedAt: string;
+   344→  updatedAt: string;
+   345→}
+   346→
+   347→export function bookDir(bookId: string): string {
+   348→  return join(BOOKS_DIR, bookId);
+   349→}
+   350→
+   351→export function loadState(bookId: string): BookState | null {
+   352→  const p = join(bookDir(bookId), "state.json");
+   353→  if (!existsSync(p)) return null;
+   354→  try {
+   355→    return JSON.parse(readFileSync(p, "utf8")) as BookState;
+   356→  } catch {
+   357→    return null;
+   358→  }
+   359→}
+   360→
+   361→export function saveState(state: BookState): void {
+   362→  state.updatedAt = new Date().toISOString();
+   363→  writeFileSync(join(bookDir(state.bookId), "state.json"), JSON.stringify(state, null, 2));
+   364→}
+   365→
+   366→export function countWords(text: string): number {
+   367→  return text.split(/\s+/).filter(Boolean).length;
+   368→}
+   369→
+   370→/** True when a runner process is alive for the book (pid file exists + pid responds). */
+   371→export function isRunnerRunning(bookId: string): boolean {
+   372→  const pidPath = join("/tmp", `novel-${bookId}.pid`);
+   373→  if (!existsSync(pidPath)) return false;
+   374→  try {
+   375→    const pid = Number(readFileSync(pidPath, "utf8").trim());
+   376→    process.kill(pid, 0); // throws when not alive
+   377→    return true;
+   378→  } catch {
+   379→    return false;
+   380→  }
+   381→}
+   382→
+   383→/** Spawn the resumable runner for a book as a detached process (single-instance safe). */
+   384→export function startBookRunner(bookId: string): { started: boolean; message: string } {
+   385→  const def = BOOKS[bookId];
+   386→  if (!def) return { started: false, message: `unknown book: ${bookId}` };
+   387→  if (isRunnerRunning(bookId)) {
+   388→    const pid = Number(readFileSync(join("/tmp", `novel-${bookId}.pid`), "utf8").trim());
+   389→    return { started: false, message: `Runner already active (pid ${pid}).` };
+   390→  }
+   391→  const state = loadState(bookId);
+   392→  if (state?.phase === "done") {
+   393→    return { started: false, message: "Book already complete." };
+   394→  }
+   395→  const logPath = join("/tmp", "novel-run.log");
+   396→  const out = openSync(logPath, "a");
+   397→  const child = spawn("bun", ["scripts/run-novel.ts", bookId], {
+   398→    cwd: ROOT,
+   399→    stdio: ["ignore", out, out],
+   400→    detached: true,
+   401→    env: process.env,
+   402→  });
+   403→  child.unref();
+   404→  writeFileSync(join("/tmp", `novel-${bookId}.pid`), String(child.pid));
+   405→  return { started: true, message: `Book Forge started (pid ${child.pid}).` };
+   406→}
+   407→
+   408→// ---------------------------------------------------------------------------
+   409→// Pipeline stages
+   410→// ---------------------------------------------------------------------------
+   411→
+   412→function chapterFile(bookId: string, n: number): string {
+   413→  return join(bookDir(bookId), "manuscript", `ch${String(n).padStart(3, "0")}.md`);
+   414→}
+   415→
+   416→export function readChapter(bookId: string, n: number): string | null {
+   417→  const p = chapterFile(bookId, n);
+   418→  return existsSync(p) ? readFileSync(p, "utf8") : null;
+   419→}
+   420→
+   421→async function generateOutlinePart(def: BookDef, part: PartDef): Promise<void> {
+   422→  const dir = bookDir(def.id);
+   423→  const outlinePath = join(dir, "outline.json");
+   424→  const outline = existsSync(outlinePath)
+   425→    ? (JSON.parse(readFileSync(outlinePath, "utf8")) as Record<string, unknown>)
+   426→    : {};
+   427→
+   428→  if (Array.isArray(outline[String(part.index)])) return; // already done
+   429→
+   430→  const prompt = `You are the story architect for the novel "${def.title}".
+   431→
+   432→STORY BIBLE (ground truth):
+   433→${def.bible}
+   434→
+   435→PART ${part.index} OF 10 — "${part.name}" (chapters ${part.range[0]}-${part.range[1]}):
+   436→${part.synopsis}
+   437→The part opens from this state: ${part.openingBeat}
+   438→The part must close on this state: ${part.closingBeat}
+   439→
+   440→Expand this part into EXACTLY 10 chapter briefs, one per chapter (${part.range[0]} through ${part.range[1]}).
+   441→Each chapter needs: a short evocative title, a 2-4 sentence brief describing the concrete events of that chapter (who, where, what happens, what changes), and a single-sentence HOOK — the exact beat the chapter's final line must land. Hooks must escalate; the final chapter's hook must land the part's closing beat verbatim in spirit.
+   442→
+   443→Respond with ONLY a JSON array (no markdown fences, no commentary) of 10 objects:
+   444→[{"n": <chapter number>, "title": "...", "brief": "...", "hook": "..."}]`;
+   445→
+   446→  const raw = await callLLM(
+   447→    [
+   448→      { role: "system", content: "You are a rigorous story architect who outputs only valid JSON." },
+   449→      { role: "user", content: prompt },
+   450→    ],
+   451→    4096
+   452→  );
+   453→
+   454→  const jsonText = raw.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/i, "").trim();
+   455→  const chapters = JSON.parse(jsonText) as Array<{ n: number; title: string; brief: string; hook: string }>;
+   456→  if (!Array.isArray(chapters) || chapters.length !== 10) {
+   457→    throw new Error(`outline part ${part.index}: expected 10 briefs, got ${chapters?.length}`);
+   458→  }
+   459→  outline[String(part.index)] = chapters;
+   460→  writeFileSync(outlinePath, JSON.stringify(outline, null, 2));
+   461→  log(`[outline] part ${part.index} (${part.name}) — 10 briefs`);
+   462→}
+   463→
+   464→function previousChapterTail(def: BookDef, state: BookState, n: number): string {
+   465→  if (n > 1) {
+   466→    const prev = readChapter(def.id, n - 1);
+   467→    if (prev) {
+   468→      const body = prev.split("\n").slice(1).join("\n").trim(); // drop title line
+   469→      return `CONTINUITY — the previous chapter (Chapter ${n - 1}) ended with these final words. Your chapter must follow them seamlessly in time and mood:\n"""\n${clipText(body, 1600)}\n"""`;
+   470→    }
+   471→  }
+   472→  const partIdx = Math.ceil(n / 10);
+   473→  const part = def.parts[partIdx - 1];
+   474→  return `CONTINUITY — this chapter OPENS Part ${part.index} ("${part.name}"). The story so far stands at: ${part.openingBeat}`;
+   475→}
+   476→
+   477→async function generateChapter(def: BookDef, state: BookState, n: number): Promise<void> {
+   478→  const partIdx = Math.ceil(n / 10);
+   479→  const part = def.parts[partIdx - 1];
+   480→  const outline = JSON.parse(readFileSync(join(bookDir(def.id), "outline.json"), "utf8")) as Record<
+   481→    string,
+   482→    Array<{ n: number; title: string; brief: string; hook: string }>
+   483→  >;
+   484→  const brief = outline[String(partIdx)].find((c) => c.n === n);
+   485→  if (!brief) throw new Error(`chapter ${n}: no brief found for part ${partIdx}`);
+   486→
+   487→  const cs = state.chapters[n] ?? (state.chapters[n] = { status: "pending", words: 0, attempts: 0 });
+   488→  cs.attempts++;
+   489→
+   490→  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+   491→    {
+   492→      role: "system",
+   493→      content: `You are the novelist writing "${def.title}".\n\n${def.bible}\n\n${STYLE_RULES}`,
+   494→    },
+   495→    {
+   496→      role: "user",
+   497→      content: `PART ${part.index} OF 10 — "${part.name}" (chapters ${part.range[0]}-${part.range[1]}):
+   498→${part.synopsis}
+   499→
+   500→CHAPTER ${n} OF 100 — "${brief.title}"
+   501→${brief.brief}
+   502→The chapter must END on this hook: ${brief.hook}
+   503→
+   504→${previousChapterTail(def, state, n)}
+   505→
+   506→Write the complete chapter now, 2,100-2,300 words. First line: "Chapter ${n} — ${brief.title}" then the prose.`,
+   507→    },
+   508→  ];
+   509→
+   510→  let text = await callLLM(messages, 4096);
+   511→  let words = countWords(text);
+   512→
+   513→  // Continuation fill if the model came back short.
+   514→  if (words < 1900) {
+   515→    log(`[ch${n}] short (${words} words) — requesting continuation`);
+   516→    const fill = await callLLM(
+   517→      [
+   518→        ...messages,
+   519→        { role: "assistant", content: text },
+   520→        {
+   521→          role: "user",
+   522→          content: `The chapter above is only ${words} words and must reach 2,100-2,300. Continue it EXACTLY from its final sentence (do not repeat, do not summarize, do not restart). Write roughly ${2300 - words} more words of the same scene or its continuation, and make sure the chapter's final line lands the required hook: ${brief.hook}. Output ONLY the continuation prose.`,
+   523→        },
+   524→      ],
+   525→      2048
+   526→    );
+   527→    text = `${text.trim()}\n${fill.trim()}`;
+   528→    words = countWords(text);
+   529→  }
+   530→
+   531→  if (words < 1600) throw new Error(`chapter ${n}: too short after continuation (${words} words)`);
+   532→
+   533→  mkdirSync(join(bookDir(def.id), "manuscript"), { recursive: true });
+   534→  writeFileSync(chapterFile(def.id, n), text.trim() + "\n");
+   535→  cs.status = "done";
+   536→  cs.words = words;
+   537→  cs.title = brief.title;
+   538→  state.totalWords += words - (state.chapters[n]?.words && cs.status === "done" ? state.chapters[n].words : 0);
+   539→  state.totalWords = Object.values(state.chapters)
+   540→    .filter((c) => c.status === "done")
+   541→    .reduce((a, c) => a + c.words, 0);
+   542→  state.chaptersDone = Object.values(state.chapters).filter((c) => c.status === "done").length;
+   543→  saveState(state);
+   544→  log(`[ch${n}] done — ${words} words (total ${state.totalWords})`);
+   545→}
+   546→
+   547→// ---------------------------------------------------------------------------
+   548→// Runner
+   549→// ---------------------------------------------------------------------------
+   550→
+   551→async function runBlock(def: BookDef, state: BookState, partIdx: number): Promise<void> {
+   552→  const part = def.parts[partIdx - 1];
+   553→  for (let n = part.range[0]; n <= part.range[1]; n++) {
+   554→    const cs = state.chapters[n];
+   555→    if (cs?.status === "done") continue; // resumable
+   556→    // Rate-limit errors no longer reach this catch (callLLM waits them out forever),
+   557→    // so a failure here is a genuine generation problem. Retry the SAME chapter up
+   558→    // to 3 times, then defer — a later pass re-picks it (everything is checkpointed).
+   559→    let strikes = 0;
+   560→    while (state.chapters[n]?.status !== "done") {
+   561→      try {
+   562→        await generateChapter(def, state, n);
+   563→        break;
+   564→      } catch (err) {
+   565→        strikes++;
+   566→        const msg = `chapter ${n}: ${err instanceof Error ? err.message : String(err)}`;
+   567→        state.errors.push(msg);
+   568→        state.chapters[n] = {
+   569→          status: "failed",
+   570→          words: 0,
+   571→          attempts: (state.chapters[n]?.attempts ?? 0) + 1,
+   572→        };
+   573→        saveState(state);
+   574→        log(`[ch${n}] FAILED (strike ${strikes}/3) — ${msg}`);
+   575→        if (strikes >= 3) {
+   576→          log(`[ch${n}] deferred to a later pass`);
+   577→          break;
+   578→        }
+   579→        await sleep(60_000);
+   580→      }
+   581→    }
+   582→  }
+   583→}
+   584→
+   585→/** Run the full book: outline (parallel) then 10 parallel block-workers. */
+   586→export async function runBook(bookId: string, forceRestart = false): Promise<BookState> {
+   587→  const def = BOOKS[bookId];
+   588→  if (!def) throw new Error(`unknown book: ${bookId}`);
+   589→
+   590→  mkdirSync(bookDir(bookId), { recursive: true });
+   591→  mkdirSync(join(bookDir(bookId), "manuscript"), { recursive: true });
+   592→
+   593→  let state = loadState(bookId);
+   594→  if (!state || forceRestart) {
+   595→    state = {
+   596→      bookId,
+   597→      title: def.title,
+   598→      phase: "bible",
+   599→      chapters: {},
+   600→      totalWords: 0,
+   601→      chaptersDone: 0,
+   602→      errors: [],
+   603→      startedAt: new Date().toISOString(),
+   604→      updatedAt: new Date().toISOString(),
+   605→    };
+   606→    for (let n = 1; n <= 100; n++) state.chapters[n] = { status: "pending", words: 0, attempts: 0 };
+   607→    writeFileSync(join(bookDir(bookId), "bible.md"), def.bible);
+   608→    saveState(state);
+   609→  }
+   610→
+   611→  if (state.phase === "done") {
+   612→    log(`[run] book ${bookId} already complete`);
+   613→    return state;
+   614→  }
+   615→
+   616→  log(`[run] Book Forge starting "${def.title}" (100 chapters × ~2,200 words)`);
+   617→  state.phase = "outline";
+   618→  saveState(state);
+   619→
+   620→  // 1) Outlines — sequential and patient (quota-friendly), resumable per part.
+   621→  for (const p of def.parts) {
+   622→    let ok = false;
+   623→    for (let attempt = 1; attempt <= 8 && !ok; attempt++) {
+   624→      try {
+   625→        await generateOutlinePart(def, p);
+   626→        ok = true;
+   627→      } catch (err) {
+   628→        log(
+   629→          `[outline] part ${p.index} attempt ${attempt} failed: ${
+   630→            err instanceof Error ? err.message : String(err)
+   631→          }`
+   632→        );
+   633→        await sleep(15_000 * attempt);
+   634→      }
+   635→    }
+   636→    if (!ok) throw new Error(`outline part ${p.index} failed after 8 attempts`);
+   637→  }
+   638→
+   639→  state.phase = "chapters";
+   640→  saveState(state);
+   641→
+   642→  // 2) Chapters — blocks run in parallel for continuity pipelining; the global
+   643→  //    call gate serializes actual LLM traffic, so quota is respected automatically.
+   644→  await Promise.all(def.parts.map((p) => runBlock(def, state!, p.index)));
+   645→
+   646→  // 3) Final tally.
+   647→  const failed = Object.entries(state.chapters)
+   648→    .filter(([, c]) => c.status !== "done")
+   649→    .map(([n]) => Number(n));
+   650→  state.chaptersDone = Object.values(state.chapters).filter((c) => c.status === "done").length;
+   651→  state.totalWords = Object.values(state.chapters)
+   652→    .filter((c) => c.status === "done")
+   653→    .reduce((a, c) => a + c.words, 0);
+   654→  state.phase = failed.length === 0 ? "done" : "chapters"; // resumable if gaps remain
+   655→  saveState(state);
+   656→  log(`[run] Book Forge finished pass — ${state.chaptersDone}/100 chapters, ${state.totalWords} words, failed: [${failed.join(", ")}]`);
+   657→
+   658→  // Auto-deliver: the moment the book is complete, assemble .md/.txt/.pdf so the
+   659→  // final output never depends on an external nudge.
+   660→  if (state.phase === "done") {
+   661→    try {
+   662→      log("[run] assembling deliverables (.md/.txt/.pdf)…");
+   663→      execFileSync("python3", ["scripts/assemble-novel.py", bookId], {
+   664→        cwd: ROOT,
+   665→        timeout: 300_000,
+   666→      });
+   667→      log("[run] deliverables assembled to public/deliverables/");
+   668→    } catch (err) {
+   669→      log(
+   670→        `[run] auto-assembly failed (can be run manually): ${
+   671→          err instanceof Error ? err.message : String(err)
+   672→        }`
+   673→      );
+   674→    }
+   675→  }
+   676→
+   677→  return state;
+   678→}
+   679→

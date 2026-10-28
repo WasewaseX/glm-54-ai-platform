@@ -8,7 +8,7 @@ import {
   isImageSize,
   type SdkChatMessage,
 } from "@/lib/ai";
-import { loadState, startBookRunner, isRunnerRunning, BOOKS } from "@/lib/novel-engine";
+import { createBook, getBookDef, isRunnerRunning, listBooks, loadState, startBookRunner } from "@/lib/novel-engine";
 import type {
   AgentStreamEvent,
   ArtifactKind,
@@ -81,13 +81,17 @@ Rules: 2-6 steps, each under 80 characters, concrete and ordered.
 <tool>{"name":"page_reader","arguments":{"url":"https://example.com/page"}}</tool>
 <tool>{"name":"generate_image","arguments":{"prompt":"vivid image description","size":"1024x1024"}}</tool>
 <tool>{"name":"run_code","arguments":{"code":"...full program...","language":"typescript","tests":"...optional bun:test file..."}}</tool>
-<tool>{"name":"book_forge","arguments":{"action":"status","bookId":"the-dreaming-vat"}}</tool>
+<tool>{"name":"book_forge","arguments":{"action":"create","premise":"the user's story premise"}}</tool>
 Rules:
 - web_search: current events, facts you are unsure of, or when the user asks to research. num is 1-10 (default 5).
 - page_reader: fetch the full text of a specific URL (often a web_search result).
 - generate_image: create an illustration on request or when it clearly adds value.
 - run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
-- book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part outline → parallel block-workers, checkpointed per chapter). For any request to write a novel/webnovel/book of many chapters (e.g. "write 100 chapters"), call book_forge with action "status" first, and action "start" to launch or resume the runner. ALWAYS report the tool's real numbers (phase, chapters done, words) and the deliverable links it returns — never claim you wrote the chapters yourself in one reply, and never invent progress numbers.
+- book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed per chapter). Actions:
+  • {"action":"create","premise":"<the story premise>","title":"<optional override>"} — forges a brand-new ORIGINAL book and immediately starts writing it in the background. YOU MUST call this IN THIS TURN whenever the user asks to write/start a novel, webnovel, or book of many chapters — including when a previous book exists or is complete and the user asks for a NEW one. NEVER reply with only an acknowledgment like \"I understand you'd like me to create…\" — emitting words instead of this tool call is a failure. After the call, report the tool's real bookId, title and phase.
+  • {"action":"status","bookId":"<bookId>"} — real progress numbers for a book.
+  • {"action":"start","bookId":"<bookId>"} — (re)launch a book's checkpointed runner.
+  ALWAYS report the tool's real numbers (bookId, phase, chapters done, words) and deliverable links it returns — never claim you wrote the chapters yourself in one reply, and never invent progress numbers. Chapters are written in the background over hours; say exactly that and point to the live progress on the welcome screen.
 - After tool blocks stop generating. The environment replies with <tool_results> and you continue.
 
 3) Artifact — a file the user can open and download in the side panel. Write the FULL content between the tags, never a placeholder:
@@ -461,10 +465,60 @@ async function executeTool(
     }
 
     case "book_forge": {
-      const action = args.action === "start" ? "start" : "status";
-      const requested = typeof args.bookId === "string" ? args.bookId : "the-dreaming-vat";
-      const bookId = BOOKS[requested] ? requested : "the-dreaming-vat";
-      const def = BOOKS[bookId];
+      const rawAction = typeof args.action === "string" ? args.action : "status";
+      const action = ["create", "start", "status"].includes(rawAction) ? rawAction : "status";
+
+      // --- create: forge a brand-new book from a premise, then launch its runner ---
+      if (action === "create") {
+        const premise = typeof args.premise === "string" ? args.premise.trim() : "";
+        const title = typeof args.title === "string" && args.title.trim() ? args.title.trim() : undefined;
+        if (premise.length < 20) {
+          return {
+            ok: false,
+            resultText:
+              'book_forge create failed: "premise" is required — the story premise as a sentence or two. Example: {"action":"create","premise":"a marine-biology graduate student discovers her lab bioreactor is dreaming"}. Retry now with the user\'s premise.',
+            detail: {},
+          };
+        }
+        const def = await createBook({ premise, title });
+        const launched = startBookRunner(def.id);
+        const state = loadState(def.id);
+        const lines = [
+          `Book Forge created a NEW original book and launched its runner:`,
+          `- bookId: ${def.id}`,
+          `- title: "${def.title}"`,
+          `- logline: ${def.logline}`,
+          `- 10-part arc locked; runner: ${launched.started ? "WRITING NOW (pid noted in message)" : launched.message}`,
+          `- what happens next, automatically and checkpointed: outline briefs → 100 chapters × ~2,200 words, several hours of background writing`,
+          `- live progress: the Book Forge card on the welcome screen (currently phase=${state?.phase ?? "bible"})`,
+          `- when phase=done: /deliverables/${def.id}.md and /deliverables/${def.id}.pdf appear automatically`,
+          "",
+          "Report the real bookId and title to the user. State plainly that chapters are being written in the background right now (NOT in this reply) and progress is visible live on the welcome screen.",
+        ];
+        return {
+          ok: true,
+          resultText: clip(lines.join("\n"), TOOL_RESULT_CHAR_BUDGET),
+          detail: { action, bookId: def.id, title: def.title, phase: state?.phase ?? "bible" },
+        };
+      }
+
+      // --- status / start: operate on a known book ---
+      const requested =
+        typeof args.bookId === "string" && args.bookId.trim()
+          ? args.bookId.trim()
+          : listBooks()[0]?.bookId ?? "";
+      const def = getBookDef(requested);
+      if (!def) {
+        const known = listBooks().map(
+          (b) => `- ${b.bookId} — "${b.title}" (${b.phase}, ${b.chaptersDone}/100 chapters)`
+        );
+        return {
+          ok: true,
+          resultText: `Unknown bookId "${requested}". Known books:\n${known.join("\n") || "(none yet)"}\n\nRe-call with one of these bookIds — or use action "create" with a premise to forge a NEW book. If the user asked for a NEW novel, create it now; do not just describe it.`,
+          detail: { unknownBookId: requested },
+        };
+      }
+      const bookId = def.id;
 
       let startMessage = "";
       if (action === "start") {
@@ -497,7 +551,7 @@ async function executeTool(
       if (startMessage) lines.push(`- start action result: ${startMessage}`);
       lines.push(
         "",
-        "Report these REAL numbers to the user verbatim. If phase=done, congratulate and link the deliverables. If still writing, explain the run is checkpointed and finishes automatically; the welcome screen shows live progress."
+        "Report these REAL numbers to the user verbatim. If phase=done, congratulate and link the deliverables. If still writing, explain the run is checkpointed and finishes automatically; the welcome screen shows live progress. If the user wanted a NEW book (not this one), call book_forge with action=\"create\" and their premise NOW."
       );
 
       return {
