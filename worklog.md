@@ -670,3 +670,16 @@ Work Log:
 
 Stage Summary:
 - Steady-state loop: reboot every ~15min + cron restart per cycle = recovery working, but 429 storm is the bottleneck for chapter progress
+
+---
+Task ID: cron-479831-1833
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 18:33) — fifth reboot cycle
+
+Work Log:
+- Reboot cycle again: runner 1250 killed, /tmp + forge.log wiped; data intact (68/100, 159,857w; vat done/fresh)
+- RESTARTED runner per protocol; resumed 68/100; dev 200; no extender
+- 429 storm ongoing since ~08:44 UTC — quota still blocking chapter progress
+
+Stage Summary:
+- Steady-state: 5th consecutive lossless restart
