@@ -560,3 +560,15 @@ Stage Summary:
 - DEV SERVER RESTART RULE (updates old "never restart" rule): restart ONLY when :3000 is actually dead (curl fails) using the setsid command above; never restart while serving. Runner 1867 is detached and survives restarts (proven twice)
 - P1 (next calm moment): startBookRunner should check isRunnerRunning(pid) before running inline — currently a user retry of the novel request can spawn parallel ghost runBooks that crash the dev server. Cron rule "never modify engine code" stands for supervision cycles; do this as a deliberate fix, not mid-incident
 - If user asks again about the novel request: DO NOT resubmit — the-bioreactor-s-dream IS that request, at 68/100 and climbing
+
+---
+Task ID: cron-479831-1648
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 16:48)
+
+Work Log:
+- Sweep: bioreactor 68/100 (159,857w), runner 1867 ALIVE, stateAge 442s; vat done/FRESH, no extender; dev server http 200
+- Runner in heavy 429 backoff (retry #4, waiting 244s) — gateway still rough; sole writer now, infinite-retry will carry it through. No action per rules
+
+Stage Summary:
+- Holding pattern; next cycle expect ~70+/100 if gateway eases. Cron stays alive
