@@ -19,7 +19,7 @@ import {
 import { estimateTokens, retrieveChunks } from "@/lib/rag";
 import { requireUser } from "@/lib/auth";
 import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
-import { createBook, loadState, startBookRunner } from "@/lib/novel-engine";
+import { forgeOrExisting, type ForgeOutcome } from "@/lib/novel-engine";
 import { detectNovelIntent } from "@/lib/novel-intent";
 import type { ChatStreamEvent, WebSearchResult } from "@/lib/types";
 import type { Conversation } from "@prisma/client";
@@ -40,6 +40,40 @@ const BodySchema = z.object({
 
 function sseFrame(event: ChatStreamEvent): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`);
+}
+
+/** Ground-truth instruction block for the model, tailored to the forge outcome. */
+function forgeSystemNote(outcome: ForgeOutcome, forceNew: boolean): string {
+  const { def, state, runner, kind } = outcome;
+  const facts = `bookId=${def.id}; title="${def.title}"; logline=${def.logline}; chapters=${state?.chaptersDone ?? 0}/100; words=${(state?.totalWords ?? 0).toLocaleString()}; phase=${state?.phase ?? "bible"}; runner=${runner.message}`;
+  const tail =
+    " Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/" +
+    def.id +
+    ".md and /deliverables/" +
+    def.id +
+    ".pdf.";
+  if (kind === "created") {
+    return (
+      `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: ${facts}.${tail} ` +
+      `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT claim the book is finished.</system_note>`
+    );
+  }
+  if (kind === "complete") {
+    return (
+      `<system_note> Book Forge dedup: this premise is ALREADY a finished novel, so no new book was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+      `In your reply: tell the user this exact novel is already complete, give the real title and the deliverable links, and point to the Library card. If they want a brand-NEW novel from the same premise, tell them to say "write a new one" and Book Forge will forge a fresh book. DO NOT pretend you just started a new book.</system_note>`
+    );
+  }
+  if (kind === "resumed") {
+    return (
+      `<system_note> Book Forge dedup: this premise is ALREADY a book in this library, and its stalled writer has just been RESUMED — no duplicate was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+      `In your reply: tell the user this novel already existed and is now writing again from its checkpoint, give the real title and current progress, and point to the live progress card. DO NOT claim you started a brand-new book.</system_note>`
+    );
+  }
+  return (
+    `<system_note> Book Forge dedup: this premise is ALREADY a live project in the library${forceNew ? "" : " (the user's message looked like a retry of the same request), so no new book was created and no second writer was launched"}. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+    `In your reply: tell the user this novel is already being written right now, give the real title and current chapter/word progress, and point to the live progress card. DO NOT ask permission. DO NOT create another book for this premise. If the user explicitly wants a DIFFERENT new novel, they should say "write a new one" with the premise.</system_note>`
+  );
 }
 
 export async function POST(req: Request) {
@@ -244,7 +278,8 @@ export async function POST(req: Request) {
 
         // ----- Deterministic Book Forge intent (plain chat mode) -----
         // The platform ACTS on novel-scale requests even without agent mode:
-        // Book Forge creates the book and starts writing before the model speaks.
+        // Book Forge dedups against existing books, creates + starts writing
+        // when genuinely new, and resumes a stalled runner instead of duplicating.
         let forgeNote = "";
         try {
           const earlierUserTexts = historyRows
@@ -256,21 +291,16 @@ export async function POST(req: Request) {
               type: "tool",
               tool: "book_forge",
               status: "start",
-              message: "Book Forge — forging a new novel…",
+              message: "Book Forge — checking the library, then forging…",
             });
-            const def = await createBook({ premise: intent.premise });
-            const launched = startBookRunner(def.id);
-            const state = loadState(def.id);
-            const runnerMsg = launched.started ? "writing now" : launched.message;
+            const outcome = await forgeOrExisting({ premise: intent.premise, forceNew: intent.forceNew });
             send({
               type: "tool",
               tool: "book_forge",
               status: "done",
-              message: `Book Forge created "${def.title}" (bookId ${def.id}) — runner ${runnerMsg}`,
+              message: `Book Forge: ${outcome.note}`,
             });
-            forgeNote =
-              `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: bookId=${def.id}; title="${def.title}"; logline=${def.logline}; runner=${runnerMsg}; phase=${state?.phase ?? "bible"}. 100 chapters × ~2,200 words are being written in the background over the coming hours (checkpointed after every chapter, resumable). Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/${def.id}.md and /deliverables/${def.id}.pdf. ` +
-              `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT claim the book is finished.</system_note>`;
+            forgeNote = forgeSystemNote(outcome, intent.forceNew);
           }
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

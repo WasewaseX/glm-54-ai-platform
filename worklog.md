@@ -542,3 +542,21 @@ Stage Summary:
   1. When extend-chapters (pid 3333) exits and ch97 >= 2200: run `python3 scripts/assemble-novel.py the-dreaming-vat`, verify .md/.pdf exist
   2. When the-bioreactor-s-dream phase=done: if md missing run `python3 scripts/assemble-novel.py the-bioreactor-s-dream`; ALSO it has 17 short chapters -> after assembly, POST /api/novel/extend {"bookId":"the-bioreactor-s-dream","target":2200} (server-spawned, survives), then re-assemble when extender exits and md is fresh
   3. Only DELETE cron 479831 when: no runner, no extender, both books phase=done, both deliverables fresh
+
+---
+Task ID: cron-479831-1633 + user 502 incident response
+Agent: main (cron supervision + incident repair)
+Task: Supervision cycle; user reported "Generation failed - Stream request failed (502)" after retrying the novel request at 08:18
+
+Work Log:
+- User's 08:18 chat retry triggered the deterministic forge path: 3 parallel "Book Forge starting" runs logged 08:21-08:22 (new "The Coral Consciousness" + "The Bioreactor's Dream" x2 inline ghost runBooks) while real runner pid 1867 was alive — gateway quota got saturated, user saw 502
+- ~08:33 the dev server processes (3 instances) all died (likely unhandled rejection from the ghost runs / memory cull); ghost runs died with them, port 3000 unowned, UI down
+- Verified ghosts caused ZERO data damage: ch1/11/21/31/41/51 all retain original words (2475/2404/2222/2365/2413/2738, mtimes 07:19-07:21); books/ dir clean (no coral dir); /tmp/my-project is platform driver snapshot area — left untouched
+- Real runner 1867 (detached, cwd /home/z/my-project) unaffected: survived, moved to second pass (ch88 done 08:42, total 159,857), only writer now so quota is all its
+- RESTARTED dev server: cd /home/z/my-project && setsid nohup bun run dev > /tmp/dev-server.log 2>&1 & — HTTP 200 in 8s; /api/novel/books serves both books correctly
+- the-dreaming-vat: DONE + deliverables FRESH (ch97 extended to 2,829 words in md+state, pdf 1.5MB) — extender exited cleanly, nothing left for this book
+
+Stage Summary:
+- DEV SERVER RESTART RULE (updates old "never restart" rule): restart ONLY when :3000 is actually dead (curl fails) using the setsid command above; never restart while serving. Runner 1867 is detached and survives restarts (proven twice)
+- P1 (next calm moment): startBookRunner should check isRunnerRunning(pid) before running inline — currently a user retry of the novel request can spawn parallel ghost runBooks that crash the dev server. Cron rule "never modify engine code" stands for supervision cycles; do this as a deliberate fix, not mid-incident
+- If user asks again about the novel request: DO NOT resubmit — the-bioreactor-s-dream IS that request, at 68/100 and climbing

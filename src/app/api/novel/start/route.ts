@@ -1,16 +1,17 @@
 import "server-only";
-import { createBook, getBookDef, loadState, startBookRunner } from "@/lib/novel-engine";
+import { forgeOrExisting, getBookDef, loadState, startBookRunner } from "@/lib/novel-engine";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
  * POST /api/novel/start
- *   {"premise": "...", "title": "optional"} → forge a NEW book and start writing it
+ *   {"premise": "...", "title": "optional"} → dedup against the library, then
+ *                                             forge a NEW book and start writing it
  *   {"bookId": "..."}                       → (re)launch a known book's checkpointed runner
  */
 export async function POST(req: Request) {
-  let body: { bookId?: unknown; premise?: unknown; title?: unknown } = {};
+  let body: { bookId?: unknown; premise?: unknown; title?: unknown; forceNew?: unknown } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -19,12 +20,25 @@ export async function POST(req: Request) {
 
   const premise = typeof body.premise === "string" ? body.premise : "";
   const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : undefined;
+  const forceNew = body.forceNew === true;
   let bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
 
   try {
     if (premise) {
-      const def = await createBook({ premise, title });
-      bookId = def.id;
+      // Dedup: a re-sent premise returns the existing book instead of forging
+      // a duplicate (unless the caller explicitly sets forceNew: true).
+      const outcome = await forgeOrExisting({ premise, title, forceNew });
+      const state = loadState(outcome.def.id);
+      return Response.json({
+        ok: true,
+        bookId: outcome.def.id,
+        title: outcome.def.title,
+        message: outcome.note,
+        forgeKind: outcome.kind,
+        phase: state?.phase ?? "idle",
+        chaptersDone: state?.chaptersDone ?? 0,
+        totalWords: state?.totalWords ?? 0,
+      });
     }
     if (!bookId || !getBookDef(bookId)) {
       return Response.json(

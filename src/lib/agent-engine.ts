@@ -8,7 +8,14 @@ import {
   isImageSize,
   type SdkChatMessage,
 } from "@/lib/ai";
-import { createBook, getBookDef, isRunnerRunning, listBooks, loadState, startBookRunner } from "@/lib/novel-engine";
+import {
+  forgeOrExisting,
+  getBookDef,
+  isRunnerRunning,
+  listBooks,
+  loadState,
+  startBookRunner,
+} from "@/lib/novel-engine";
 import { detectNovelIntent } from "@/lib/novel-intent";
 import type {
   AgentStreamEvent,
@@ -89,7 +96,7 @@ Rules:
 - generate_image: create an illustration on request or when it clearly adds value.
 - run_code: EXECUTE TypeScript/JavaScript in a sandbox and get real stdout/stderr/exit code. Whenever you write non-trivial code, RUN it first (with tests when possible) and iterate on the real output until it passes — never present unverified code as working. \"tests\" is an optional bun:test file that may import from \"./main\".
 - book_forge: the platform's REAL long-form novel pipeline (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed per chapter). Actions:
-  • {"action":"create","premise":"<the story premise>","title":"<optional override>"} — forges a brand-new ORIGINAL book and immediately starts writing it in the background. Call this IN THIS TURN whenever the user asks to write/start a novel, webnovel, or book of many chapters and no <system_note> below already reports that the platform did it — including when a previous book exists or is complete and the user asks for a NEW one. NEVER reply with only an acknowledgment like \"I understand you'd like me to create…\" and NEVER ask permission first — emitting words instead of this tool call is a failure. After the call, report the tool's real bookId, title and phase.
+  • {"action":"create","premise":"<the story premise>","title":"<optional override>","forceNew":true} — forges a brand-new ORIGINAL book and immediately starts writing it in the background. Call this IN THIS TURN whenever the user asks to write/start a novel, webnovel, or book of many chapters and no <system_note> below already reports that the platform did it — including when a previous book exists or is complete and the user asks for a NEW one. NEVER reply with only an acknowledgment like \"I understand you'd like me to create…\" and NEVER ask permission first — emitting words instead of this tool call is a failure. After the call, report the tool's real bookId, title and phase. Dedup: if the premise already exists in the library the tool returns THAT book instead of a duplicate (unless forceNew=true); when it does and the user truly wants a different new novel, confirm with the user, then re-call with forceNew=true.
   • {"action":"status","bookId":"<bookId>"} — real progress numbers for a book.
   • {"action":"start","bookId":"<bookId>"} — (re)launch a book's checkpointed runner.
   If a <system_note> reports Book Forge already created a book for this request, treat it as ground truth: report the real bookId/title/phase and do NOT call create again. ALWAYS report the tools' real numbers — never claim you wrote the chapters yourself in one reply, never invent progress numbers, never say a background book is finished. Chapters are written over hours; say exactly that and point to the live progress on the welcome screen.
@@ -481,25 +488,60 @@ async function executeTool(
             detail: {},
           };
         }
-        const def = await createBook({ premise, title });
-        const launched = startBookRunner(def.id);
-        const state = loadState(def.id);
-        const lines = [
-          `Book Forge created a NEW original book and launched its runner:`,
-          `- bookId: ${def.id}`,
-          `- title: "${def.title}"`,
-          `- logline: ${def.logline}`,
-          `- 10-part arc locked; runner: ${launched.started ? "WRITING NOW (pid noted in message)" : launched.message}`,
-          `- what happens next, automatically and checkpointed: outline briefs → 100 chapters × ~2,200 words, several hours of background writing`,
-          `- live progress: the Book Forge card on the welcome screen (currently phase=${state?.phase ?? "bible"})`,
-          `- when phase=done: /deliverables/${def.id}.md and /deliverables/${def.id}.pdf appear automatically`,
-          "",
-          "Report the real bookId and title to the user. State plainly that chapters are being written in the background right now (NOT in this reply) and progress is visible live on the welcome screen.",
-        ];
+        const forceNew = args.forceNew === true;
+        // Dedup: a retried/re-sent premise must return the EXISTING book, not
+        // forge a duplicate (three identical runners once saturated the gateway).
+        const outcome = await forgeOrExisting({ premise, title, forceNew });
+        const { def, state } = outcome;
+        let lines: string[];
+        if (outcome.kind === "created") {
+          lines = [
+            `Book Forge created a NEW original book and launched its runner:`,
+            `- bookId: ${def.id}`,
+            `- title: "${def.title}"`,
+            `- logline: ${def.logline}`,
+            `- 10-part arc locked; runner: ${outcome.runner.started ? "WRITING NOW (pid noted in message)" : outcome.runner.message}`,
+            `- what happens next, automatically and checkpointed: outline briefs → 100 chapters × ~2,200 words, several hours of background writing`,
+            `- live progress: the Book Forge card on the welcome screen (currently phase=${state?.phase ?? "bible"})`,
+            `- when phase=done: /deliverables/${def.id}.md and /deliverables/${def.id}.pdf appear automatically`,
+            "",
+            "Report the real bookId and title to the user. State plainly that chapters are being written in the background right now (NOT in this reply) and progress is visible live on the welcome screen.",
+          ];
+        } else if (outcome.kind === "complete") {
+          lines = [
+            `Book Forge dedup: this premise is ALREADY a finished novel — no new book was created:`,
+            `- bookId: ${def.id}`,
+            `- title: "${def.title}"`,
+            `- progress: ${state?.chaptersDone ?? 0}/100 chapters, ${(state?.totalWords ?? 0).toLocaleString()} words, phase=${state?.phase}`,
+            `- deliverables: /deliverables/${def.id}.md and /deliverables/${def.id}.pdf`,
+            "",
+            `Tell the user this novel already exists and is complete; link the deliverables. If they explicitly want a brand-NEW novel from the same premise, ask them to confirm with "write a new one" — then re-call this tool with forceNew=true.`,
+          ];
+        } else if (outcome.kind === "resumed") {
+          lines = [
+            `Book Forge dedup: this premise is ALREADY a book, and its stalled writer was just RESUMED — no duplicate was created:`,
+            `- bookId: ${def.id}`,
+            `- title: "${def.title}"`,
+            `- progress: ${state?.chaptersDone ?? 0}/100 chapters, ${(state?.totalWords ?? 0).toLocaleString()} words`,
+            `- runner: ${outcome.runner.message}`,
+            "",
+            `Tell the user this novel already existed and is writing again from its checkpoint. Give the real title and progress.`,
+          ];
+        } else {
+          lines = [
+            `Book Forge dedup: this premise is ALREADY a live project — no new book was created, no second writer launched:`,
+            `- bookId: ${def.id}`,
+            `- title: "${def.title}"`,
+            `- progress: ${state?.chaptersDone ?? 0}/100 chapters, ${(state?.totalWords ?? 0).toLocaleString()} words, phase=${state?.phase}`,
+            `- runner: ${outcome.runner.message}`,
+            "",
+            `Tell the user this novel is already being written right now with the REAL title and progress above; point to the live progress card on the welcome screen. If the user explicitly wants a DIFFERENT new novel, ask them to confirm with "write a new one" — then re-call this tool with forceNew=true.`,
+          ];
+        }
         return {
           ok: true,
           resultText: clip(lines.join("\n"), TOOL_RESULT_CHAR_BUDGET),
-          detail: { action, bookId: def.id, title: def.title, phase: state?.phase ?? "bible" },
+          detail: { action, bookId: def.id, title: def.title, phase: state?.phase ?? "bible", forgeKind: outcome.kind },
         };
       }
 
@@ -692,7 +734,7 @@ export async function runAgent(
           idx: stepIdx++,
           kind: "tool",
           tool: "book_forge",
-          title: "Book Forge — forging a new novel",
+          title: "Book Forge — checking the library, then forging",
           status: "running",
         },
       });
@@ -707,15 +749,24 @@ export async function runAgent(
       });
       toolsUsed.add("book_forge");
       try {
-        const def = await createBook({ premise: intent.premise });
-        const launched = startBookRunner(def.id);
-        const state = loadState(def.id);
+        // Dedup: retried/re-sent premises return the EXISTING book instead of
+        // forging duplicates; explicitly-new requests (forceNew) bypass dedup.
+        const outcome = await forgeOrExisting({ premise: intent.premise, forceNew: intent.forceNew });
+        const { def, state } = outcome;
+        const stepTitle =
+          outcome.kind === "created"
+            ? `Book Forge — forged "${def.title}"`
+            : outcome.kind === "complete"
+              ? `Book Forge — already complete: "${def.title}"`
+              : outcome.kind === "resumed"
+                ? `Book Forge — resumed "${def.title}"`
+                : `Book Forge — already writing: "${def.title}"`;
         await db.agentStep.update({
           where: { id: stepRow.id },
           data: {
             status: "done",
-            title: `Book Forge — forged "${def.title}"`,
-            detail: JSON.stringify({ bookId: def.id, title: def.title, runner: launched.message }),
+            title: stepTitle,
+            detail: JSON.stringify({ bookId: def.id, title: def.title, runner: outcome.runner.message, kind: outcome.kind }),
           },
         });
         send({
@@ -724,16 +775,31 @@ export async function runAgent(
           idx: stepRow.idx,
           kind: "tool",
           tool: "book_forge",
-          title: `Book Forge — forged "${def.title}"`,
+          title: stepTitle,
           status: "done",
-          detail: JSON.stringify({ bookId: def.id, title: def.title, runner: launched.message }),
+          detail: JSON.stringify({ bookId: def.id, title: def.title, runner: outcome.runner.message, kind: outcome.kind }),
         });
-        messages.push({
-          role: "user",
-          content:
-            `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: bookId=${def.id}; title="${def.title}"; logline=${def.logline}; runner=${launched.message}; phase=${state?.phase ?? "bible"}. 100 chapters × ~2,200 words are being written in the background over the coming hours (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed after every chapter). Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/${def.id}.md and /deliverables/${def.id}.pdf. ` +
-            `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet, checkpointed, resumable), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT call book_forge create again for this request. DO NOT claim the book is finished.</system_note>`,
-        });
+        const facts = `bookId=${def.id}; title="${def.title}"; logline=${def.logline}; chapters=${state?.chaptersDone ?? 0}/100; words=${(state?.totalWords ?? 0).toLocaleString()}; phase=${state?.phase ?? "bible"}; runner=${outcome.runner.message}`;
+        const tail = ` Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/${def.id}.md and /deliverables/${def.id}.pdf.`;
+        let note: string;
+        if (outcome.kind === "created") {
+          note =
+            `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: ${facts}. 100 chapters × ~2,200 words are being written in the background over the coming hours (story bible → 10-part arc → outline briefs → parallel block-workers, checkpointed after every chapter).${tail} ` +
+            `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet, checkpointed, resumable), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT call book_forge create again for this request. DO NOT claim the book is finished.</system_note>`;
+        } else if (outcome.kind === "complete") {
+          note =
+            `<system_note> Book Forge dedup: this premise is ALREADY a finished novel — no new book was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+            `In your reply: tell the user this exact novel is already complete, give the real title and deliverable links. If they want a brand-NEW novel from the same premise, tell them to say "write a new one" — then call book_forge create with forceNew=true.</system_note>`;
+        } else if (outcome.kind === "resumed") {
+          note =
+            `<system_note> Book Forge dedup: this premise is ALREADY a book, and its stalled writer was just RESUMED — no duplicate was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+            `In your reply: tell the user this novel already existed and is writing again from its checkpoint, with the real title and progress. DO NOT claim you started a brand-new book.</system_note>`;
+        } else {
+          note =
+            `<system_note> Book Forge dedup: this premise is ALREADY a live project — no new book was created and no second writer was launched (the message looked like a retry of the same request). REAL facts — report these, change nothing: ${facts}.${tail} ` +
+            `In your reply: tell the user this novel is already being written right now with the real title and chapter/word progress, and point to the live progress card. DO NOT call book_forge create again for this premise. If the user explicitly wants a DIFFERENT new novel, tell them to say "write a new one" — then call book_forge create with forceNew=true.</system_note>`;
+        }
+        messages.push({ role: "user", content: note });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         await db.agentStep.update({

@@ -581,7 +581,7 @@
     },
     "97": {
       "status": "done",
-      "words": 1969,
+      "words": 2829,
       "attempts": 1,
       "title": "Answer"
     },
@@ -604,7 +604,7 @@
       "title": "Again"
     }
   },
-  "totalWords": 246964,
+  "totalWords": 247824,
   "chaptersDone": 100,
   "errors": [
     "chapter 69: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
@@ -633,5 +633,5 @@
     "chapter 100: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
   ],
   "startedAt": "2026-10-27T09:02:15.468Z",
-  "updatedAt": "2026-10-28T08:18:40.011Z"
+  "updatedAt": "2026-10-28T08:21:32.005Z"
 }

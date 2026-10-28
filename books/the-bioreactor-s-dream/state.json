@@ -105,7 +105,7 @@
     "18": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "19": {
       "status": "pending",
@@ -154,14 +154,15 @@
       "title": "The Midnight Meeting"
     },
     "27": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2458,
+      "attempts": 1,
+      "title": "The Security Breach"
     },
     "28": {
       "status": "pending",
       "words": 0,
-      "attempts": 0
+      "attempts": 1
     },
     "29": {
       "status": "pending",
@@ -498,9 +499,10 @@
       "title": "Tidal Forces"
     },
     "88": {
-      "status": "pending",
-      "words": 0,
-      "attempts": 1
+      "status": "done",
+      "words": 2071,
+      "attempts": 1,
+      "title": "Depth Charges"
     },
     "89": {
       "status": "pending",
@@ -570,9 +572,9 @@
       "attempts": 0
     }
   },
-  "totalWords": 155328,
-  "chaptersDone": 66,
+  "totalWords": 159857,
+  "chaptersDone": 68,
   "errors": [],
   "startedAt": "2026-10-28T07:13:07.002Z",
-  "updatedAt": "2026-10-28T08:18:07.922Z"
+  "updatedAt": "2026-10-28T08:42:48.762Z"
 }

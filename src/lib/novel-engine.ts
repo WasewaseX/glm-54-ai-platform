@@ -32,6 +32,8 @@ export interface BookDef {
   logline: string;
   bible: string;
   parts: PartDef[];
+  /** The raw user premise this book was forged from — used for dedup on retries. */
+  originPremise?: string;
 }
 
 export interface PartDef {
@@ -409,6 +411,7 @@ Return ONLY a valid JSON array of exactly 10 objects (no markdown fences):
     logline,
     bible,
     parts,
+    originPremise: premise,
   };
   mkdirSync(bookDir(def.id), { recursive: true });
   writeFileSync(join(bookDir(def.id), "bookdef.json"), JSON.stringify(def, null, 2));
@@ -416,6 +419,135 @@ Return ONLY a valid JSON array of exactly 10 objects (no markdown fences):
   bookDefCache.set(def.id, def);
   log(`[create] forged "${def.title}" as book ${def.id} (bible ${def.bible.length} chars, 10 parts)`);
   return def;
+}
+
+// ---------------------------------------------------------------------------
+// Premise dedup — a retried/re-sent novel request must never forge a duplicate
+// ---------------------------------------------------------------------------
+
+const PREMISE_STOPWORDS = new Set([
+  "a", "an", "the", "and", "or", "but", "of", "in", "on", "at", "to", "for", "with", "from",
+  "her", "his", "their", "its", "my", "our", "your", "who", "that", "this", "is", "are",
+  "was", "were", "be", "been", "discovers", "as", "by", "into",
+  "write", "all", "chapters", "each", "words", "novel", "webnovel", "web", "serialized",
+  "original", "start", "about", "it", "she", "he", "they", "them",
+]);
+
+function premiseTokens(text: string): Set<string> {
+  const toks = text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 3 && !PREMISE_STOPWORDS.has(t));
+  return new Set(toks);
+}
+
+function overlapRatio(a: Set<string>, b: Set<string>): { ratio: number; shared: number } {
+  if (a.size === 0 || b.size === 0) return { ratio: 0, shared: 0 };
+  let shared = 0;
+  for (const t of a) if (b.has(t)) shared++;
+  return { ratio: shared / a.size, shared };
+}
+
+export interface ExistingBookMatch {
+  def: BookDef;
+  score: number;
+  reason: string;
+}
+
+/**
+ * Find an existing book that already covers this premise. Primary signal:
+ * token overlap with the book's stored originPremise (catches re-sent and
+ * retried requests verbatim). Fallback: overlap with title+logline+bible.
+ */
+export function findExistingBookForPremise(premise: string): ExistingBookMatch | null {
+  const want = premiseTokens(premise);
+  if (want.size === 0) return null;
+  let best: ExistingBookMatch | null = null;
+  if (!existsSync(BOOKS_DIR)) return null;
+  for (const entry of readdirSync(BOOKS_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const def = getBookDef(entry.name);
+    if (!def) continue;
+    let score = 0;
+    let reason = "";
+    if (def.originPremise) {
+      const { ratio, shared } = overlapRatio(want, premiseTokens(def.originPremise));
+      if (ratio >= 0.6 && shared >= 2) {
+        score = 1 + ratio;
+        reason = `same origin premise (token match ${(ratio * 100).toFixed(0)}%)`;
+      }
+    }
+    if (score === 0) {
+      const corpus = premiseTokens(`${def.title} ${def.logline} ${def.bible.slice(0, 1_200)}`);
+      const { ratio, shared } = overlapRatio(want, corpus);
+      if (ratio >= 0.34 && shared >= 3) {
+        score = ratio;
+        reason = `matches existing story "${def.title}" (${shared} key story elements)`;
+      }
+    }
+    if (score > 0 && (!best || score > best.score)) {
+      best = { def, score, reason };
+    }
+  }
+  return best;
+}
+
+export interface ForgeOutcome {
+  kind: "created" | "writing" | "resumed" | "complete";
+  def: BookDef;
+  state: BookState | null;
+  runner: { started: boolean; message: string };
+  note: string;
+}
+
+/**
+ * The ONE entry point both chat paths use for novel requests. Dedups first:
+ * a premise that already maps to a real book is reported (and its runner
+ * resumed if stalled) instead of forging a duplicate.
+ */
+export async function forgeOrExisting(input: CreateBookInput & { forceNew?: boolean }): Promise<ForgeOutcome> {
+  if (!input.forceNew) {
+    const match = findExistingBookForPremise(input.premise);
+    if (match) {
+      const state = loadState(match.def.id);
+      if (state?.phase === "done") {
+        return {
+          kind: "complete",
+          def: match.def,
+          state,
+          runner: { started: false, message: "not needed — book complete" },
+          note: `This premise is already a finished novel: "${match.def.title}" (${state.chaptersDone}/100 chapters, ${state.totalWords.toLocaleString()} words) — ${match.reason}`,
+        };
+      }
+      if (!isRunnerRunning(match.def.id)) {
+        const launched = startBookRunner(match.def.id);
+        const fresh = loadState(match.def.id);
+        return {
+          kind: "resumed",
+          def: match.def,
+          state: fresh,
+          runner: launched,
+          note: `Resumed stalled writing of existing book "${match.def.title}" (bookId ${match.def.id}, ${fresh?.chaptersDone ?? 0}/100 chapters) — ${match.reason}`,
+        };
+      }
+      return {
+        kind: "writing",
+        def: match.def,
+        state,
+        runner: { started: false, message: "already writing in the background" },
+        note: `This premise is already a live project: "${match.def.title}" (bookId ${match.def.id}, ${state?.chaptersDone ?? 0}/100 chapters, ${state?.totalWords.toLocaleString() ?? 0} words) — ${match.reason}`,
+      };
+    }
+  }
+  const def = await createBook(input);
+  const launched = startBookRunner(def.id);
+  return {
+    kind: "created",
+    def,
+    state: loadState(def.id),
+    runner: launched,
+    note: `Forged new novel "${def.title}" (bookId ${def.id})`,
+  };
 }
 
 // ---------------------------------------------------------------------------

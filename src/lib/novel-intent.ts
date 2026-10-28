@@ -32,6 +32,13 @@ export function extractNovelPremise(msg: string): string {
 
 export interface NovelIntent {
   premise: string;
+  /**
+   * True when the user EXPLICITLY asked for a new book on a short confirmation
+   * ("no write a new one", "ok go") — dedup must not block these. False for a
+   * plain novel-scale message, where a retry/re-send of the same premise must
+   * NOT forge a duplicate book.
+   */
+  forceNew: boolean;
 }
 
 /**
@@ -42,12 +49,12 @@ export interface NovelIntent {
 export function detectNovelIntent(current: string, earlierUserTexts: string[]): NovelIntent | null {
   const msg = current.trim();
   if (NOVEL_INTENT_RE.test(msg) && msg.length >= 30) {
-    return { premise: extractNovelPremise(msg) };
+    return { premise: extractNovelPremise(msg), forceNew: false };
   }
   if (msg.length <= 60 && CONFIRM_RE.test(msg)) {
     for (let i = earlierUserTexts.length - 1; i >= 0; i--) {
       if (NOVEL_INTENT_RE.test(earlierUserTexts[i]) && earlierUserTexts[i].length >= 30) {
-        return { premise: extractNovelPremise(earlierUserTexts[i]) };
+        return { premise: extractNovelPremise(earlierUserTexts[i]), forceNew: true };
       }
     }
   }
