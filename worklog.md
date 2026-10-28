@@ -642,3 +642,18 @@ Work Log:
 Stage Summary:
 - Data loss: NONE (book data + code fixes intact); process loss: 1 runner (restarted). The 429 storm at death makes progress-recovery cheap — resume costs nothing
 - Watch next cycles: runner 1368 progress past 68; 429 storm status
+
+---
+Task ID: cron-479831-1748
+Agent: main (cron supervision loop)
+Task: Book Forge supervision (Job 479831 @ 17:48) — SECOND SANDBOX REBOOT
+
+Work Log:
+- Full sandbox reboot at 09:48:32 UTC (boot-timeline.log: restore state, git setup, start services) — killed runner 1368, wiped /tmp + forge.log again
+- Pattern established: platform cycles sandbox ~every 15 min (09:19 → 09:33 → 09:48); each boot git-commits book state (backup commits d0b3729, 7006f57) so writing survives
+- Data loss: none meaningful (state last write 09:36, only backoff since); dedup fixes still in tree
+- RESTARTED runner per protocol: POST /api/novel/start → pid 1291, resumed 68/100, 159,857 words
+
+Stage Summary:
+- Operating reality: sandbox reboots every ~15 min; cron-per-cycle runner restart IS the recovery mechanism — each boot the runner gets a work window; 429 storm still active (will clear when quota eases)
+- No engine/server changes; protocol holding
