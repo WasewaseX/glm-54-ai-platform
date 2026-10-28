@@ -1,0 +1,640 @@
+     1→import "server-only";
+     2→import { db } from "@/lib/db";
+     3→import {
+     4→  streamChat,
+     5→  streamVision,
+     6→  webSearch,
+     7→  chatOnce,
+     8→  normalizeAiError,
+     9→  type SdkChatMessage,
+    10→} from "@/lib/ai";
+    11→import type { VisionMessage } from "z-ai-web-dev-sdk/dist/index";
+    12→import {
+    13→  buildTextMessages,
+    14→  formatWebContext,
+    15→  historyWindow,
+    16→  DEFAULT_SYSTEM_PROMPT,
+    17→  LIMITS,
+    18→} from "@/lib/context-builder";
+    19→import { estimateTokens, retrieveChunks } from "@/lib/rag";
+    20→import { requireUser } from "@/lib/auth";
+    21→import { checkRate, RATE_LIMITS, rateLimitResponse } from "@/lib/rate-limit";
+    22→import { forgeOrExisting, type ForgeOutcome } from "@/lib/novel-engine";
+    23→import { detectNovelIntent } from "@/lib/novel-intent";
+    24→import type { ChatStreamEvent, WebSearchResult } from "@/lib/types";
+    25→import type { Conversation } from "@prisma/client";
+    26→import { z } from "zod";
+    27→
+    28→export const dynamic = "force-dynamic";
+    29→export const maxDuration = 300;
+    30→
+    31→const BodySchema = z.object({
+    32→  conversationId: z.string().min(1).optional(),
+    33→  message: z.string().max(64_000).optional(),
+    34→  attachmentIds: z.array(z.string()).max(LIMITS.MAX_ATTACHMENTS_PER_MESSAGE).optional(),
+    35→  webSearch: z.boolean().optional(),
+    36→  thinking: z.boolean().optional(),
+    37→  systemPrompt: z.string().max(8_000).nullable().optional(),
+    38→  regenerate: z.boolean().optional(),
+    39→});
+    40→
+    41→function sseFrame(event: ChatStreamEvent): Uint8Array {
+    42→  return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`);
+    43→}
+    44→
+    45→/** Ground-truth instruction block for the model, tailored to the forge outcome. */
+    46→function forgeSystemNote(outcome: ForgeOutcome, forceNew: boolean): string {
+    47→  const { def, state, runner, kind } = outcome;
+    48→  const facts = `bookId=${def.id}; title="${def.title}"; logline=${def.logline}; chapters=${state?.chaptersDone ?? 0}/100; words=${(state?.totalWords ?? 0).toLocaleString()}; phase=${state?.phase ?? "bible"}; runner=${runner.message}`;
+    49→  const tail =
+    50→    " Live progress: the Book Forge Library card on the welcome screen. When phase=done, deliverables appear at /deliverables/" +
+    51→    def.id +
+    52→    ".md and /deliverables/" +
+    53→    def.id +
+    54→    ".pdf.";
+    55→  if (kind === "created") {
+    56→    return (
+    57→      `<system_note> The platform has ALREADY executed the user's novel request through Book Forge before your reply. REAL results — report these, change nothing: ${facts}.${tail} ` +
+    58→      `In your reply: state plainly that Book Forge has started writing this new novel right now, give the real title, explain the background writing honestly (not finished yet), and point to the live progress card. DO NOT ask permission. DO NOT offer to write a sample chapter instead. DO NOT claim the book is finished.</system_note>`
+    59→    );
+    60→  }
+    61→  if (kind === "complete") {
+    62→    return (
+    63→      `<system_note> Book Forge dedup: this premise is ALREADY a finished novel, so no new book was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+    64→      `In your reply: tell the user this exact novel is already complete, give the real title and the deliverable links, and point to the Library card. If they want a brand-NEW novel from the same premise, tell them to say "write a new one" and Book Forge will forge a fresh book. DO NOT pretend you just started a new book.</system_note>`
+    65→    );
+    66→  }
+    67→  if (kind === "resumed") {
+    68→    return (
+    69→      `<system_note> Book Forge dedup: this premise is ALREADY a book in this library, and its stalled writer has just been RESUMED — no duplicate was created. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+    70→      `In your reply: tell the user this novel already existed and is now writing again from its checkpoint, give the real title and current progress, and point to the live progress card. DO NOT claim you started a brand-new book.</system_note>`
+    71→    );
+    72→  }
+    73→  return (
+    74→    `<system_note> Book Forge dedup: this premise is ALREADY a live project in the library${forceNew ? "" : " (the user's message looked like a retry of the same request), so no new book was created and no second writer was launched"}. REAL facts — report these, change nothing: ${facts}.${tail} ` +
+    75→    `In your reply: tell the user this novel is already being written right now, give the real title and current chapter/word progress, and point to the live progress card. DO NOT ask permission. DO NOT create another book for this premise. If the user explicitly wants a DIFFERENT new novel, they should say "write a new one" with the premise.</system_note>`
+    76→  );
+    77→}
+    78→
+    79→/**
+    80→ * Deterministic user-facing reply, used when the LLM gateway is too saturated
+    81→ * to word a reply. The forge already knows the ground truth, so the platform
+    82→ * answers honestly on its own instead of showing "Generation failed".
+    83→ */
+    84→function forgeFallbackReply(outcome: ForgeOutcome): string {
+    85→  const { def, state, kind } = outcome;
+    86→  const chapters = state?.chaptersDone ?? 0;
+    87→  const words = (state?.totalWords ?? 0).toLocaleString();
+    88→  const deliverables = `/deliverables/${def.id}.md · /deliverables/${def.id}.pdf`;
+    89→  if (kind === "created") {
+    90→    return (
+    91→      `📕 Book Forge has started writing a brand-new novel: **${def.title}** (bookId \`${def.id}\`).\n\n` +
+    92→      `Logline: ${def.logline}\n\n` +
+    93→      `The pipeline is running in the background right now — story bible ✓, 10-part arc ✓, next it expands chapter briefs and writes all 100 chapters (× ~2,200 words), checkpointed after every chapter. This takes a few hours, not one reply — watch the **Book Forge Library** card on the welcome screen for live progress. When it's done, the full book downloads appear at ${deliverables}.\n\n` +
+    94→      `(Reply composed directly by Book Forge — the AI gateway was rate-limiting, but your book is real and writing.)`
+    95→    );
+    96→  }
+    97→  if (kind === "complete") {
+    98→    return (
+    99→      `✅ This premise is already a finished novel in your library: **${def.title}** — ${chapters}/100 chapters, ${words} words. No new book was created.\n\n` +
+   100→      `Read or download it: ${deliverables}.\n\n` +
+   101→      `Want a brand-NEW novel from this same premise? Say “write a new one” and Book Forge will forge a fresh book.`
+   102→    );
+   103→  }
+   104→  if (kind === "resumed") {
+   105→    return (
+   106→      `📖 This premise is already a book in your library — **${def.title}** (${chapters}/100 chapters, ${words} words). Its writer had stalled, so Book Forge just resumed it from the last checkpoint. No duplicate was created.\n\n` +
+   107→      `It's writing again right now — watch the **Book Forge Library** card for live progress. When finished, downloads appear at ${deliverables}.`
+   108→    );
+   109→  }
+   110→  return (
+   111→    `📖 Good news — this exact novel already exists and is being written right now: **${def.title}** (bookId \`${def.id}\`).\n\n` +
+   112→    `Real progress: **${chapters}/100 chapters**, ${words} words so far. Your message looked like a retry of the same request, so Book Forge did NOT create a duplicate or launch a second writer.\n\n` +
+   113→    `It's checkpointed every chapter and finishes automatically over the coming hours — the **Book Forge Library** card on the welcome screen shows live progress, and full downloads appear at ${deliverables} when done.\n\n` +
+   114→    `If you actually wanted a DIFFERENT new novel, say “write a new one” with the new premise.\n\n` +
+   115→    `(Reply composed directly by Book Forge — the AI gateway was rate-limiting, but the status above is real.)`
+   116→  );
+   117→}
+   118→
+   119→export async function POST(req: Request) {
+   120→  const user = await requireUser();
+   121→
+   122→  const rate = checkRate(`chat:${user.id}`, RATE_LIMITS.chat.limit, RATE_LIMITS.chat.windowMs);
+   123→  if (!rate.ok) return rateLimitResponse(rate.retryAfterMs);
+   124→
+   125→  let body: z.infer<typeof BodySchema>;
+   126→  try {
+   127→    body = BodySchema.parse(await req.json());
+   128→  } catch {
+   129→    return Response.json({ error: "Invalid request body." }, { status: 400 });
+   130→  }
+   131→
+   132→  // ---------- Resolve conversation ----------
+   133→  let conversation: Conversation | null = null;
+   134→  if (body.conversationId) {
+   135→    conversation = await db.conversation.findFirst({
+   136→      where: { id: body.conversationId, userId: user.id },
+   137→    });
+   138→    if (!conversation) return Response.json({ error: "Conversation not found." }, { status: 404 });
+   139→  }
+   140→
+   141→  // ---------- Resolve the user turn ----------
+   142→  let userText = body.message?.trim() ?? "";
+   143→  let attachmentIds = body.attachmentIds ?? [];
+   144→
+   145→  if (body.regenerate) {
+   146→    if (!conversation) return Response.json({ error: "Nothing to regenerate." }, { status: 400 });
+   147→    const history = await db.message.findMany({
+   148→      where: { conversationId: conversation.id },
+   149→      orderBy: { createdAt: "asc" },
+   150→    });
+   151→    // Drop trailing assistant messages, find the last user message.
+   152→    while (history.length > 0 && history[history.length - 1].role === "assistant") history.pop();
+   153→    const lastUser = history[history.length - 1];
+   154→    if (!lastUser || lastUser.role !== "user") {
+   155→      return Response.json({ error: "Nothing to regenerate." }, { status: 400 });
+   156→    }
+   157→    userText = lastUser.content;
+   158→    let atts: { id: string }[] = [];
+   159→    try {
+   160→      atts = lastUser.attachments ? JSON.parse(lastUser.attachments) : [];
+   161→    } catch {
+   162→      atts = [];
+   163→    }
+   164→    attachmentIds = atts.map((a) => a.id);
+   165→    await db.message.deleteMany({
+   166→      where: {
+   167→        conversationId: conversation.id,
+   168→        role: "assistant",
+   169→        createdAt: { gte: lastUser.createdAt },
+   170→      },
+   171→    });
+   172→  } else {
+   173→    if (!userText && attachmentIds.length === 0) {
+   174→      return Response.json({ error: "Message or attachment required." }, { status: 400 });
+   175→    }
+   176→  }
+   177→
+   178→  if (!conversation) {
+   179→    conversation = await db.conversation.create({
+   180→      data: {
+   181→        userId: user.id,
+   182→        title: "New conversation",
+   183→        systemPrompt: body.systemPrompt ?? null,
+   184→      },
+   185→    });
+   186→  } else if (body.systemPrompt !== undefined) {
+   187→    await db.conversation.update({
+   188→      where: { id: conversation.id },
+   189→      data: { systemPrompt: body.systemPrompt },
+   190→    });
+   191→  }
+   192→
+   193→  // ---------- Persist the user message ----------
+   194→  const documents = attachmentIds.length
+   195→    ? await db.document.findMany({ where: { id: { in: attachmentIds }, userId: user.id } })
+   196→    : [];
+   197→
+   198→  const attachmentMeta = documents.map((d) => ({
+   199→    id: d.id,
+   200→    name: d.name,
+   201→    mime: d.mime,
+   202→    size: d.size,
+   203→    kind: d.kind as "text" | "image" | "binary",
+   204→    documentId: d.id,
+   205→  }));
+   206→
+   207→  const userMessage = await db.message.create({
+   208→    data: {
+   209→      conversationId: conversation.id,
+   210→      role: "user",
+   211→      content: userText,
+   212→      attachments: attachmentMeta.length ? JSON.stringify(attachmentMeta) : null,
+   213→    },
+   214→  });
+   215→
+   216→  const assistantMessage = await db.message.create({
+   217→    data: {
+   218→      conversationId: conversation.id,
+   219→      role: "assistant",
+   220→      content: "",
+   221→      status: "streaming",
+   222→      webSearchUsed: Boolean(body.webSearch),
+   223→    },
+   224→  });
+   225→
+   226→  // ---------- Stream ----------
+   227→  const startedAt = Date.now();
+   228→  const convId = conversation.id;
+   229→  const wantWebSearch = Boolean(body.webSearch);
+   230→  const wantThinking = Boolean(body.thinking);
+   231→  const systemPrompt =
+   232→    (body.systemPrompt ?? conversation.systemPrompt ?? DEFAULT_SYSTEM_PROMPT) || DEFAULT_SYSTEM_PROMPT;
+   233→
+   234→  const upstreamAbort = new AbortController();
+   235→  req.signal.addEventListener("abort", () => upstreamAbort.abort());
+   236→
+   237→  const stream = new ReadableStream<Uint8Array>({
+   238→    async start(controller) {
+   239→      let closed = false;
+   240→      const ping = new TextEncoder().encode(": ping\n\n");
+   241→      const send = (event: ChatStreamEvent) => {
+   242→        if (closed) return;
+   243→        try {
+   244→          controller.enqueue(sseFrame(event));
+   245→        } catch {
+   246→          closed = true;
+   247→        }
+   248→      };
+   249→      // SSE heartbeat: keep proxies from killing the connection during long
+   250→      // upstream stalls (the "Error in input stream" class of failures).
+   251→      const heartbeat = setInterval(() => {
+   252→        if (closed) return;
+   253→        try {
+   254→          controller.enqueue(ping);
+   255→        } catch {
+   256→          closed = true;
+   257→        }
+   258→      }, 15_000);
+   259→
+   260→      let fullText = "";
+   261→      let thinkingText = "";
+   262→      let servedModel: string | null = null;
+   263→      let usage: { prompt_tokens: number; completion_tokens: number } | null = null;
+   264→      let searchResults: WebSearchResult[] = [];
+   265→
+   266→      try {
+   267→        send({
+   268→          type: "meta",
+   269→          conversationId: convId,
+   270→          userMessageId: userMessage.id,
+   271→          assistantMessageId: assistantMessage.id,
+   272→        });
+   273→
+   274→        // ----- Web search tool -----
+   275→        let webContext = "";
+   276→        if (wantWebSearch && userText) {
+   277→          send({ type: "tool", tool: "web_search", status: "start", message: "Searching the web…" });
+   278→          try {
+   279→            searchResults = await webSearch(userText, 6);
+   280→            webContext = formatWebContext(searchResults);
+   281→            send({
+   282→              type: "tool",
+   283→              tool: "web_search",
+   284→              status: "done",
+   285→              message: `Found ${searchResults.length} results`,
+   286→              results: searchResults,
+   287→            });
+   288→            await db.usageEvent.create({
+   289→              data: { userId: user.id, kind: "search", latencyMs: 0 },
+   290→            });
+   291→          } catch (err) {
+   292→            send({
+   293→              type: "tool",
+   294→              tool: "web_search",
+   295→              status: "done",
+   296→              message: "Web search unavailable — answering without it.",
+   297→            });
+   298→            console.error("[chat] web_search failed:", err);
+   299→          }
+   300→        }
+   301→
+   302→        // ----- History + RAG -----
+   303→        const historyRows = await db.message.findMany({
+   304→          where: { conversationId: convId, id: { notIn: [assistantMessage.id] } },
+   305→          orderBy: { createdAt: "asc" },
+   306→        });
+   307→        const historyForContext = historyWindow(
+   308→          historyRows
+   309→            .filter((m) => m.id !== userMessage.id)
+   310→            .map((m) => ({
+   311→              id: m.id,
+   312→              role: m.role as "user" | "assistant",
+   313→              content: m.content,
+   314→              status: "complete" as const,
+   315→              createdAt: m.createdAt.toISOString(),
+   316→            }))
+   317→        );
+   318→
+   319→        // ----- Deterministic Book Forge intent (plain chat mode) -----
+   320→        // The platform ACTS on novel-scale requests even without agent mode:
+   321→        // Book Forge dedups against existing books, creates + starts writing
+   322→        // when genuinely new, and resumes a stalled runner instead of duplicating.
+   323→        let forgeNote = "";
+   324→        let lastForge: ForgeOutcome | null = null;
+   325→        try {
+   326→          const earlierUserTexts = historyRows
+   327→            .filter((m) => m.role === "user" && m.id !== userMessage.id)
+   328→            .map((m) => m.content);
+   329→          const intent = detectNovelIntent(userText, earlierUserTexts);
+   330→          if (intent) {
+   331→            send({
+   332→              type: "tool",
+   333→              tool: "book_forge",
+   334→              status: "start",
+   335→              message: "Book Forge — checking the library, then forging…",
+   336→            });
+   337→            const outcome = await forgeOrExisting({ premise: intent.premise, forceNew: intent.forceNew });
+   338→            lastForge = outcome;
+   339→            send({
+   340→              type: "tool",
+   341→              tool: "book_forge",
+   342→              status: "done",
+   343→              message: `Book Forge: ${outcome.note}`,
+   344→            });
+   345→            forgeNote = forgeSystemNote(outcome, intent.forceNew);
+   346→          }
+   347→        } catch (err) {
+   348→          const msg = err instanceof Error ? err.message : String(err);
+   349→          console.error("[chat] book_forge intent failed:", err);
+   350→          send({
+   351→            type: "tool",
+   352→            tool: "book_forge",
+   353→            status: "done",
+   354→            message: `Book Forge could not create the book: ${msg.slice(0, 200)}`,
+   355→          });
+   356→          forgeNote = `<system_note> Book Forge failed to create the book: ${msg.slice(0, 300)}. Tell the user this honestly and suggest trying again shortly.</system_note>`;
+   357→        }
+   358→
+   359→        const textDocs = documents.filter((d) => d.kind === "text" && d.content);
+   360→        let ragContext = "";
+   361→        if (textDocs.length > 0 && userText) {
+   362→          const docNameById = new Map<string, string>();
+   363→          const allChunks: Array<{ idx: number; text: string; tokens: number }> = [];
+   364→          for (const doc of textDocs) {
+   365→            const rows = await db.documentChunk.findMany({
+   366→              where: { documentId: doc.id },
+   367→              orderBy: { idx: "asc" },
+   368→            });
+   369→            for (const row of rows) {
+   370→              docNameById.set(String(allChunks.length), doc.name);
+   371→              allChunks.push({ idx: allChunks.length, text: row.text, tokens: row.tokens });
+   372→            }
+   373→          }
+   374→          const top = retrieveChunks(userText, allChunks, 6);
+   375→          if (top.length > 0) {
+   376→            ragContext = top
+   377→              .map(({ chunk }) => {
+   378→                const name = docNameById.get(String(chunk.idx));
+   379→                return name ? `[${name}]\n${chunk.text}` : chunk.text;
+   380→              })
+   381→              .join("\n\n---\n\n")
+   382→              .slice(0, LIMITS.RAG_CHAR_BUDGET);
+   383→            send({
+   384→              type: "context",
+   385→              message: `Retrieved ${top.length} excerpt${top.length === 1 ? "" : "s"} from ${textDocs.length} document${textDocs.length === 1 ? "" : "s"}`,
+   386→            });
+   387→          }
+   388→        }
+   389→
+   390→        // ----- Vision path (images / binary docs attached) -----
+   391→        const visualDocs = documents.filter((d) => d.kind === "image" || d.kind === "binary");
+   392→        const hasVision = visualDocs.length > 0;
+   393→
+   394→        let finalText = userText;
+   395→        if (ragContext) {
+   396→          finalText =
+   397→            (userText ? userText + "\n\n" : "") +
+   398→            "Answer using the retrieved document context provided above if relevant.";
+   399→        }
+   400→        if (forgeNote) {
+   401→          finalText = (finalText ? finalText + "\n\n" : "") + forgeNote;
+   402→        }
+   403→
+   404→        const contentItems: Array<
+   405→          | { type: "text"; text: string }
+   406→          | { type: "image_url"; image_url: { url: string } }
+   407→          | { type: "file_url"; file_url: { url: string } }
+   408→        > = [];
+   409→        if (finalText) contentItems.push({ type: "text", text: finalText });
+   410→        if (ragContext) {
+   411→          contentItems.push({
+   412→            type: "text",
+   413→            text: "Retrieved document context:\n\n" + ragContext,
+   414→          });
+   415→        }
+   416→        if (webContext) {
+   417→          contentItems.push({ type: "text", text: "Web search results:\n\n" + webContext });
+   418→        }
+   419→        for (const doc of visualDocs) {
+   420→          if (!doc.content) continue;
+   421→          const url = `data:${doc.mime};base64,${doc.content}`;
+   422→          if (doc.kind === "image") {
+   423→            contentItems.push({ type: "image_url", image_url: { url } });
+   424→          } else {
+   425→            contentItems.push({ type: "file_url", file_url: { url } });
+   426→          }
+   427→        }
+   428→
+   429→        type UpstreamGen = AsyncGenerator<{
+   430→          text: string;
+   431→          thinking: string;
+   432→          model: string | null;
+   433→          usage: { prompt_tokens: number; completion_tokens: number } | null;
+   434→          finished: boolean;
+   435→        }>;
+   436→
+   437→        let gen: UpstreamGen;
+   438→
+   439→        if (hasVision) {
+   440→          const visionMessages: VisionMessage[] = [
+   441→            { role: "system", content: systemPrompt },
+   442→            ...historyForContext.map((m) => ({
+   443→              role: m.role,
+   444→              content: m.content,
+   445→            })),
+   446→            { role: "user", content: contentItems },
+   447→          ];
+   448→          gen = streamVision(visionMessages, {
+   449→            thinking: wantThinking,
+   450→            signal: upstreamAbort.signal,
+   451→          });
+   452→        } else {
+   453→          const sdkMessages: SdkChatMessage[] = buildTextMessages({
+   454→            systemPrompt,
+   455→            history: historyForContext,
+   456→            userText: finalText,
+   457→            ragContext,
+   458→            webContext,
+   459→          });
+   460→          gen = streamChat(sdkMessages, {
+   461→            thinking: wantThinking,
+   462→            signal: upstreamAbort.signal,
+   463→          });
+   464→        }
+   465→
+   466→        // ----- Relay deltas (with one-shot mid-stream recovery) -----
+   467→        type RelayOutcome = "done" | "aborted" | "broken";
+   468→        let relayErr: unknown = null;
+   469→        const relay = async (g: UpstreamGen): Promise<RelayOutcome> => {
+   470→          try {
+   471→            for await (const chunk of g) {
+   472→              if (chunk.model) servedModel = chunk.model;
+   473→              if (chunk.usage) usage = chunk.usage;
+   474→              if (chunk.thinking) {
+   475→                thinkingText += chunk.thinking;
+   476→                send({ type: "thinking", text: chunk.thinking });
+   477→              }
+   478→              if (chunk.text) {
+   479→                fullText += chunk.text;
+   480→                send({ type: "delta", text: chunk.text });
+   481→              }
+   482→              if (chunk.finished) return "done";
+   483→              if (req.signal.aborted) return "aborted";
+   484→            }
+   485→            return "done";
+   486→          } catch (err) {
+   487→            relayErr = err;
+   488→            return "broken";
+   489→          }
+   490→        };
+   491→
+   492→        let outcome = await relay(gen);
+   493→
+   494→        // If the upstream stream died mid-answer but we already have substantial
+   495→        // text, resume ONCE from the partial — the client sees a seamless reply.
+   496→        if (outcome === "broken" && fullText.length >= 200 && !req.signal.aborted) {
+   497→          console.warn("[chat] upstream stream broke mid-answer — resuming from partial text");
+   498→          send({
+   499→            type: "context",
+   500→            message: "Stream interrupted — resuming from where the answer stopped…",
+   501→          });
+   502→          const recoveryMessages: SdkChatMessage[] = [
+   503→            { role: "assistant", content: systemPrompt },
+   504→            {
+   505→              role: "user",
+   506→              content:
+   507→                "The text below is your answer so far; it was cut off mid-stream. Continue it EXACTLY from where it stops — same style and register, no repetition, no recap, no preamble. Output ONLY the continuation.\n\n<answer_so_far>\n" +
+   508→                fullText.slice(-4000) +
+   509→                "\n</answer_so_far>",
+   510→            },
+   511→          ];
+   512→          outcome = await relay(
+   513→            streamChat(recoveryMessages, {
+   514→              thinking: false,
+   515→              signal: upstreamAbort.signal,
+   516→            })
+   517→          );
+   518→        }
+   519→
+   520→        if (outcome === "broken") {
+   521→          if (fullText.length === 0 && lastForge) {
+   522→            // The gateway never gave us a single token. The forge outcome is
+   523→            // ground truth, so answer deterministically instead of failing the
+   524→            // user's turn — honest status beats "Generation failed".
+   525→            console.warn("[chat] gateway exhausted retries with forge result — streaming deterministic forge reply");
+   526→            send({
+   527→              type: "context",
+   528→              message: "AI gateway saturated — replying with verified Book Forge status directly.",
+   529→            });
+   530→            fullText = forgeFallbackReply(lastForge);
+   531→            send({ type: "delta", text: fullText });
+   532→          } else {
+   533→            throw relayErr ?? new Error("upstream stream failed");
+   534→          }
+   535→        }
+   536→
+   537→        const latencyMs = Date.now() - startedAt;
+   538→        const status = req.signal.aborted ? "cancelled" : "complete";
+   539→
+   540→        await db.message.update({
+   541→          where: { id: assistantMessage.id },
+   542→          data: {
+   543→            content: fullText || (status === "cancelled" ? "" : "(empty response)"),
+   544→            thinking: thinkingText || null,
+   545→            model: servedModel,
+   546→            promptTokens: usage?.prompt_tokens ?? null,
+   547→            completionTokens: usage?.completion_tokens ?? estimateTokens(fullText),
+   548→            latencyMs,
+   549→            status,
+   550→          },
+   551→        });
+   552→        await db.usageEvent.create({
+   553→          data: {
+   554→            userId: user.id,
+   555→            kind: hasVision ? "vision" : "chat",
+   556→            promptTokens: usage?.prompt_tokens ?? 0,
+   557→            completionTokens: usage?.completion_tokens ?? estimateTokens(fullText),
+   558→            latencyMs,
+   559→          },
+   560→        });
+   561→        await db.conversation.update({ where: { id: convId }, data: { model: servedModel } });
+   562→
+   563→        // ----- Auto-title on first exchange -----
+   564→        const msgCount = await db.message.count({ where: { conversationId: convId } });
+   565→        if (msgCount <= 2 && !req.signal.aborted) {
+   566→          try {
+   567→            const { text: title } = await chatOnce(
+   568→              [
+   569→                {
+   570→                  role: "assistant",
+   571→                  content:
+   572→                    "Generate a concise conversation title (max 6 words) for the exchange. Reply with the title only, no quotes.",
+   573→                },
+   574→                {
+   575→                  role: "user",
+   576→                  content: `User: ${userText.slice(0, 500)}\nAssistant: ${fullText.slice(0, 500)}`,
+   577→                },
+   578→              ],
+   579→              { maxChars: LIMITS.TITLE_MAX_CHARS }
+   580→            );
+   581→            const clean = title.replace(/^["'#\s]+|["'\s]+$/g, "").slice(0, LIMITS.TITLE_MAX_CHARS);
+   582→            if (clean) {
+   583→              await db.conversation.update({ where: { id: convId }, data: { title: clean } });
+   584→              send({ type: "title", title: clean });
+   585→            }
+   586→          } catch (err) {
+   587→            console.error("[chat] title generation failed:", err);
+   588→          }
+   589→        }
+   590→
+   591→        send({
+   592→          type: "done",
+   593→          assistantMessageId: assistantMessage.id,
+   594→          model: servedModel,
+   595→          promptTokens: usage?.prompt_tokens ?? null,
+   596→          completionTokens: usage?.completion_tokens ?? null,
+   597→          latencyMs,
+   598→          status,
+   599→        });
+   600→      } catch (err) {
+   601→        const normalized = normalizeAiError(err);
+   602→        console.error("[chat] stream error:", err);
+   603→        try {
+   604→          await db.message.update({
+   605→            where: { id: assistantMessage.id },
+   606→            data: {
+   607→              content: fullText,
+   608→              thinking: thinkingText || null,
+   609→              model: servedModel,
+   610→              status: "error",
+   611→              error: normalized.message,
+   612→              latencyMs: Date.now() - startedAt,
+   613→            },
+   614→          });
+   615→        } catch (dbErr) {
+   616→          console.error("[chat] failed to persist error state:", dbErr);
+   617→        }
+   618→        send({ type: "error", message: normalized.message, fatal: fullText.length === 0 });
+   619→      } finally {
+   620→        closed = true;
+   621→        clearInterval(heartbeat);
+   622→        try {
+   623→          controller.close();
+   624→        } catch {
+   625→          /* noop */
+   626→        }
+   627→      }
+   628→    },
+   629→  });
+   630→
+   631→  return new Response(stream, {
+   632→    headers: {
+   633→      "Content-Type": "text/event-stream; charset=utf-8",
+   634→      "Cache-Control": "no-cache, no-transform",
+   635→      Connection: "keep-alive",
+   636→      "X-Accel-Buffering": "no",
+   637→    },
+   638→  });
+   639→}
+   640→

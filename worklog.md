@@ -683,3 +683,23 @@ Work Log:
 
 Stage Summary:
 - Steady-state: 5th consecutive lossless restart
+
+---
+Task ID: cron-479831-1848 + user 502 UX fix (commit 7c2558d)
+Agent: main (cron supervision + user-reported bug fix)
+Task: User reported "stuck at thinking → Request failed (502)" with api-client.ts:112 dev overlay; cron cycle same turn
+
+Work Log:
+- Sweep: runner 1276 ALIVE (survived this cycle), 429 storm ongoing (retry #5, 488s backoff); vat done/fresh; no restart needed
+- Root cause of user-visible 502 (two independent layers):
+  1) Sandbox reboots every ~15min make the app unreachable ~30s → Caddy 502 → client JSON api() had ZERO retries → unhandled error overlay; openSseStream gave up after ~4s → "Stream request failed (502)"
+  2) ai.ts streamChat/chatOnce burned ~105s of server backoff (7 attempts, 30s cap) during gateway storm → "stuck at thinking" for minutes before failing
+- Fix shipped (commit 7c2558d, pushed 8efe2a0..7c2558d):
+  - ai.ts: interactive profile retries 2 / 2s base / 8s cap (~20s worst case) — writer untouched (novel-engine has its own patient loop, verified no ai.ts import)
+  - api-client.ts: GET/HEAD JSON retries ×3 (transient-only, no POST double-submit); openSseStream 5 attempts ≈25s window to bridge reboot gaps
+  - chat route: gatewayFallbackReply() — honest "gateway saturated" message + LIVE Book Forge progress read from disk; never 502s the turn
+- CONCURRENCY NOTE: a parallel agent session edited api-client.ts + chat route mid-turn (same fix direction, higher quality); merged naturally in working tree, single commit 7c2558d contains both sessions' work; no conflicts
+
+Stage Summary:
+- User-facing behavior now: gateway storm → honest status reply in ≤25s (not minutes, not 502); reboot window → transparent client retry
+- Remaining upstream: gateway 429 storm (2h+) + reboot cadence — both outside app control; writer resumes automatically

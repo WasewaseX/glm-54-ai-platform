@@ -350,6 +350,7 @@ export async function POST(req: Request) {
         // when genuinely new, and resumes a stalled runner instead of duplicating.
         let forgeNote = "";
         let lastForge: ForgeOutcome | null = null;
+        let usedFallback = false;
         try {
           const earlierUserTexts = historyRows
             .filter((m) => m.role === "user" && m.id !== userMessage.id)
@@ -556,6 +557,7 @@ export async function POST(req: Request) {
               message: "AI gateway saturated — replying with verified Book Forge status directly.",
             });
             fullText = forgeFallbackReply(lastForge);
+            usedFallback = true;
             send({ type: "delta", text: fullText });
           } else {
             // No forge outcome either — still never fail the turn with a 502.
@@ -568,6 +570,7 @@ export async function POST(req: Request) {
             });
             const reason = normalizeAiError(relayErr ?? new Error("upstream stream failed")).message;
             fullText = gatewayFallbackReply(reason);
+            usedFallback = true;
             send({ type: "delta", text: fullText });
           }
         }
@@ -598,9 +601,10 @@ export async function POST(req: Request) {
         });
         await db.conversation.update({ where: { id: convId }, data: { model: servedModel } });
 
-        // ----- Auto-title on first exchange -----
+        // ----- Auto-title on first exchange (skipped when the turn fell back —
+        // the gateway is saturated and a title call would just hang the turn) -----
         const msgCount = await db.message.count({ where: { conversationId: convId } });
-        if (msgCount <= 2 && !req.signal.aborted) {
+        if (msgCount <= 2 && !req.signal.aborted && !usedFallback) {
           try {
             const { text: title } = await chatOnce(
               [
